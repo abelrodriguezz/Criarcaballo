@@ -1,0 +1,194 @@
+"use client";
+
+import { useState, type FormEvent } from "react";
+import { useRouter } from "next/navigation";
+import { crearClienteSupabase } from "@/lib/supabase/client";
+import type { Senal } from "@/lib/types";
+
+interface AdminSenalFormProps {
+  senalExistente?: Senal;
+  onCancelar?: () => void;
+}
+
+export function AdminSenalForm({
+  senalExistente,
+  onCancelar,
+}: AdminSenalFormProps) {
+  const router = useRouter();
+  const esEdicion = !!senalExistente;
+
+  const [par, setPar] = useState(senalExistente?.par ?? "");
+  const [tipo, setTipo] = useState<"compra" | "venta">(
+    senalExistente?.tipo ?? "compra"
+  );
+  const [entrada, setEntrada] = useState(
+    senalExistente ? String(senalExistente.entrada) : ""
+  );
+  const [stopLoss, setStopLoss] = useState(
+    senalExistente?.stop_loss != null ? String(senalExistente.stop_loss) : ""
+  );
+  const [takeProfit, setTakeProfit] = useState(
+    senalExistente?.take_profit != null
+      ? String(senalExistente.take_profit)
+      : ""
+  );
+  const [razon, setRazon] = useState(senalExistente?.razon ?? "");
+  const [error, setError] = useState<string | null>(null);
+  const [guardando, setGuardando] = useState(false);
+  const [abierto, setAbierto] = useState(esEdicion);
+
+  function cerrar() {
+    setAbierto(false);
+    onCancelar?.();
+  }
+
+  async function manejarEnvio(e: FormEvent) {
+    e.preventDefault();
+    setError(null);
+
+    if (!par.trim()) {
+      setError("El par no puede estar vacío.");
+      return;
+    }
+    const entradaNum = parseFloat(entrada);
+    if (isNaN(entradaNum) || entradaNum <= 0) {
+      setError("El precio de entrada debe ser un número mayor a cero.");
+      return;
+    }
+
+    setGuardando(true);
+    const supabase = crearClienteSupabase();
+    const datos = {
+      par: par.toUpperCase(),
+      tipo,
+      entrada: entradaNum,
+      stop_loss: stopLoss ? parseFloat(stopLoss) : null,
+      take_profit: takeProfit ? parseFloat(takeProfit) : null,
+      razon: razon || null,
+    };
+
+    const { error } = esEdicion
+      ? await supabase
+          .from("senales")
+          .update(datos)
+          .eq("id", senalExistente.id)
+      : await supabase.from("senales").insert(datos);
+
+    setGuardando(false);
+
+    if (error) {
+      setError("No se pudo guardar. Verifica tu permiso de admin.");
+      return;
+    }
+
+    if (esEdicion) {
+      onCancelar?.();
+    } else {
+      setPar("");
+      setEntrada("");
+      setStopLoss("");
+      setTakeProfit("");
+      setRazon("");
+      setAbierto(false);
+    }
+    router.refresh();
+  }
+
+  if (!abierto) {
+    return (
+      <button
+        onClick={() => setAbierto(true)}
+        className="border border-dashed border-[var(--brand-primary)] text-brand-primary text-sm font-semibold px-4 py-2.5 rounded-xl mb-6 hover:bg-[var(--brand-primary)]/5 transition-colors"
+      >
+        + Publicar señal (admin)
+      </button>
+    );
+  }
+
+  return (
+    <form
+      onSubmit={manejarEnvio}
+      className="border border-[var(--brand-primary)] bg-[var(--brand-primary)]/5 rounded-2xl p-5 mb-6"
+    >
+      <div className="flex justify-between items-center mb-3">
+        <h3 className="font-display font-semibold text-sm">
+          {esEdicion ? "Editar señal" : "Publicar señal"}
+        </h3>
+        <button
+          type="button"
+          onClick={cerrar}
+          className="text-xs text-foreground-muted"
+        >
+          Cancelar
+        </button>
+      </div>
+
+      <div className="grid grid-cols-2 gap-2.5 mb-2.5">
+        <input
+          required
+          value={par}
+          onChange={(e) => setPar(e.target.value)}
+          aria-label="Par"
+          placeholder="Par (ej. BTCUSDT)"
+          className="px-3 py-2 rounded-lg border border-[var(--border)] bg-background text-sm"
+        />
+        <select
+          aria-label="Tipo de señal"
+          value={tipo}
+          onChange={(e) => setTipo(e.target.value as "compra" | "venta")}
+          className="px-3 py-2 rounded-lg border border-[var(--border)] bg-background text-sm"
+        >
+          <option value="compra">Compra</option>
+          <option value="venta">Venta</option>
+        </select>
+      </div>
+
+      <div className="grid grid-cols-3 gap-2.5 mb-2.5">
+        <input
+          required
+          value={entrada}
+          onChange={(e) => setEntrada(e.target.value)}
+          aria-label="Precio de entrada"
+          placeholder="Entrada"
+          inputMode="decimal"
+          className="px-3 py-2 rounded-lg border border-[var(--border)] bg-background text-sm"
+        />
+        <input
+          value={stopLoss}
+          onChange={(e) => setStopLoss(e.target.value)}
+          aria-label="Stop loss"
+          placeholder="Stop loss"
+          inputMode="decimal"
+          className="px-3 py-2 rounded-lg border border-[var(--border)] bg-background text-sm"
+        />
+        <input
+          value={takeProfit}
+          onChange={(e) => setTakeProfit(e.target.value)}
+          aria-label="Take profit"
+          placeholder="Take profit"
+          inputMode="decimal"
+          className="px-3 py-2 rounded-lg border border-[var(--border)] bg-background text-sm"
+        />
+      </div>
+
+      <textarea
+        value={razon ?? ""}
+        onChange={(e) => setRazon(e.target.value)}
+        aria-label="Razón del análisis"
+        placeholder="Razón del análisis (opcional)"
+        rows={2}
+        className="w-full px-3 py-2 mb-3 rounded-lg border border-[var(--border)] bg-background text-sm resize-none"
+      />
+
+      {error && <p className="text-loss text-[13px] mb-2">{error}</p>}
+
+      <button
+        type="submit"
+        disabled={guardando}
+        className="bg-brand-primary hover:bg-brand-primary-hover disabled:opacity-60 text-white font-semibold text-sm px-5 py-2.5 rounded-lg transition-colors"
+      >
+        {guardando ? "Guardando..." : esEdicion ? "Guardar cambios" : "Publicar"}
+      </button>
+    </form>
+  );
+}

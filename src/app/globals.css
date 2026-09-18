@@ -1,0 +1,186 @@
+@import "tailwindcss";
+
+/* ============================================================
+   TradeIN — Sistema de diseño
+   Modo claro por defecto, con variante oscura vía [data-theme="dark"]
+   ============================================================ */
+
+:root {
+  /* Superficies */
+  --background: #ffffff;
+  --surface: #f6f6f8;
+  --surface-hover: #efeff3;
+  --border: #e4e4ea;
+
+  /* Texto */
+  --foreground: #0f1222;
+  --foreground-muted: #6b7280;
+
+  /* Marca */
+  --brand-primary: #4a3aff;   /* violeta-azul eléctrico */
+  --brand-primary-hover: #3c2ee0;
+  --brand-primary-tint: #eeecff; /* fondo suave para badges/resaltados */
+  --brand-secondary: #ff6b4a; /* coral */
+
+  /* Semánticos (ganancia/pérdida) */
+  --gain: #12b76a;
+  --loss: #f04438;
+
+  --radius: 0.75rem;
+}
+
+[data-theme="dark"] {
+  --background: #0b0d12;
+  --surface: #141721;
+  --surface-hover: #1b1f2c;
+  --border: #23273580;
+
+  --foreground: #f4f5f7;
+  --foreground-muted: #9aa0ae;
+
+  --brand-primary: #7a6fff;
+  --brand-primary-hover: #8f86ff;
+  --brand-primary-tint: #1c1a33;
+  --brand-secondary: #ff8768;
+
+  --gain: #22c77e;
+  --loss: #f4665a;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-surface: var(--surface);
+  --color-surface-hover: var(--surface-hover);
+  --color-border: var(--border);
+  --color-foreground: var(--foreground);
+  --color-foreground-muted: var(--foreground-muted);
+  --color-brand-primary: var(--brand-primary);
+  --color-brand-primary-hover: var(--brand-primary-hover);
+  --color-brand-secondary: var(--brand-secondary);
+  --color-gain: var(--gain);
+  --color-loss: var(--loss);
+  --font-sans: var(--font-inter);
+  --font-display: var(--font-space-grotesk);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans), Arial, Helvetica, sans-serif;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.font-display {
+  font-family: var(--font-display), var(--font-sans), sans-serif;
+}
+
+/* Números tabulares para precios/tickers — evita que salten de ancho */
+.tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+/* ============================================================
+   Transición entre módulos — franja de velas que cruza pantalla
+   ============================================================ */
+.barrido-contenedor {
+  position: absolute;
+  inset: 0;
+  z-index: 30;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.barrido-franja {
+  position: absolute;
+  top: -10%;
+  bottom: -10%;
+  left: 0;
+  width: 260px;
+  background: linear-gradient(
+    100deg,
+    transparent 0%,
+    color-mix(in srgb, var(--brand-primary) 92%, transparent) 35%,
+    color-mix(in srgb, var(--brand-secondary) 92%, transparent) 65%,
+    transparent 100%
+  );
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 7px;
+  padding: 30px 0;
+  transform: translateX(-320px);
+  opacity: 0;
+}
+
+.barrido-franja.animar {
+  animation: cruzarPantalla 900ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes cruzarPantalla {
+  0% {
+    transform: translateX(-320px);
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  85% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(1500px);
+    opacity: 0;
+  }
+}
+
+.barrido-vela {
+  width: 13px;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.9);
+  animation: crecerVela 0.9s ease-in-out both;
+}
+
+@keyframes crecerVela {
+  0% {
+    height: 8px;
+    opacity: 0.4;
+  }
+  45% {
+    height: var(--h, 60px);
+    opacity: 1;
+  }
+  100% {
+    height: 8px;
+    opacity: 0.4;
+  }
+}
+
+.panel-entrando {
+  animation: panelEntra 0.5s cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+
+.panel-saliendo {
+  animation: panelSale 0.35s ease both;
+}
+
+@keyframes panelEntra {
+  from {
+    opacity: 0;
+    transform: translateX(36px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes panelSale {
+  from {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(-36px);
+  }
+}
