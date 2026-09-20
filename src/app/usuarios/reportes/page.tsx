@@ -9,12 +9,18 @@ import {
   finDelDiaNY,
 } from "@/lib/horarioMercado";
 import { formatearDinero } from "@/lib/format";
+import { BotonPagoGanancia } from "@/components/admin/BotonPagoGanancia";
+import type { GananciaConcurso } from "@/lib/types";
 
 interface FilaAgregado {
   usuario_id: string;
   num_operaciones: number | string;
   ganancia_neta: number | string;
 }
+
+type GananciaPendiente = GananciaConcurso & {
+  usuarios: { email: string; id_corto: number | null } | null;
+};
 
 export default async function PaginaReportes({
   searchParams,
@@ -52,20 +58,35 @@ export default async function PaginaReportes({
 
   const supabase = await crearClienteSupabaseServidor();
 
-  const [{ data: todosUsuarios }, { data: agregadosRaw }] = await Promise.all([
-    supabase
-      .from("usuarios")
-      .select("id, email, id_corto")
-      .order("email"),
-    supabase.rpc("reporte_operaciones_por_dia", {
-      p_inicio: inicio,
-      p_fin: fin,
-    }) as unknown as Promise<{ data: FilaAgregado[] | null }>,
-  ]);
+  const [{ data: todosUsuarios }, { data: agregadosRaw }, resultadoPendientes] =
+    await Promise.all([
+      supabase
+        .from("usuarios")
+        .select("id, email, id_corto")
+        .order("email"),
+      supabase.rpc("reporte_operaciones_por_dia", {
+        p_inicio: inicio,
+        p_fin: fin,
+      }) as unknown as Promise<{ data: FilaAgregado[] | null }>,
+      supabase
+        // "usuarios!usuario_id": ganancias_concursos tiene dos llaves
+        // foráneas hacia usuarios (usuario_id y creado_por) — sin el hint,
+        // PostgREST no sabe cuál usar y devuelve el error PGRST201 en vez
+        // de datos (el filtro quedaba silenciosamente vacío).
+        .from("ganancias_concursos")
+        .select("*, usuarios!usuario_id(email, id_corto)")
+        .eq("pagado", false)
+        .order("created_at", { ascending: true })
+        .returns<GananciaPendiente[]>(),
+    ]);
+  const pendientesRaw = resultadoPendientes.data;
 
   const mapaAgregados = new Map(
     (agregadosRaw ?? []).map((a) => [a.usuario_id, a])
   );
+
+  const pendientes = pendientesRaw ?? [];
+  const totalPendiente = pendientes.reduce((s, p) => s + p.monto, 0);
 
   const usuariosBase = usuarioIdFiltro
     ? (todosUsuarios ?? []).filter((u) => u.id === usuarioIdFiltro)
@@ -120,6 +141,74 @@ export default async function PaginaReportes({
         pérdida neta ese día. El día se cuenta en horario de Nueva York,
         igual que el horario de mercado.
       </p>
+
+      <h2 className="font-display font-semibold text-lg mb-3 flex items-center gap-2">
+        Ganancias pendientes de pago
+        {pendientes.length > 0 && (
+          <span className="text-[11px] font-bold uppercase tracking-wide px-2 py-0.5 bg-brand-secondary/15 text-brand-secondary">
+            {pendientes.length}
+          </span>
+        )}
+      </h2>
+
+      {pendientes.length === 0 ? (
+        <p className="text-foreground-muted text-sm border border-dashed border-[var(--border)] p-6 text-center mb-8">
+          No hay ninguna ganancia pendiente de pago en este momento.
+        </p>
+      ) : (
+        <>
+          <div className="border border-[var(--border)] p-5 mb-4">
+            <div className="text-[13px] text-foreground-muted mb-1">
+              Total pendiente por pagar
+            </div>
+            <div className="font-display font-bold text-2xl tabular text-brand-secondary">
+              ${formatearDinero(totalPendiente)} USD
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-2.5 mb-8">
+            {pendientes.map((p) => (
+              <div
+                key={p.id}
+                className="border border-[var(--border)] p-4 flex items-center justify-between gap-3"
+              >
+                <div className="min-w-0">
+                  <Link
+                    href={`/usuarios/${p.usuario_id}`}
+                    className="text-sm font-medium break-all hover:text-brand-primary"
+                  >
+                    {p.usuarios?.email ?? "Usuario eliminado"}
+                    {p.usuarios?.id_corto && (
+                      <span className="text-foreground-muted font-normal font-mono text-[12px]">
+                        {" "}
+                        · ID {p.usuarios.id_corto}
+                      </span>
+                    )}
+                  </Link>
+                  <div className="text-[12px] text-foreground-muted">
+                    {p.concepto || "Sin concepto"} ·{" "}
+                    {new Date(p.created_at).toLocaleDateString("es-DO", {
+                      day: "numeric",
+                      month: "short",
+                      year: "numeric",
+                    })}
+                  </div>
+                </div>
+                <div className="flex items-center gap-3 shrink-0">
+                  <span className="font-display font-bold text-sm tabular text-brand-secondary">
+                    ${formatearDinero(p.monto)}
+                  </span>
+                  <BotonPagoGanancia gananciaId={p.id} pagado={false} />
+                </div>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
+
+      <h2 className="font-display font-semibold text-lg mb-3">
+        Operaciones por día
+      </h2>
 
       <form
         method="get"
