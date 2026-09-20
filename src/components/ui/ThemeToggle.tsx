@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 
 export function ThemeToggle() {
-  const [esOscuro, setEsOscuro] = useState(false);
+  const [esOscuro, setEsOscuro] = useState(true);
 
   useEffect(() => {
     // El tema real ya se aplicó al <html> antes de pintar (ver el script
@@ -11,11 +11,10 @@ export function ThemeToggle() {
     // botón con lo que ya quedó puesto — es una lectura de un sistema
     // externo (localStorage/preferencia del SO) tras montar, el patrón
     // estándar para evitar un hydration mismatch entre servidor y cliente.
+    // Debe coincidir exactamente con la lógica del script inline de
+    // layout.tsx: oscuro por defecto salvo que ya se haya elegido claro.
     const guardado = localStorage.getItem("trade4u-theme");
-    const prefiereOscuro =
-      guardado === "dark" ||
-      (!guardado &&
-        window.matchMedia("(prefers-color-scheme: dark)").matches);
+    const prefiereOscuro = guardado ? guardado === "dark" : true;
 
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setEsOscuro(prefiereOscuro);

@@ -176,7 +176,7 @@ export function TarjetaSenalAdmin({
           <div className="flex items-center justify-between mb-3.5">
             <div className="flex items-center gap-2.5">
               <div
-                className="w-10 h-10 rounded-[10px] flex items-center justify-center text-white shrink-0"
+                className="w-10 h-10 rounded-[4px] flex items-center justify-center text-white shrink-0"
                 style={{ background: colorAcento }}
               >
                 <IconoTendenciaSubida

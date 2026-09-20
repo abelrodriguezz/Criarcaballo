@@ -81,7 +81,7 @@ export default async function PaginaInicio() {
         </div>
 
         <div className="relative">
-          <div className="bg-surface border border-[var(--border)] rounded-[20px] p-6 relative min-h-[212px] flex flex-col">
+          <div className="bg-surface border border-[var(--border)] rounded-[6px] p-6 relative min-h-[212px] flex flex-col">
             {sp500 ? (
               <>
                 <div
@@ -128,7 +128,7 @@ export default async function PaginaInicio() {
 
       <div className="bg-foreground text-background dark:bg-surface dark:text-foreground rounded-3xl p-6 sm:p-10 md:p-12 mt-16 grid md:grid-cols-3 gap-8">
         <div>
-          <div className="w-10 h-10 rounded-[10px] bg-brand-secondary flex items-center justify-center text-white mb-4">
+          <div className="w-10 h-10 rounded-[4px] bg-brand-secondary flex items-center justify-center text-white mb-4">
             <IconoMercado />
           </div>
           <h3 className="font-display font-semibold text-lg mb-2">
@@ -140,7 +140,7 @@ export default async function PaginaInicio() {
           </p>
         </div>
         <div>
-          <div className="w-10 h-10 rounded-[10px] bg-brand-secondary flex items-center justify-center text-white mb-4">
+          <div className="w-10 h-10 rounded-[4px] bg-brand-secondary flex items-center justify-center text-white mb-4">
             <IconoSenales />
           </div>
           <h3 className="font-display font-semibold text-lg mb-2">
@@ -152,7 +152,7 @@ export default async function PaginaInicio() {
           </p>
         </div>
         <div>
-          <div className="w-10 h-10 rounded-[10px] bg-brand-secondary flex items-center justify-center text-white mb-4">
+          <div className="w-10 h-10 rounded-[4px] bg-brand-secondary flex items-center justify-center text-white mb-4">
             <IconoReto />
           </div>
           <h3 className="font-display font-semibold text-lg mb-2">

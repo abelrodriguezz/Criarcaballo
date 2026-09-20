@@ -54,7 +54,7 @@ export function WalletForm({
         onClick={() => setEditando(true)}
         className="w-full text-left border border-[var(--border)] rounded-2xl p-4 mb-3 flex items-center gap-3.5 hover:bg-surface-hover hover:border-brand-primary/40 transition-colors"
       >
-        <div className="shrink-0 w-10 h-10 rounded-[10px] bg-brand-primary/10 text-brand-primary flex items-center justify-center">
+        <div className="shrink-0 w-10 h-10 rounded-[4px] bg-brand-primary/10 text-brand-primary flex items-center justify-center">
           <IconoWallet />
         </div>
         <div className="min-w-0 flex-1">

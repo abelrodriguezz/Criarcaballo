@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Script from "next/script";
-import { Inter, Space_Grotesk } from "next/font/google";
+import { Inter, Space_Grotesk, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { NavBar } from "@/components/layout/NavBar";
 import { MobileTabBar } from "@/components/layout/MobileTabBar";
@@ -18,6 +18,12 @@ const spaceGrotesk = Space_Grotesk({
   weight: ["500", "700"],
 });
 
+const jetbrainsMono = JetBrains_Mono({
+  variable: "--font-jetbrains-mono",
+  subsets: ["latin"],
+  weight: ["500", "600"],
+});
+
 export const metadata: Metadata = {
   title: "Trade4U — Mercado, señales y práctica de trading",
   description:
@@ -31,9 +37,9 @@ const SCRIPT_TEMA_INICIAL = `
 (function () {
   try {
     var guardado = localStorage.getItem('trade4u-theme');
-    var oscuro = guardado
-      ? guardado === 'dark'
-      : window.matchMedia('(prefers-color-scheme: dark)').matches;
+    // Oscuro por defecto (look de terminal de trading) salvo que la
+    // persona ya haya elegido claro explícitamente antes.
+    var oscuro = guardado ? guardado === 'dark' : true;
     document.documentElement.setAttribute('data-theme', oscuro ? 'dark' : 'light');
   } catch (e) {}
 })();
@@ -45,7 +51,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="es"
-      className={`${inter.variable} ${spaceGrotesk.variable} h-full antialiased`}
+      className={`${inter.variable} ${spaceGrotesk.variable} ${jetbrainsMono.variable} h-full antialiased`}
       suppressHydrationWarning
     >
       <head>
