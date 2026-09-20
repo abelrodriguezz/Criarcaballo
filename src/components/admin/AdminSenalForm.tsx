@@ -3,7 +3,13 @@
 import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { crearClienteSupabase } from "@/lib/supabase/client";
+import { parsearNumero } from "@/lib/format";
 import type { Senal } from "@/lib/types";
+
+// Mismo formato que exige AdminPickForm: el par completo de Binance. Si no
+// existe en Binance, el cierre automático por velas (verificarTpSl.ts) no
+// puede revisar la señal nunca.
+const FORMATO_PAR = /^[A-Z0-9]{5,20}$/;
 
 interface AdminSenalFormProps {
   senalExistente?: Senal;
@@ -46,24 +52,76 @@ export function AdminSenalForm({
     e.preventDefault();
     setError(null);
 
-    if (!par.trim()) {
-      setError("El par no puede estar vacío.");
+    const parNormalizado = par.trim().toUpperCase();
+    if (!FORMATO_PAR.test(parNormalizado)) {
+      setError(
+        "Debe ser el par completo de Binance (moneda + moneda de cotización), " +
+          "ej. BTCUSDT — no solo BTC. Si el par no existe en Binance, el " +
+          "cierre automático por TP/SL nunca se va a poder aplicar."
+      );
       return;
     }
-    const entradaNum = parseFloat(entrada);
-    if (isNaN(entradaNum) || entradaNum <= 0) {
+
+    const entradaNum = parsearNumero(entrada);
+    if (!Number.isFinite(entradaNum) || entradaNum <= 0) {
       setError("El precio de entrada debe ser un número mayor a cero.");
       return;
+    }
+
+    // Campos opcionales: vacío = null, pero un texto que no sea un número
+    // NO puede pasar como null silencioso (antes, escribir "abc" en el
+    // stop loss lo guardaba sin stop loss y sin avisar).
+    const stopLossNum = stopLoss.trim() ? parsearNumero(stopLoss) : null;
+    const takeProfitNum = takeProfit.trim() ? parsearNumero(takeProfit) : null;
+
+    if (stopLossNum !== null && (!Number.isFinite(stopLossNum) || stopLossNum <= 0)) {
+      setError("El stop loss debe ser un número mayor a cero (o dejarse vacío).");
+      return;
+    }
+    if (
+      takeProfitNum !== null &&
+      (!Number.isFinite(takeProfitNum) || takeProfitNum <= 0)
+    ) {
+      setError("El take profit debe ser un número mayor a cero (o dejarse vacío).");
+      return;
+    }
+
+    // Los niveles tienen que estar del lado correcto de la entrada. Sin
+    // esta validación, una compra con el TP por debajo de la entrada la
+    // cerraba sola el chequeo de velas como "TP tocado" con porcentaje
+    // negativo en la primera vela revisada. La base de datos también lo
+    // rechaza (constraint senales_niveles_coherentes, migración 019),
+    // pero aquí el mensaje es entendible.
+    const esCompra = tipo === "compra";
+    if (takeProfitNum !== null) {
+      if (esCompra && takeProfitNum <= entradaNum) {
+        setError("En una señal de compra el take profit tiene que estar POR ENCIMA de la entrada.");
+        return;
+      }
+      if (!esCompra && takeProfitNum >= entradaNum) {
+        setError("En una señal de venta el take profit tiene que estar POR DEBAJO de la entrada.");
+        return;
+      }
+    }
+    if (stopLossNum !== null) {
+      if (esCompra && stopLossNum >= entradaNum) {
+        setError("En una señal de compra el stop loss tiene que estar POR DEBAJO de la entrada.");
+        return;
+      }
+      if (!esCompra && stopLossNum <= entradaNum) {
+        setError("En una señal de venta el stop loss tiene que estar POR ENCIMA de la entrada.");
+        return;
+      }
     }
 
     setGuardando(true);
     const supabase = crearClienteSupabase();
     const datos = {
-      par: par.toUpperCase(),
+      par: parNormalizado,
       tipo,
       entrada: entradaNum,
-      stop_loss: stopLoss ? parseFloat(stopLoss) : null,
-      take_profit: takeProfit ? parseFloat(takeProfit) : null,
+      stop_loss: stopLossNum,
+      take_profit: takeProfitNum,
       razon: razon || null,
     };
 
@@ -77,7 +135,11 @@ export function AdminSenalForm({
     setGuardando(false);
 
     if (error) {
-      setError("No se pudo guardar. Verifica tu permiso de admin.");
+      setError(
+        error.message
+          ? `No se pudo guardar: ${error.message}`
+          : "No se pudo guardar. Verifica tu permiso de admin."
+      );
       return;
     }
 

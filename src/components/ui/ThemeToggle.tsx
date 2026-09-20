@@ -11,7 +11,7 @@ export function ThemeToggle() {
     // botón con lo que ya quedó puesto — es una lectura de un sistema
     // externo (localStorage/preferencia del SO) tras montar, el patrón
     // estándar para evitar un hydration mismatch entre servidor y cliente.
-    const guardado = localStorage.getItem("tradein-theme");
+    const guardado = localStorage.getItem("trade4u-theme");
     const prefiereOscuro =
       guardado === "dark" ||
       (!guardado &&
@@ -28,7 +28,7 @@ export function ThemeToggle() {
       "data-theme",
       nuevoValor ? "dark" : "light"
     );
-    localStorage.setItem("tradein-theme", nuevoValor ? "dark" : "light");
+    localStorage.setItem("trade4u-theme", nuevoValor ? "dark" : "light");
   }
 
   return (

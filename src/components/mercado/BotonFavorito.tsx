@@ -12,10 +12,12 @@ export function BotonFavorito({
   esFavoritoInicial: boolean;
 }) {
   const [esFavorito, setEsFavorito] = useState(esFavoritoInicial);
+  const [error, setError] = useState<string | null>(null);
   const [pendiente, iniciarTransicion] = useTransition();
 
   function alternar() {
     const nuevoEstado = !esFavorito;
+    setError(null);
     setEsFavorito(nuevoEstado); // optimista: se ve instantáneo
 
     const formData = new FormData();
@@ -23,32 +25,52 @@ export function BotonFavorito({
 
     iniciarTransicion(async () => {
       try {
-        if (nuevoEstado) {
-          await agregarFavorito(formData);
-        } else {
-          await quitarFavorito(formData);
+        const resultado = nuevoEstado
+          ? await agregarFavorito(formData)
+          : await quitarFavorito(formData);
+
+        if (!resultado.ok) {
+          // Antes la estrella simplemente se revertía sin decir nada, así
+          // que quien llegaba al tope de 50 favoritos (trigger de la
+          // migración 021) veía la estrella "rebotar" sin ninguna
+          // explicación y lo reintentaba una y otra vez.
+          setEsFavorito(!nuevoEstado);
+          setError(resultado.error);
         }
       } catch {
-        setEsFavorito(!nuevoEstado); // revierte si falló
+        setEsFavorito(!nuevoEstado);
+        setError("No se pudo guardar el favorito. Inténtalo de nuevo.");
       }
     });
   }
 
   return (
-    <button
-      onClick={alternar}
-      disabled={pendiente}
-      aria-label={esFavorito ? "Quitar de favoritos" : "Agregar a favoritos"}
-      aria-pressed={esFavorito}
-      className="disabled:opacity-50 transition-colors"
-    >
-      <IconoEstrella
-        className={`w-4 h-4 ${
-          esFavorito
-            ? "text-brand-secondary fill-brand-secondary"
-            : "text-foreground-muted"
-        }`}
-      />
-    </button>
+    <span className="relative inline-flex">
+      <button
+        onClick={alternar}
+        disabled={pendiente}
+        aria-label={esFavorito ? "Quitar de favoritos" : "Agregar a favoritos"}
+        aria-pressed={esFavorito}
+        title={error ?? undefined}
+        className="disabled:opacity-50 transition-colors"
+      >
+        <IconoEstrella
+          className={`w-4 h-4 ${
+            esFavorito
+              ? "text-brand-secondary fill-brand-secondary"
+              : "text-foreground-muted"
+          }`}
+        />
+      </button>
+      {error && (
+        <span
+          role="alert"
+          onClick={() => setError(null)}
+          className="absolute left-0 top-full mt-1 z-20 w-max max-w-[240px] cursor-pointer rounded-lg border border-[var(--border)] bg-background px-2.5 py-1.5 text-[11px] leading-snug text-loss shadow-lg"
+        >
+          {error}
+        </span>
+      )}
+    </span>
   );
 }

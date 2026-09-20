@@ -11,6 +11,7 @@ export interface Usuario {
   invitado_por: string | null;
   wallet_usdt_erc20: string | null;
   id_corto: number | null;
+  trading_habilitado: boolean;
   created_at: string;
 }
 
@@ -23,6 +24,10 @@ export interface Senal {
   take_profit: number | null;
   razon: string | null;
   estado: "activa" | "cerrada" | "cancelada";
+  resultado: "tp" | "sl" | null;
+  precio_cierre: number | null;
+  porcentaje_resultado: number | null;
+  cerrado_en: string | null;
   creado_por: string | null;
   created_at: string;
 }

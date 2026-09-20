@@ -33,3 +33,11 @@ yarn-error.log*
 .DS_Store
 Thumbs.db
 .vscode/
+
+# Configuración local de herramientas de desarrollo. No va al repositorio:
+# ambos archivos pueden guardar rutas absolutas de la máquina de quien
+# programa (incluido su nombre de usuario de Windows) dentro de permisos
+# aprobados para comandos puntuales — no tienen por qué viajar con el
+# proyecto ni revelarle nada a quien lo reciba.
+.claude/settings.local.json
+.claude/settings.json

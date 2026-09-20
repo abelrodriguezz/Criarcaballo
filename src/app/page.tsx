@@ -3,19 +3,53 @@ import { IconoMercado, IconoSenales, IconoReto } from "@/components/ui/Iconos";
 import { esAdmin, obtenerUsuarioActual } from "@/lib/auth/sesion";
 import { obtenerConfigPortada } from "@/lib/config-portada";
 import { AdminPortadaForm } from "@/components/admin/AdminPortadaForm";
+import { obtenerPrecioIndice } from "@/lib/market/yahoo";
+import { obtenerNoticiasExternas } from "@/lib/noticias/feedExterno";
+import { formatearPrecio } from "@/lib/format";
+import { crearClienteSupabaseServidor } from "@/lib/supabase/server";
+import { TickerNoticias, type ItemTicker } from "@/components/ui/TickerNoticias";
+import { SparklineChart } from "@/components/mercado/SparklineChart";
+import type { Noticia } from "@/lib/types";
 
 export default async function PaginaInicio() {
-  const [usuario, { hero, estadisticas }] = await Promise.all([
-    obtenerUsuarioActual(),
-    obtenerConfigPortada(),
-  ]);
+  const supabase = await crearClienteSupabaseServidor();
+  const [usuario, { hero }, sp500, { data: noticiasPropias }, noticiasExternas] =
+    await Promise.all([
+      obtenerUsuarioActual(),
+      obtenerConfigPortada(),
+      obtenerPrecioIndice("^GSPC"),
+      supabase
+        .from("noticias")
+        .select("*")
+        .order("destacada", { ascending: false })
+        .order("created_at", { ascending: false })
+        .limit(6)
+        .returns<Noticia[]>(),
+      obtenerNoticiasExternas(4),
+    ]);
   const usuarioEsAdmin = esAdmin(usuario);
+
+  // Primero lo que tú publicaste (con estrella si está destacada), luego
+  // titulares reales de Cointelegraph/MarketWatch para que el ticker
+  // nunca se vea vacío mientras todavía no publicas las tuyas.
+  const itemsTicker: ItemTicker[] = [
+    ...(noticiasPropias ?? []).map((n) => ({
+      id: n.id,
+      titulo: n.titulo,
+      url: n.url_fuente || "/noticias",
+      destacada: n.destacada,
+    })),
+    ...noticiasExternas.map((n, i) => ({
+      id: `ext-${i}`,
+      titulo: `${n.titulo} — ${n.fuente}`,
+      url: n.url,
+      externo: true,
+    })),
+  ];
 
   return (
     <div className="pt-10 pb-20">
-      {usuarioEsAdmin && (
-        <AdminPortadaForm heroActual={hero} estadisticasActuales={estadisticas} />
-      )}
+      {usuarioEsAdmin && <AdminPortadaForm heroActual={hero} />}
 
       <div className="grid md:grid-cols-2 gap-10 md:gap-12 items-center">
         <div>
@@ -38,54 +72,61 @@ export default async function PaginaInicio() {
               Crear cuenta gratis
             </Link>
             <Link
-              href="/senales"
-              className="border border-[var(--border)] font-semibold text-[15px] px-6 py-3.5 rounded-xl hover:bg-surface-hover transition-colors text-center"
+              href="/trade-del-dia"
+              className="border-2 border-brand-primary text-brand-primary bg-brand-primary/10 font-semibold text-[15px] px-6 py-3.5 rounded-xl hover:bg-brand-primary/20 transition-colors text-center"
             >
-              Ver señales de hoy
+              Trade del día
             </Link>
-          </div>
-          <div className="flex flex-wrap gap-x-7 gap-y-3">
-            {estadisticas.map((stat, i) => (
-              <div key={i}>
-                <div className="font-display font-bold text-2xl">
-                  {stat.num}
-                </div>
-                <div className="text-[13px] text-foreground-muted">
-                  {stat.label}
-                </div>
-              </div>
-            ))}
           </div>
         </div>
 
         <div className="relative">
-          <div className="bg-surface border border-[var(--border)] rounded-[20px] p-6 relative">
-            <div className="absolute -top-3.5 right-6 bg-gain text-white text-xs font-bold px-3.5 py-1.5 rounded-full">
-              ▲ +2.4% hoy
-            </div>
-            <div className="mb-4">
-              <div className="font-display font-semibold text-[15px]">
-                BTC / USDT
+          <div className="bg-surface border border-[var(--border)] rounded-[20px] p-6 relative min-h-[212px] flex flex-col">
+            {sp500 ? (
+              <>
+                <div
+                  className={`absolute -top-3.5 right-6 text-white text-xs font-bold px-3.5 py-1.5 rounded-full ${
+                    sp500.cambioPorc >= 0 ? "bg-gain" : "bg-loss"
+                  }`}
+                >
+                  {sp500.cambioPorc >= 0 ? "▲" : "▼"}{" "}
+                  {sp500.cambioPorc >= 0 ? "+" : ""}
+                  {sp500.cambioPorc.toFixed(2)}% hoy
+                </div>
+                <div className="font-display font-semibold text-[15px]">
+                  S&P 500
+                </div>
+                <div className="font-display font-bold text-[28px] tabular mb-4">
+                  {formatearPrecio(sp500.precio)}
+                </div>
+                {sp500.sparkline.length > 1 && (
+                  <div className="flex-1 min-h-[100px]">
+                    <SparklineChart
+                      data={sp500.sparkline}
+                      subiendo={sp500.cambioPorc >= 0}
+                    />
+                  </div>
+                )}
+              </>
+            ) : (
+              <div className="flex-1 flex flex-col items-center justify-center text-center gap-1.5">
+                <div className="font-display font-semibold text-[15px] text-foreground-muted">
+                  S&P 500
+                </div>
+                <p className="text-[13px] text-foreground-muted max-w-[220px]">
+                  Índices en vivo próximamente.
+                </p>
               </div>
-              <div className="font-display font-bold text-[28px] tabular">
-                $62,410
-              </div>
-            </div>
-            <svg viewBox="0 0 320 120" className="w-full h-[120px]">
-              <polyline
-                points="0,90 30,95 60,70 90,80 120,55 150,60 180,35 210,45 240,20 270,30 300,10 320,15"
-                fill="none"
-                stroke="var(--gain)"
-                strokeWidth="3"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
+            )}
           </div>
         </div>
       </div>
 
-      <div className="bg-foreground text-background dark:bg-surface rounded-3xl p-6 sm:p-10 md:p-12 mt-16 grid md:grid-cols-3 gap-8">
+      <div className="mt-8">
+        <TickerNoticias items={itemsTicker} />
+      </div>
+
+      <div className="bg-foreground text-background dark:bg-surface dark:text-foreground rounded-3xl p-6 sm:p-10 md:p-12 mt-16 grid md:grid-cols-3 gap-8">
         <div>
           <div className="w-10 h-10 rounded-[10px] bg-brand-secondary flex items-center justify-center text-white mb-4">
             <IconoMercado />

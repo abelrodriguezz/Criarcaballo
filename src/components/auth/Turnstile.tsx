@@ -75,18 +75,31 @@ export function Turnstile({
   }, [siteKey, contenedorId]);
 
   if (!siteKey) {
+    // El aviso de configuración es para quien desarrolla/despliega, NO
+    // para el visitante: en producción, un usuario que entra a iniciar
+    // sesión veía un recuadro hablándole de una variable de entorno. Sin
+    // site key simplemente no se muestra captcha (login y registro siguen
+    // funcionando; ver la nota en LoginForm.tsx).
+    if (process.env.NODE_ENV === "production") return null;
+
     return (
       <p className="text-[12px] text-foreground-muted border border-dashed border-[var(--border)] rounded-lg px-3 py-2">
         Falta configurar <code>NEXT_PUBLIC_TURNSTILE_SITE_KEY</code> para
-        mostrar el captcha.
+        mostrar el captcha (aviso visible solo en desarrollo).
       </p>
     );
   }
 
   return (
     <>
+      {/* challenges.cloudflare.com, en plural: el host en singular no es
+          el de Turnstile y además no está en la CSP (next.config.ts), así
+          que en producción el script no cargaba nunca, el widget no
+          aparecía y el botón de enviar quedaba deshabilitado para
+          siempre — login y registro inutilizables en cuanto se
+          configurara la site key. */}
       <Script
-        src="https://challenge.cloudflare.com/turnstile/v0/api.js"
+        src="https://challenges.cloudflare.com/turnstile/v0/api.js"
         strategy="afterInteractive"
         onLoad={() =>
           window.dispatchEvent(new Event("turnstile-listo"))

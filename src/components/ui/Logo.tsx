@@ -28,7 +28,7 @@ export function Logo({ className = "", mostrarWordmark = true }: LogoProps) {
       </svg>
       {mostrarWordmark && (
         <span className="font-display font-bold text-xl tracking-tight">
-          Trade<span style={{ color: "var(--brand-primary)" }}>IN</span>
+          Trade<span style={{ color: "var(--brand-primary)" }}>4U</span>
         </span>
       )}
     </div>

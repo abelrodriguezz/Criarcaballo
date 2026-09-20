@@ -1,11 +1,13 @@
 import { redirect } from "next/navigation";
-import Link from "next/link";
 import { esAdmin, obtenerUsuarioActual } from "@/lib/auth/sesion";
 import { crearClienteSupabaseServidor } from "@/lib/supabase/server";
 import { CerrarSesionBoton } from "@/components/auth/CerrarSesionBoton";
 import { BotonFavorito } from "@/components/mercado/BotonFavorito";
 import { WalletForm } from "@/components/perfil/WalletForm";
+import { TarjetaMenu } from "@/components/ui/TarjetaMenu";
+import { IconoUsuarios, IconoSoporte, IconoReportes } from "@/components/ui/Iconos";
 import { obtenerVariosPreciosCripto } from "@/lib/market/binance";
+import { formatearDinero, formatearPrecio } from "@/lib/format";
 import type { GananciaConcurso } from "@/lib/types";
 
 export default async function PaginaPerfil() {
@@ -95,27 +97,70 @@ export default async function PaginaPerfil() {
 
         <div className="border-t border-[var(--border)] pt-4">
           <div className="text-[13px] text-foreground-muted mb-1">
-            Saldo virtual (paper trading)
+            Saldo de Inversión
           </div>
+          {/* Si por lo que sea no hay fila de saldo, mostrar $0.00 — antes
+              caía a "10,000.00" fijo, un saldo que el usuario no tiene. */}
           <div className="font-display font-bold text-2xl tabular">
-            ${saldo?.saldo_usd?.toLocaleString("en-US", { minimumFractionDigits: 2 }) ?? "10,000.00"}
+            ${formatearDinero(saldo?.saldo_usd ?? 0)}
           </div>
         </div>
       </div>
 
+      {/* Grupo de accesos tipo menú — estilo distinto de las tarjetas de
+          solo-datos de abajo, uno debajo del otro en orden. */}
       <WalletForm
         usuarioId={usuario.id}
         walletActual={perfilExtra?.wallet_usdt_erc20 ?? null}
       />
 
-      <div className="border border-[var(--border)] rounded-2xl p-5 mb-4">
-        <div className="flex justify-between items-center mb-3">
-          <div className="font-medium text-sm">Ganancias</div>
-          {totalGanancias > 0 && (
-            <span className="font-display font-bold text-gain tabular">
-              +${totalGanancias.toLocaleString("en-US", { minimumFractionDigits: 2 })}
-            </span>
-          )}
+      {esAdmin(usuario) && (
+        <TarjetaMenu
+          href="/usuarios"
+          icono={<IconoUsuarios />}
+          titulo="Gestión de usuarios"
+          subtitulo="Cambiar roles y activar/desactivar cuentas"
+        />
+      )}
+
+      <TarjetaMenu
+        href="/soporte"
+        icono={<IconoSoporte />}
+        titulo={esAdmin(usuario) ? "Bandeja de soporte" : "Contactar soporte"}
+        subtitulo={
+          esAdmin(usuario)
+            ? "Conversaciones de usuarios, en orden de llegada"
+            : "¿Alguna duda? Escríbenos"
+        }
+        badge={noLeidos ?? 0}
+      />
+
+      {esAdmin(usuario) && (
+        <TarjetaMenu
+          href="/usuarios/reportes"
+          icono={<IconoReportes />}
+          titulo="Reportes"
+          subtitulo="Ganancias/pérdidas y quién operó por fecha"
+        />
+      )}
+
+      <div className="border border-[var(--border)] rounded-2xl p-5 mb-4 mt-1">
+        <div className="font-medium text-sm mb-3">Ganancias</div>
+        <div
+          className={`rounded-xl px-4 py-5 mb-3 text-center ${
+            totalGanancias > 0 ? "bg-gain/10" : "bg-[var(--surface)]"
+          }`}
+        >
+          <div className="text-[12px] font-semibold text-foreground-muted uppercase tracking-wide mb-1">
+            Total ganado
+          </div>
+          <div
+            className={`font-display font-extrabold text-[36px] leading-tight tabular ${
+              totalGanancias > 0 ? "text-gain" : "text-foreground-muted"
+            }`}
+          >
+            {totalGanancias > 0 ? "+" : ""}${formatearDinero(totalGanancias)}
+          </div>
         </div>
         {pendienteGanancias > 0 && (
           <div className="bg-brand-secondary/10 rounded-lg px-3 py-2 mb-3 flex justify-between items-center">
@@ -123,7 +168,7 @@ export default async function PaginaPerfil() {
               Pendiente por recibir
             </span>
             <span className="font-display font-bold text-sm text-brand-secondary tabular">
-              ${pendienteGanancias.toLocaleString("en-US", { minimumFractionDigits: 2 })}
+              ${formatearDinero(pendienteGanancias)}
             </span>
           </div>
         )}
@@ -153,7 +198,7 @@ export default async function PaginaPerfil() {
                   </div>
                 </div>
                 <span className="font-display font-bold text-sm text-gain tabular">
-                  +${g.monto.toLocaleString("en-US", { minimumFractionDigits: 2 })}
+                  +${formatearDinero(g.monto)}
                 </span>
               </div>
             ))}
@@ -187,11 +232,7 @@ export default async function PaginaPerfil() {
                 </div>
                 <div className="flex items-center gap-3">
                   <span className="text-sm tabular">
-                    $
-                    {activo.precio.toLocaleString("en-US", {
-                      minimumFractionDigits: 2,
-                      maximumFractionDigits: 6,
-                    })}
+                    ${formatearPrecio(activo.precio)}
                   </span>
                   <span
                     className={`text-xs font-semibold ${
@@ -207,41 +248,6 @@ export default async function PaginaPerfil() {
           </div>
         )}
       </div>
-
-      {esAdmin(usuario) && (
-        <Link
-          href="/usuarios"
-          className="border border-[var(--border)] rounded-2xl p-5 mb-4 flex justify-between items-center hover:bg-surface-hover transition-colors"
-        >
-          <div>
-            <div className="font-medium text-sm">Gestión de usuarios</div>
-            <div className="text-[13px] text-foreground-muted">
-              Cambiar roles y activar/desactivar cuentas
-            </div>
-          </div>
-        </Link>
-      )}
-
-      <Link
-        href="/soporte"
-        className="border border-[var(--border)] rounded-2xl p-5 mb-4 flex justify-between items-center hover:bg-surface-hover transition-colors"
-      >
-        <div>
-          <div className="font-medium text-sm">
-            {esAdmin(usuario) ? "Bandeja de soporte" : "Contactar soporte"}
-          </div>
-          <div className="text-[13px] text-foreground-muted">
-            {esAdmin(usuario)
-              ? "Conversaciones de usuarios, en orden de llegada"
-              : "¿Alguna duda? Escríbenos"}
-          </div>
-        </div>
-        {!!noLeidos && (
-          <span className="shrink-0 bg-brand-secondary text-white text-xs font-bold px-2.5 py-1 rounded-full ml-3">
-            {noLeidos}
-          </span>
-        )}
-      </Link>
 
       <div className="border border-[var(--border)] rounded-2xl p-5 flex justify-between items-center">
         <div>

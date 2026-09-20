@@ -2,12 +2,21 @@
 
 import { useEffect } from "react";
 
+/**
+ * En Next.js 16 el prop para recuperarse de un error es `retry()`, no el
+ * viejo `reset()`. La diferencia importa aquí: `reset()` solo limpia el
+ * estado del error y vuelve a renderizar SIN volver a pedir los datos al
+ * servidor, así que en un error de Server Component (que es de lo que
+ * vive esta app: Supabase, Binance, Yahoo) el botón "Reintentar" fallaba
+ * otra vez al instante. `retry()` sí vuelve a pedir y re-renderizar.
+ * Ver node_modules/next/dist/docs/01-app/03-api-reference/03-file-conventions/error.md
+ */
 export default function ErrorGlobal({
   error,
-  reset,
+  retry,
 }: {
   error: Error & { digest?: string };
-  reset: () => void;
+  retry: () => void;
 }) {
   useEffect(() => {
     console.error(error);
@@ -24,7 +33,7 @@ export default function ErrorGlobal({
           conexión — intenta de nuevo en un momento.
         </p>
         <button
-          onClick={reset}
+          onClick={() => retry()}
           className="bg-brand-primary hover:bg-brand-primary-hover text-white font-semibold text-sm px-5 py-2.5 rounded-lg transition-colors"
         >
           Reintentar

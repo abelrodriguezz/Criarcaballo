@@ -4,7 +4,22 @@ import { esAdmin, obtenerUsuarioActual } from "@/lib/auth/sesion";
 import { crearClienteSupabaseServidor } from "@/lib/supabase/server";
 import { AdminGananciaForm } from "@/components/admin/AdminGananciaForm";
 import { TarjetaGananciaAdmin } from "@/components/admin/TarjetaGananciaAdmin";
-import type { GananciaConcurso, Usuario } from "@/lib/types";
+import { AdminSaldoForm } from "@/components/admin/AdminSaldoForm";
+import { formatearDinero, formatearPrecio } from "@/lib/format";
+import type { GananciaConcurso, OperacionSimulada, Usuario } from "@/lib/types";
+
+async function obtenerEmailPorId(
+  supabase: Awaited<ReturnType<typeof crearClienteSupabaseServidor>>,
+  id: string | null
+): Promise<string | null> {
+  if (!id) return null;
+  const { data } = await supabase
+    .from("usuarios")
+    .select("email")
+    .eq("id", id)
+    .maybeSingle();
+  return data?.email ?? null;
+}
 
 export default async function PaginaDetalleUsuario({
   params,
@@ -20,7 +35,13 @@ export default async function PaginaDetalleUsuario({
 
   const supabase = await crearClienteSupabaseServidor();
 
-  const [{ data: perfil }, { data: ganancias }] = await Promise.all([
+  const [
+    { data: perfil },
+    { data: ganancias },
+    { data: saldo },
+    { count: cantidadInvitados },
+    { data: operaciones },
+  ] = await Promise.all([
     supabase
       .from("usuarios")
       .select("*")
@@ -32,7 +53,25 @@ export default async function PaginaDetalleUsuario({
       .eq("usuario_id", usuarioId)
       .order("created_at", { ascending: false })
       .returns<GananciaConcurso[]>(),
+    supabase
+      .from("saldo_virtual")
+      .select("saldo_usd")
+      .eq("usuario_id", usuarioId)
+      .maybeSingle(),
+    supabase
+      .from("usuarios")
+      .select("id", { count: "exact", head: true })
+      .eq("invitado_por", usuarioId),
+    supabase
+      .from("operaciones_simuladas")
+      .select("*")
+      .eq("usuario_id", usuarioId)
+      .order("created_at", { ascending: false })
+      .limit(20)
+      .returns<OperacionSimulada[]>(),
   ]);
+
+  const emailInvitador = await obtenerEmailPorId(supabase, perfil?.invitado_por ?? null);
 
   const total = (ganancias ?? []).reduce((suma, g) => suma + g.monto, 0);
   const pendiente = (ganancias ?? [])
@@ -57,14 +96,54 @@ export default async function PaginaDetalleUsuario({
         {perfil?.email ?? "Usuario"}
       </h1>
       {perfil?.wallet_usdt_erc20 ? (
-        <p className="text-[13px] text-foreground-muted font-mono mb-7 break-all">
+        <p className="text-[13px] text-foreground-muted font-mono mb-4 break-all">
           Wallet: {perfil.wallet_usdt_erc20}
         </p>
       ) : (
-        <p className="text-[13px] text-foreground-muted mb-7">
+        <p className="text-[13px] text-foreground-muted mb-4">
           Este usuario no ha agregado su wallet todavía.
         </p>
       )}
+
+      <div className="border border-[var(--border)] rounded-2xl p-5 mb-6 grid grid-cols-2 gap-y-3 gap-x-4">
+        <div>
+          <div className="text-[12px] text-foreground-muted mb-0.5">
+            Saldo de Inversión (práctica)
+          </div>
+          <div className="font-display font-bold text-lg tabular">
+            ${formatearDinero(saldo?.saldo_usd ?? 0)}
+          </div>
+          <AdminSaldoForm usuarioId={usuarioId} />
+        </div>
+        <div>
+          <div className="text-[12px] text-foreground-muted mb-0.5">
+            Trading
+          </div>
+          <span
+            className={`inline-block text-xs font-bold px-2.5 py-1 rounded-full ${
+              perfil?.trading_habilitado
+                ? "bg-brand-primary/15 text-brand-primary"
+                : "bg-loss/15 text-loss"
+            }`}
+          >
+            {perfil?.trading_habilitado ? "Habilitado" : "Bloqueado"}
+          </span>
+        </div>
+        <div>
+          <div className="text-[12px] text-foreground-muted mb-0.5">
+            Invitado por
+          </div>
+          <div className="text-sm font-medium break-all">
+            {emailInvitador ?? "Nadie (registro directo)"}
+          </div>
+        </div>
+        <div>
+          <div className="text-[12px] text-foreground-muted mb-0.5">
+            Personas invitadas
+          </div>
+          <div className="text-sm font-medium">{cantidadInvitados ?? 0}</div>
+        </div>
+      </div>
 
       <div className="grid grid-cols-2 gap-3 mb-6">
         <div className="border border-[var(--border)] rounded-2xl p-5">
@@ -72,7 +151,7 @@ export default async function PaginaDetalleUsuario({
             Total ganado
           </div>
           <div className="font-display font-bold text-2xl tabular text-gain">
-            +${total.toLocaleString("en-US", { minimumFractionDigits: 2 })}
+            +${formatearDinero(total)}
           </div>
         </div>
         <div className="border border-[var(--border)] rounded-2xl p-5">
@@ -80,7 +159,7 @@ export default async function PaginaDetalleUsuario({
             Pendiente por pagar
           </div>
           <div className="font-display font-bold text-2xl tabular text-brand-secondary">
-            ${pendiente.toLocaleString("en-US", { minimumFractionDigits: 2 })}
+            ${formatearDinero(pendiente)}
           </div>
         </div>
       </div>
@@ -96,9 +175,60 @@ export default async function PaginaDetalleUsuario({
           Todavía no se le ha registrado ninguna ganancia.
         </p>
       ) : (
-        <div className="flex flex-col gap-2.5">
+        <div className="flex flex-col gap-2.5 mb-8">
           {ganancias.map((g) => (
             <TarjetaGananciaAdmin key={g.id} ganancia={g} usuarioId={usuarioId} />
+          ))}
+        </div>
+      )}
+
+      <h2 className="font-display font-semibold text-lg mb-3">
+        Historial de operaciones (Trade del día)
+      </h2>
+
+      {!operaciones || operaciones.length === 0 ? (
+        <p className="text-foreground-muted text-sm border border-dashed border-[var(--border)] rounded-2xl p-6 text-center">
+          Este usuario todavía no ha abierto ninguna operación simulada.
+        </p>
+      ) : (
+        <div className="flex flex-col gap-2.5">
+          {operaciones.map((op) => (
+            <div
+              key={op.id}
+              className="border border-[var(--border)] rounded-xl p-4 flex justify-between items-center gap-3"
+            >
+              <div className="min-w-0">
+                <div className="font-medium text-sm flex items-center gap-1.5">
+                  {op.activo} · {op.tipo === "compra" ? "Compra" : "Venta"}
+                  {op.estado === "abierta" && (
+                    <span className="text-[10px] font-bold uppercase tracking-wide text-brand-primary bg-brand-primary/15 px-1.5 py-0.5 rounded">
+                      Abierta
+                    </span>
+                  )}
+                </div>
+                <div className="text-[12px] text-foreground-muted">
+                  Entrada ${formatearPrecio(op.precio_entrada)}
+                  {op.precio_salida != null &&
+                    ` → Salida $${formatearPrecio(op.precio_salida)}`}{" "}
+                  · {new Date(op.created_at).toLocaleString("es-DO", {
+                    day: "numeric",
+                    month: "short",
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
+                </div>
+              </div>
+              {op.ganancia_perdida != null && (
+                <span
+                  className={`shrink-0 whitespace-nowrap font-display font-bold text-sm ${
+                    op.ganancia_perdida >= 0 ? "text-gain" : "text-loss"
+                  }`}
+                >
+                  {op.ganancia_perdida >= 0 ? "+" : ""}
+                  {formatearDinero(op.ganancia_perdida)} USD
+                </span>
+              )}
+            </div>
           ))}
         </div>
       )}

@@ -3,6 +3,9 @@
 import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { crearClienteSupabase } from "@/lib/supabase/client";
+import { fechaEnNY } from "@/lib/horarioMercado";
+
+const FORMATO_PAR = /^[A-Z0-9]{5,20}$/;
 
 export function AdminPickForm() {
   const router = useRouter();
@@ -15,13 +18,26 @@ export function AdminPickForm() {
   async function manejarEnvio(e: FormEvent) {
     e.preventDefault();
     setError(null);
+
+    const activoNormalizado = activo.trim().toUpperCase();
+    if (!FORMATO_PAR.test(activoNormalizado)) {
+      setError(
+        "Debe ser el par completo de Binance (moneda + moneda de cotización), ej. BTCUSDT — no solo BTC."
+      );
+      return;
+    }
+
     setGuardando(true);
 
     const supabase = crearClienteSupabase();
     const { error } = await supabase.from("pick_del_dia").insert({
-      activo: activo.toUpperCase(),
+      activo: activoNormalizado,
       nota_admin: nota || null,
-      fecha: new Date().toISOString().slice(0, 10),
+      // El día de la bolsa de Nueva York, no el día UTC: definiendo el
+      // pick después de las 8pm hora de NY, toISOString() ya devolvía la
+      // fecha de mañana y el pick quedaba fechado un día adelantado
+      // respecto a los reportes (que sí cuentan el día en horario NY).
+      fecha: fechaEnNY(),
     });
 
     setGuardando(false);
@@ -70,7 +86,7 @@ export function AdminPickForm() {
         required
         value={activo}
         onChange={(e) => setActivo(e.target.value)}
-        aria-label="Par de Binance" placeholder="Par de Binance (ej. BTCUSDT)"
+        aria-label="Par de Binance" placeholder="Par completo de Binance (ej. BTCUSDT, no solo BTC)"
         className="w-full px-3 py-2 mb-2.5 rounded-lg border border-[var(--border)] bg-background text-sm"
       />
       <textarea

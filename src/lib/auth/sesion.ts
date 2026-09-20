@@ -42,23 +42,25 @@ export async function obtenerUsuarioActual(): Promise<SesionUsuario | null> {
 }
 
 /**
- * Lanza si la cuenta del usuario está desactivada. Usar en toda server
- * action que mute datos, justo después de confirmar que hay sesión —
- * las páginas ya redirigen a /cuenta-desactivada, pero una server action
- * se puede invocar directo (sin pasar por la página), así que necesita
- * su propio chequeo.
+ * ¿La cuenta sigue activa? Usar en toda server action que mute datos,
+ * justo después de confirmar que hay sesión — las páginas ya redirigen a
+ * /cuenta-desactivada, pero una server action se puede invocar directo
+ * (sin pasar por la página), así que necesita su propio chequeo.
+ *
+ * Devuelve un booleano en vez de lanzar: quien la llama tiene que poder
+ * responder con un `Resultado` de fallo, porque en producción Next.js
+ * borra el mensaje de cualquier Error que escape de una Server Action
+ * (ver src/lib/actions/resultado.ts).
  */
-export async function exigirActivo(
+export async function cuentaActiva(
   supabase: SupabaseClient,
   userId: string
-): Promise<void> {
+): Promise<boolean> {
   const { data: perfil } = await supabase
     .from("usuarios")
     .select("activo")
     .eq("id", userId)
     .single();
 
-  if (perfil?.activo === false) {
-    throw new Error("Tu cuenta está desactivada.");
-  }
+  return perfil?.activo !== false;
 }

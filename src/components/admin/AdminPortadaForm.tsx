@@ -3,31 +3,14 @@
 import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { crearClienteSupabase } from "@/lib/supabase/client";
-import type { ConfigHero, EstadisticaPortada } from "@/lib/config-portada";
+import type { ConfigHero } from "@/lib/config-portada";
 
-export function AdminPortadaForm({
-  heroActual,
-  estadisticasActuales,
-}: {
-  heroActual: ConfigHero;
-  estadisticasActuales: EstadisticaPortada[];
-}) {
+export function AdminPortadaForm({ heroActual }: { heroActual: ConfigHero }) {
   const router = useRouter();
   const [abierto, setAbierto] = useState(false);
   const [hero, setHero] = useState(heroActual);
-  const [stats, setStats] = useState(estadisticasActuales);
   const [error, setError] = useState<string | null>(null);
   const [guardando, setGuardando] = useState(false);
-
-  function actualizarStat(
-    indice: number,
-    campo: keyof EstadisticaPortada,
-    valor: string
-  ) {
-    setStats((actuales) =>
-      actuales.map((s, i) => (i === indice ? { ...s, [campo]: valor } : s))
-    );
-  }
 
   async function manejarEnvio(e: FormEvent) {
     e.preventDefault();
@@ -35,13 +18,9 @@ export function AdminPortadaForm({
     setGuardando(true);
 
     const supabase = crearClienteSupabase();
-    const { error } = await supabase.from("config_portada").upsert(
-      [
-        { clave: "hero", valor: hero },
-        { clave: "estadisticas", valor: stats },
-      ],
-      { onConflict: "clave" }
-    );
+    const { error } = await supabase
+      .from("config_portada")
+      .upsert({ clave: "hero", valor: hero }, { onConflict: "clave" });
 
     setGuardando(false);
 
@@ -128,28 +107,6 @@ export function AdminPortadaForm({
         rows={2}
         className="w-full px-3 py-2 mb-4 rounded-lg border border-[var(--border)] bg-background text-sm resize-none"
       />
-
-      <label className="block text-[12px] font-medium text-foreground-muted mb-1.5">
-        Estadísticas (los 3 números debajo de los botones)
-      </label>
-      <div className="grid grid-cols-3 gap-2.5 mb-3">
-        {stats.map((stat, i) => (
-          <div key={i} className="flex flex-col gap-1.5">
-            <input
-              value={stat.num}
-              onChange={(e) => actualizarStat(i, "num", e.target.value)}
-              placeholder="Número"
-              className="px-2.5 py-2 rounded-lg border border-[var(--border)] bg-background text-sm"
-            />
-            <input
-              value={stat.label}
-              onChange={(e) => actualizarStat(i, "label", e.target.value)}
-              placeholder="Etiqueta"
-              className="px-2.5 py-2 rounded-lg border border-[var(--border)] bg-background text-xs"
-            />
-          </div>
-        ))}
-      </div>
 
       {error && <p className="text-loss text-[13px] mb-2">{error}</p>}
 

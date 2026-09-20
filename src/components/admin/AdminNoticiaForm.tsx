@@ -3,6 +3,7 @@
 import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { crearClienteSupabase } from "@/lib/supabase/client";
+import { urlSeguraParaEnlace } from "@/lib/url";
 import type { Noticia } from "@/lib/types";
 
 interface AdminNoticiaFormProps {
@@ -43,13 +44,24 @@ export function AdminNoticiaForm({
       return;
     }
 
+    // La URL termina como href en la portada pública: solo http/https.
+    // La base también lo exige (constraint noticias_url_fuente_http), pero
+    // aquí el mensaje es entendible en vez de un error de Postgres.
+    const urlLimpia = urlFuente?.trim() ? urlSeguraParaEnlace(urlFuente) : null;
+    if (urlFuente?.trim() && !urlLimpia) {
+      setError(
+        "La URL de la fuente tiene que ser un enlace http:// o https:// válido."
+      );
+      return;
+    }
+
     setGuardando(true);
 
     const supabase = crearClienteSupabase();
     const datos = {
       titulo: titulo.trim(),
       resumen: resumen || null,
-      url_fuente: urlFuente || null,
+      url_fuente: urlLimpia,
       destacada,
     };
 

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { AdminNoticiaForm } from "@/components/admin/AdminNoticiaForm";
 import { BotonEliminarAdmin } from "@/components/admin/BotonEliminarAdmin";
+import { urlSeguraParaEnlace } from "@/lib/url";
 import type { Noticia } from "@/lib/types";
 
 export function TarjetaNoticiaAdmin({
@@ -13,6 +14,10 @@ export function TarjetaNoticiaAdmin({
   esAdmin: boolean;
 }) {
   const [editando, setEditando] = useState(false);
+  // Aunque la base ya solo acepta http/https (constraint
+  // noticias_url_fuente_http, migración 021), esto cubre las filas que
+  // pudieran venir de antes y cualquier otra vía de escritura futura.
+  const urlFuente = urlSeguraParaEnlace(noticia.url_fuente);
 
   if (editando) {
     return (
@@ -40,9 +45,9 @@ export function TarjetaNoticiaAdmin({
           {noticia.resumen}
         </p>
       )}
-      {noticia.url_fuente && (
+      {urlFuente && (
         <a
-          href={noticia.url_fuente}
+          href={urlFuente}
           target="_blank"
           rel="noopener noreferrer"
           className="text-brand-primary text-[13px] font-semibold"

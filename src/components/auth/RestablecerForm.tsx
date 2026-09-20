@@ -3,6 +3,7 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { crearClienteSupabase } from "@/lib/supabase/client";
+import { mensajeErrorAuth } from "@/lib/auth/mensajesError";
 
 export function RestablecerForm() {
   const router = useRouter();
@@ -53,8 +54,12 @@ export function RestablecerForm() {
       setError("Las contraseñas no coinciden.");
       return;
     }
-    if (password.length < 6) {
-      setError("La contraseña debe tener al menos 6 caracteres.");
+    // 8 caracteres, igual que el registro. Estaba en 6 aquí: el usuario
+    // podía poner una de 7, pasar esta validación y recibir el error
+    // genérico de Supabase ("No se pudo actualizar la contraseña") sin
+    // saber nunca cuál era el problema real.
+    if (password.length < 8) {
+      setError("La contraseña debe tener al menos 8 caracteres.");
       return;
     }
 
@@ -64,7 +69,12 @@ export function RestablecerForm() {
     setCargando(false);
 
     if (error) {
-      setError("No se pudo actualizar la contraseña. Intenta de nuevo.");
+      setError(
+        mensajeErrorAuth(
+          error,
+          "No se pudo actualizar la contraseña. Intenta de nuevo."
+        )
+      );
       return;
     }
 
@@ -123,22 +133,30 @@ export function RestablecerForm() {
         Nueva contraseña
       </h1>
 
-      <label className="block text-[13px] font-medium mb-1.5">
+      <label
+        htmlFor="restablecer-password"
+        className="block text-[13px] font-medium mb-1.5"
+      >
         Nueva contraseña
       </label>
       <input
+        id="restablecer-password"
         type="password"
         required
         value={password}
         onChange={(e) => setPassword(e.target.value)}
         className="w-full px-3.5 py-2.5 mb-3 rounded-lg border border-[var(--border)] bg-background text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary"
-        placeholder="Mínimo 6 caracteres"
+        placeholder="Mínimo 8 caracteres"
       />
 
-      <label className="block text-[13px] font-medium mb-1.5">
+      <label
+        htmlFor="restablecer-confirmar"
+        className="block text-[13px] font-medium mb-1.5"
+      >
         Confirmar contraseña
       </label>
       <input
+        id="restablecer-confirmar"
         type="password"
         required
         value={confirmar}

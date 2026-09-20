@@ -3,7 +3,12 @@
 import { useState, type FormEvent } from "react";
 import Link from "next/link";
 import { crearClienteSupabase } from "@/lib/supabase/client";
+import { mensajeErrorAuth } from "@/lib/auth/mensajesError";
 import { Turnstile } from "@/components/auth/Turnstile";
+
+// Ver nota en LoginForm.tsx: sin site key configurada, el captcha se omite
+// en vez de dejar el formulario deshabilitado para siempre.
+const TURNSTILE_CONFIGURADO = !!process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
 
 export function RecuperarForm() {
   const [email, setEmail] = useState("");
@@ -16,7 +21,7 @@ export function RecuperarForm() {
     e.preventDefault();
     setError(null);
 
-    if (!captchaToken) {
+    if (TURNSTILE_CONFIGURADO && !captchaToken) {
       setError("Completa la verificación antes de continuar.");
       return;
     }
@@ -25,7 +30,7 @@ export function RecuperarForm() {
     const supabase = crearClienteSupabase();
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo: `${window.location.origin}/restablecer-contrasena`,
-      captchaToken,
+      ...(captchaToken ? { captchaToken } : {}),
     });
     setCargando(false);
 
@@ -34,7 +39,12 @@ export function RecuperarForm() {
     if (!error) {
       setEnviado(true);
     } else {
-      setError("No se pudo procesar la solicitud. Intenta de nuevo.");
+      setError(
+        mensajeErrorAuth(
+          error,
+          "No se pudo procesar la solicitud. Intenta de nuevo."
+        )
+      );
       setCaptchaToken(null);
     }
   }
@@ -92,7 +102,7 @@ export function RecuperarForm() {
 
       <button
         type="submit"
-        disabled={cargando || !captchaToken}
+        disabled={cargando || (TURNSTILE_CONFIGURADO && !captchaToken)}
         className="w-full bg-brand-primary hover:bg-brand-primary-hover disabled:opacity-60 text-white font-semibold text-sm py-3 rounded-xl transition-colors"
       >
         {cargando ? "Enviando..." : "Enviar enlace"}

@@ -9,16 +9,18 @@ import {
   IconoSenales,
   IconoComunidad,
   IconoReto,
+  IconoPerfil,
 } from "@/components/ui/Iconos";
+import type { SesionUsuario } from "@/lib/auth/sesion";
 
 const ENLACES = [
   { href: "/mercado", label: "Mercado", Icono: IconoMercado },
   { href: "/senales", label: "Señales", Icono: IconoSenales },
   { href: "/comunidad", label: "Comunidad", Icono: IconoComunidad },
-  { href: "/reto-del-dia", label: "Reto del día", Icono: IconoReto },
+  { href: "/trade-del-dia", label: "Trade del día", Icono: IconoReto },
 ];
 
-export function NavBar() {
+export function NavBar({ usuario }: { usuario: SesionUsuario | null }) {
   const pathname = usePathname();
 
   return (
@@ -47,7 +49,34 @@ export function NavBar() {
         })}
       </nav>
 
-      <ThemeToggle />
+      <div className="flex items-center gap-3">
+        {usuario ? (
+          <Link
+            href="/perfil"
+            aria-label="Perfil"
+            className={`hidden md:flex items-center justify-center w-9 h-9 rounded-full transition-colors ${
+              pathname === "/perfil"
+                ? "bg-brand-primary/15 text-brand-primary"
+                : "bg-surface text-foreground-muted hover:text-foreground"
+            }`}
+          >
+            <IconoPerfil />
+          </Link>
+        ) : (
+          // En móvil este botón estaba oculto (hidden md:inline-flex) y la
+          // MobileTabBar no tiene entrada de login: quien llegaba a la
+          // portada desde un teléfono sin sesión no veía ninguna forma
+          // obvia de entrar (había que tocar "Perfil" y esperar el
+          // redirect). Se muestra siempre, más compacto en pantalla chica.
+          <Link
+            href="/login"
+            className="inline-flex items-center px-3 md:px-4 py-2 rounded-xl text-[13px] md:text-sm font-semibold bg-brand-primary text-white hover:bg-brand-primary-hover transition-colors whitespace-nowrap"
+          >
+            Iniciar sesión
+          </Link>
+        )}
+        <ThemeToggle />
+      </div>
     </header>
   );
 }

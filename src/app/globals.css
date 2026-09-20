@@ -1,9 +1,17 @@
 @import "tailwindcss";
 
 /* ============================================================
-   TradeIN — Sistema de diseño
+   Trade4U — Sistema de diseño
    Modo claro por defecto, con variante oscura vía [data-theme="dark"]
    ============================================================ */
+
+/* Tailwind v4 por defecto liga el prefijo "dark:" a la preferencia del
+   sistema operativo (prefers-color-scheme), NO al toggle de tema de esta
+   app (que cambia el atributo data-theme en <html>). Sin esto, cualquier
+   clase dark: queda desconectada del botón de tema — se ve bien o mal
+   dependiendo del tema del sistema operativo del usuario, no de lo que
+   eligió dentro de la app. */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
 
 :root {
   /* Superficies */
@@ -182,5 +190,59 @@ body {
   to {
     opacity: 0;
     transform: translateX(-36px);
+  }
+}
+
+/* ============================================================
+   Banner de noticias en la portada — cinta corrida tipo ticker
+   ============================================================ */
+@keyframes tickerScroll {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    /* -50%: la lista está duplicada, así que a la mitad del recorrido
+       vuelve a quedar exactamente donde empezó — el loop no se nota. */
+    transform: translateX(-50%);
+  }
+}
+
+.ticker-pista {
+  animation: tickerScroll 35s linear infinite;
+}
+
+.ticker-pista:hover {
+  animation-play-state: paused;
+}
+
+/* ============================================================
+   Accesibilidad — respetar "reducir movimiento" del sistema
+   ============================================================
+   El ticker de noticias es una animación INFINITA y el barrido entre
+   módulos cruza toda la pantalla: para quien tiene activado "reducir
+   movimiento" (vestibular, migrañas, epilepsia fotosensible) eso va de
+   molesto a incapacitante. Se apagan esas dos, no el resto de
+   transiciones suaves de color/hover, que no provocan ese problema. */
+@media (prefers-reduced-motion: reduce) {
+  .ticker-pista {
+    animation: none;
+    /* Sin la animación, la pista duplicada mediría el doble: se recorta
+       para que no aparezca la segunda copia ni una barra horizontal. */
+    flex-wrap: wrap;
+    width: 100%;
+    overflow: hidden;
+    max-height: 1.5rem;
+  }
+
+  .barrido-franja,
+  .barrido-franja.animar,
+  .barrido-vela,
+  .panel-entrando,
+  .panel-saliendo {
+    animation: none !important;
+  }
+
+  .barrido-franja {
+    opacity: 0;
   }
 }

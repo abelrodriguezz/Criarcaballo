@@ -4,7 +4,12 @@ import { useState, type FormEvent } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { crearClienteSupabase } from "@/lib/supabase/client";
+import { mensajeErrorAuth } from "@/lib/auth/mensajesError";
 import { Turnstile } from "@/components/auth/Turnstile";
+
+// Ver nota en LoginForm.tsx: sin site key configurada, el captcha se omite
+// en vez de dejar el formulario deshabilitado para siempre.
+const TURNSTILE_CONFIGURADO = !!process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
 
 export function RegistroForm() {
   const searchParams = useSearchParams();
@@ -30,7 +35,7 @@ export function RegistroForm() {
       setError("La contraseña debe tener al menos 8 caracteres.");
       return;
     }
-    if (!captchaToken) {
+    if (TURNSTILE_CONFIGURADO && !captchaToken) {
       setError("Completa la verificación antes de continuar.");
       return;
     }
@@ -41,7 +46,7 @@ export function RegistroForm() {
       email,
       password,
       options: {
-        captchaToken,
+        ...(captchaToken ? { captchaToken } : {}),
         ...(codigoRef ? { data: { ref: codigoRef } } : {}),
       },
     });
@@ -49,9 +54,7 @@ export function RegistroForm() {
 
     if (error) {
       setError(
-        error.message.includes("already registered")
-          ? "Ese correo ya tiene una cuenta."
-          : "No se pudo crear la cuenta. Intenta de nuevo."
+        mensajeErrorAuth(error, "No se pudo crear la cuenta. Intenta de nuevo.")
       );
       setCaptchaToken(null); // el token de Turnstile es de un solo uso
       return;
@@ -134,7 +137,7 @@ export function RegistroForm() {
 
       <button
         type="submit"
-        disabled={cargando || !captchaToken}
+        disabled={cargando || (TURNSTILE_CONFIGURADO && !captchaToken)}
         className="w-full bg-brand-primary hover:bg-brand-primary-hover disabled:opacity-60 text-white font-semibold text-sm py-3 rounded-xl transition-colors"
       >
         {cargando ? "Creando cuenta..." : "Crear cuenta"}

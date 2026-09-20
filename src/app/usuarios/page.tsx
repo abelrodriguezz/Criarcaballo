@@ -23,7 +23,10 @@ export default async function PaginaUsuarios() {
         Gestión de usuarios
       </h1>
       <p className="text-foreground-muted text-[15px] mb-7">
-        Cambia el rol o desactiva el acceso de cualquier cuenta.
+        {usuarios?.length ?? 0}{" "}
+        {usuarios?.length === 1 ? "usuario registrado" : "usuarios registrados"}
+        . Cambia el rol, desactiva el acceso o bloquea el trading de
+        cualquier cuenta.
       </p>
 
       {!usuarios || usuarios.length === 0 ? (

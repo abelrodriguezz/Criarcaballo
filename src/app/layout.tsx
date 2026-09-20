@@ -5,6 +5,7 @@ import "./globals.css";
 import { NavBar } from "@/components/layout/NavBar";
 import { MobileTabBar } from "@/components/layout/MobileTabBar";
 import { BarridoTransition } from "@/components/layout/BarridoTransition";
+import { obtenerUsuarioActual } from "@/lib/auth/sesion";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -18,7 +19,7 @@ const spaceGrotesk = Space_Grotesk({
 });
 
 export const metadata: Metadata = {
-  title: "TradeIN — Mercado, señales y práctica de trading",
+  title: "Trade4U — Mercado, señales y práctica de trading",
   description:
     "Datos de mercado en tiempo real, análisis y un modo de práctica sin riesgo.",
 };
@@ -29,7 +30,7 @@ export const metadata: Metadata = {
 const SCRIPT_TEMA_INICIAL = `
 (function () {
   try {
-    var guardado = localStorage.getItem('tradein-theme');
+    var guardado = localStorage.getItem('trade4u-theme');
     var oscuro = guardado
       ? guardado === 'dark'
       : window.matchMedia('(prefers-color-scheme: dark)').matches;
@@ -38,11 +39,14 @@ const SCRIPT_TEMA_INICIAL = `
 })();
 `;
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default async function RootLayout({ children }: LayoutProps<"/">) {
+  const usuario = await obtenerUsuarioActual();
+
   return (
     <html
       lang="es"
       className={`${inter.variable} ${spaceGrotesk.variable} h-full antialiased`}
+      suppressHydrationWarning
     >
       <head>
         <Script id="tema-inicial" strategy="beforeInteractive">
@@ -50,7 +54,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         </Script>
       </head>
       <body className="min-h-full flex flex-col bg-background text-foreground overflow-x-hidden">
-        <NavBar />
+        <NavBar usuario={usuario} />
         <main className="flex-1 max-w-[1080px] mx-auto w-full px-6 pb-24 md:pb-16">
           <BarridoTransition>{children}</BarridoTransition>
         </main>

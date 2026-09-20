@@ -80,6 +80,49 @@ export function IconoPerfil({ className = "w-[18px] h-[18px]" }: IconoProps) {
   );
 }
 
+export function IconoWallet({ className = "w-[18px] h-[18px]" }: IconoProps) {
+  return (
+    <svg {...baseProps} className={className}>
+      <rect x="2.5" y="6" width="19" height="13" rx="2.5" />
+      <path d="M2.5 9.5h19" />
+      <circle cx="16.5" cy="14" r="1.2" fill="currentColor" stroke="none" />
+    </svg>
+  );
+}
+
+export function IconoUsuarios({ className = "w-[18px] h-[18px]" }: IconoProps) {
+  return (
+    <svg {...baseProps} className={className}>
+      <circle cx="9" cy="8" r="3" />
+      <path d="M3.5 20c0-3.3 2.5-6 5.5-6s5.5 2.7 5.5 6" />
+      <path d="M16 5.2c1.4.4 2.4 1.7 2.4 3.2 0 1.5-1 2.8-2.4 3.2" />
+      <path d="M18 14.3c2 .6 3.4 2.5 3.4 4.7" />
+    </svg>
+  );
+}
+
+export function IconoSoporte({ className = "w-[18px] h-[18px]" }: IconoProps) {
+  return (
+    <svg {...baseProps} className={className}>
+      <path d="M4 12a8 8 0 1 1 3.2 6.4L4 19l1.1-3.4A7.96 7.96 0 0 1 4 12Z" />
+      <line x1="8.5" y1="11" x2="15.5" y2="11" />
+      <line x1="8.5" y1="14" x2="13" y2="14" />
+    </svg>
+  );
+}
+
+export function IconoReportes({ className = "w-[18px] h-[18px]" }: IconoProps) {
+  return (
+    <svg {...baseProps} className={className}>
+      <path d="M6 2.5h9l4.5 4.5V21a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V3.5a1 1 0 0 1 1-1Z" />
+      <path d="M15 2.5V7h4.5" />
+      <line x1="8" y1="12.5" x2="16" y2="12.5" />
+      <line x1="8" y1="16" x2="16" y2="16" />
+      <line x1="8" y1="9" x2="11" y2="9" />
+    </svg>
+  );
+}
+
 export function IconoInfo({ className = "w-3.5 h-3.5" }: IconoProps) {
   return (
     <svg {...baseProps} className={className}>

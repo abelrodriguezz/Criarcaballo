@@ -6,6 +6,12 @@ import Link from "next/link";
 import { crearClienteSupabase } from "@/lib/supabase/client";
 import { Turnstile } from "@/components/auth/Turnstile";
 
+// Sin site key configurada, Turnstile no puede renderizar un widget real y
+// nunca llegaría un captchaToken — en ese caso el captcha se omite en vez
+// de dejar el formulario deshabilitado para siempre. Supabase igual solo
+// exige el token cuando tú actives "Attack Protection" con la secret key.
+const TURNSTILE_CONFIGURADO = !!process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
+
 export function LoginForm() {
   const router = useRouter();
   const [email, setEmail] = useState("");
@@ -18,7 +24,7 @@ export function LoginForm() {
     e.preventDefault();
     setError(null);
 
-    if (!captchaToken) {
+    if (TURNSTILE_CONFIGURADO && !captchaToken) {
       setError("Completa la verificación antes de continuar.");
       return;
     }
@@ -29,7 +35,7 @@ export function LoginForm() {
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
-      options: { captchaToken },
+      options: captchaToken ? { captchaToken } : undefined,
     });
 
     setCargando(false);
@@ -112,7 +118,7 @@ export function LoginForm() {
 
       <button
         type="submit"
-        disabled={cargando || !captchaToken}
+        disabled={cargando || (TURNSTILE_CONFIGURADO && !captchaToken)}
         className="w-full bg-brand-primary hover:bg-brand-primary-hover disabled:opacity-60 text-white font-semibold text-sm py-3 rounded-xl transition-colors"
       >
         {cargando ? "Ingresando..." : "Iniciar sesión"}

@@ -13,6 +13,18 @@ export function ListaUsuariosAdmin({
 }) {
   const [busqueda, setBusqueda] = useState("");
 
+  // Se calcula una sola vez a partir de la lista completa — cada usuario
+  // ya trae su propio invitado_por, así que contar cuántos apuntan a cada
+  // id no necesita ninguna consulta extra a la base de datos.
+  const conteoInvitados = useMemo(() => {
+    const mapa = new Map<string, number>();
+    for (const u of usuarios) {
+      if (!u.invitado_por) continue;
+      mapa.set(u.invitado_por, (mapa.get(u.invitado_por) ?? 0) + 1);
+    }
+    return mapa;
+  }, [usuarios]);
+
   const filtrados = useMemo(() => {
     const termino = busqueda.trim().toLowerCase();
     if (!termino) return usuarios;
@@ -41,7 +53,12 @@ export function ListaUsuariosAdmin({
       ) : (
         <div className="flex flex-col gap-2.5">
           {filtrados.map((u) => (
-            <FilaUsuarioAdmin key={u.id} usuario={u} esUnoMismo={u.id === miId} />
+            <FilaUsuarioAdmin
+              key={u.id}
+              usuario={u}
+              esUnoMismo={u.id === miId}
+              cantidadInvitados={conteoInvitados.get(u.id) ?? 0}
+            />
           ))}
         </div>
       )}

@@ -14,7 +14,7 @@ const ENLACES = [
   { href: "/mercado", label: "Mercado", Icono: IconoMercado },
   { href: "/senales", label: "Señales", Icono: IconoSenales },
   { href: "/comunidad", label: "Comunidad", Icono: IconoComunidad },
-  { href: "/reto-del-dia", label: "Reto", Icono: IconoReto },
+  { href: "/trade-del-dia", label: "Trade", Icono: IconoReto },
   { href: "/perfil", label: "Perfil", Icono: IconoPerfil },
 ];
 

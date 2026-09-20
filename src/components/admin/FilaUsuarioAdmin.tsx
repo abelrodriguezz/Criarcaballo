@@ -9,9 +9,11 @@ import type { Usuario } from "@/lib/types";
 export function FilaUsuarioAdmin({
   usuario,
   esUnoMismo,
+  cantidadInvitados,
 }: {
   usuario: Usuario;
   esUnoMismo: boolean;
+  cantidadInvitados: number;
 }) {
   const router = useRouter();
   const [guardando, setGuardando] = useState(false);
@@ -55,6 +57,23 @@ export function FilaUsuarioAdmin({
     router.refresh();
   }
 
+  async function alternarTrading() {
+    setError(null);
+    setGuardando(true);
+    const supabase = crearClienteSupabase();
+    const { error } = await supabase
+      .from("usuarios")
+      .update({ trading_habilitado: !usuario.trading_habilitado })
+      .eq("id", usuario.id);
+    setGuardando(false);
+
+    if (error) {
+      setError("No se pudo actualizar el permiso de trading.");
+      return;
+    }
+    router.refresh();
+  }
+
   return (
     <div className="border border-[var(--border)] rounded-xl p-4 flex flex-wrap items-center justify-between gap-3">
       <div className="min-w-0">
@@ -68,6 +87,10 @@ export function FilaUsuarioAdmin({
           {esUnoMismo && (
             <span className="text-foreground-muted font-normal"> (tú)</span>
           )}
+        </div>
+        <div className="text-[11px] text-foreground-muted">
+          {cantidadInvitados}{" "}
+          {cantidadInvitados === 1 ? "persona invitada" : "personas invitadas"}
         </div>
         {usuario.wallet_usdt_erc20 && (
           <div className="text-[11px] text-foreground-muted font-mono truncate mt-0.5">
@@ -108,6 +131,19 @@ export function FilaUsuarioAdmin({
           }`}
         >
           {usuario.activo ? "Activo" : "Desactivado"}
+        </button>
+
+        <button
+          onClick={alternarTrading}
+          disabled={guardando}
+          title="Permitir o bloquear que este usuario opere en Trade del día"
+          className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors disabled:opacity-50 ${
+            usuario.trading_habilitado
+              ? "bg-brand-primary/15 text-brand-primary"
+              : "bg-loss/15 text-loss"
+          }`}
+        >
+          {usuario.trading_habilitado ? "Trading habilitado" : "Trading bloqueado"}
         </button>
       </div>
     </div>

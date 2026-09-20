@@ -4,6 +4,7 @@ import { useState } from "react";
 import { AdminGananciaForm } from "@/components/admin/AdminGananciaForm";
 import { BotonEliminarAdmin } from "@/components/admin/BotonEliminarAdmin";
 import { BotonPagoGanancia } from "@/components/admin/BotonPagoGanancia";
+import { formatearDinero } from "@/lib/format";
 import type { GananciaConcurso } from "@/lib/types";
 
 export function TarjetaGananciaAdmin({
@@ -30,10 +31,7 @@ export function TarjetaGananciaAdmin({
       <div>
         <div className="flex items-center gap-2">
           <div className="font-display font-bold text-base tabular text-gain">
-            +$
-            {ganancia.monto.toLocaleString("en-US", {
-              minimumFractionDigits: 2,
-            })}
+            +${formatearDinero(ganancia.monto)}
           </div>
           <span
             className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${
