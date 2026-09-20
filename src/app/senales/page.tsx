@@ -73,7 +73,6 @@ export default async function PaginaSenales({
               key={senal.id}
               senal={senal}
               esAdmin={usuarioEsAdmin}
-              destacada
             />
           ))}
         </div>

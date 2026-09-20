@@ -12,12 +12,9 @@ import type { Senal } from "@/lib/types";
 export function TarjetaSenalAdmin({
   senal,
   esAdmin,
-  destacada = false,
 }: {
   senal: Senal;
   esAdmin: boolean;
-  /** Estilo tipo card llamativo, para la sección de señales recientes. */
-  destacada?: boolean;
 }) {
   const router = useRouter();
   const [editando, setEditando] = useState(false);
@@ -155,121 +152,97 @@ export function TarjetaSenalAdmin({
       href={urlGraficoTradingView(senal.par)}
       target="_blank"
       rel="noopener noreferrer"
-      className="absolute inset-0 rounded-2xl"
+      className="absolute inset-0 rounded-[4px]"
       aria-label={`Ver gráfico de ${senal.par} en TradingView`}
     />
   );
 
-  if (destacada) {
-    const colorAcento = esCompra ? "var(--gain)" : "var(--loss)";
-    return (
-      <div
-        className="relative rounded-2xl border-2 p-5 overflow-hidden bg-surface transition-transform hover:-translate-y-0.5 hover:shadow-lg"
-        style={{ borderColor: colorAcento }}
-      >
-        <div
-          className="absolute top-0 left-0 right-0 h-1.5"
-          style={{ background: colorAcento }}
-        />
-        {linkGrafico}
-        <div className="relative z-10">
-          <div className="flex items-center justify-between mb-3.5">
-            <div className="flex items-center gap-2.5">
-              <div
-                className="w-10 h-10 rounded-[4px] flex items-center justify-center text-white shrink-0"
-                style={{ background: colorAcento }}
-              >
-                <IconoTendenciaSubida
-                  className={`w-5 h-5 ${esCompra ? "" : "scale-y-[-1]"}`}
-                />
-              </div>
-              <div className="font-display font-bold text-xl">{senal.par}</div>
+  // Antes de cerrarse, el acento sigue la dirección del trade (compra/venta).
+  // Ya cerrada, sigue el resultado real (tp/sl) — más útil que la dirección
+  // una vez que lo que importa es si ganó o perdió.
+  const colorAcento = senal.resultado
+    ? senal.resultado === "tp"
+      ? "var(--gain)"
+      : "var(--loss)"
+    : esCompra
+      ? "var(--gain)"
+      : "var(--loss)";
+
+  return (
+    <div
+      className="relative border-l-4 p-5 overflow-hidden bg-surface transition-transform hover:-translate-y-0.5"
+      style={{ borderColor: colorAcento }}
+    >
+      {linkGrafico}
+      <div className="relative z-10">
+        <div className="flex items-center justify-between mb-3.5 gap-2">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div
+              className="w-10 h-10 rounded-[4px] flex items-center justify-center text-white shrink-0"
+              style={{ background: colorAcento }}
+            >
+              <IconoTendenciaSubida
+                className={`w-5 h-5 ${esCompra ? "" : "scale-y-[-1]"}`}
+              />
             </div>
+            <div className="font-display font-bold text-xl truncate">
+              {senal.par}
+            </div>
+          </div>
+          <div className="flex flex-col items-end gap-1 shrink-0">
             <span
-              className={`text-xs font-bold px-3 py-1 rounded-full whitespace-nowrap ${
+              className={`text-xs font-bold px-2.5 py-0.5 whitespace-nowrap ${
                 esCompra ? "bg-gain/15 text-gain" : "bg-loss/15 text-loss"
               }`}
             >
               {esCompra ? "Compra" : "Venta"}
             </span>
+            {senal.resultado && (
+              <span
+                className={`text-[11px] font-bold uppercase tracking-wide px-2.5 py-0.5 whitespace-nowrap ${
+                  senal.resultado === "tp"
+                    ? "bg-gain/15 text-gain"
+                    : "bg-loss/15 text-loss"
+                }`}
+              >
+                {senal.resultado === "tp" ? "TP tocado" : "SL tocado"}
+              </span>
+            )}
           </div>
+        </div>
 
-          <div className="grid grid-cols-3 gap-2 mb-3.5">
-            <div className="bg-background rounded-xl px-2.5 py-2 text-center">
-              <div className="text-[10px] uppercase tracking-wide text-foreground-muted">
-                Entrada
-              </div>
-              <div className="font-display font-bold text-sm tabular">
-                {senal.entrada}
-              </div>
+        <div className="grid grid-cols-3 gap-2 mb-3.5">
+          <div className="bg-background px-2.5 py-2 text-center">
+            <div className="text-[10px] uppercase tracking-wide text-foreground-muted">
+              Entrada
             </div>
-            <div className="bg-loss/10 rounded-xl px-2.5 py-2 text-center">
-              <div className="text-[10px] uppercase tracking-wide text-loss">
-                Stop loss
-              </div>
-              <div className="font-display font-bold text-sm tabular text-loss">
-                {senal.stop_loss ?? "—"}
-              </div>
-            </div>
-            <div className="bg-gain/10 rounded-xl px-2.5 py-2 text-center">
-              <div className="text-[10px] uppercase tracking-wide text-gain">
-                Take profit
-              </div>
-              <div className="font-display font-bold text-sm tabular text-gain">
-                {senal.take_profit ?? "—"}
-              </div>
+            <div className="font-display font-bold text-sm tabular">
+              {senal.entrada}
             </div>
           </div>
+          <div className="bg-loss/10 px-2.5 py-2 text-center">
+            <div className="text-[10px] uppercase tracking-wide text-loss">
+              Stop loss
+            </div>
+            <div className="font-display font-bold text-sm tabular text-loss">
+              {senal.stop_loss ?? "—"}
+            </div>
+          </div>
+          <div className="bg-gain/10 px-2.5 py-2 text-center">
+            <div className="text-[10px] uppercase tracking-wide text-gain">
+              Take profit
+            </div>
+            <div className="font-display font-bold text-sm tabular text-gain">
+              {senal.take_profit ?? "—"}
+            </div>
+          </div>
+        </div>
 
-          {senal.razon && (
-            <p className="text-[13px] text-foreground-muted">{senal.razon}</p>
-          )}
-          {resultadoInfo}
-          {botonesAdmin}
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="relative border border-[var(--border)] rounded-2xl p-5 flex justify-between items-start hover:border-brand-primary/40 transition-colors">
-      {linkGrafico}
-      <div className="relative z-10">
-        <div className="font-display font-semibold text-base mb-1.5">
-          {senal.par}
-        </div>
-        <div className="text-[13px] text-foreground-muted">
-          Entrada {senal.entrada}
-          {senal.stop_loss ? ` · SL ${senal.stop_loss}` : ""}
-          {senal.take_profit ? ` · TP ${senal.take_profit}` : ""}
-        </div>
-        {resultadoInfo}
         {senal.razon && (
-          <p className="text-[13px] text-foreground-muted mt-1.5">
-            {senal.razon}
-          </p>
+          <p className="text-[13px] text-foreground-muted">{senal.razon}</p>
         )}
+        {resultadoInfo}
         {botonesAdmin}
-      </div>
-      <div className="relative z-10 flex flex-col items-end gap-1.5 shrink-0">
-        <span
-          className={`text-xs font-bold px-3 py-1 rounded-full whitespace-nowrap ${
-            esCompra ? "bg-gain/15 text-gain" : "bg-loss/15 text-loss"
-          }`}
-        >
-          {esCompra ? "Compra" : "Venta"}
-        </span>
-        {senal.resultado && (
-          <span
-            className={`text-[11px] font-bold uppercase tracking-wide px-2.5 py-1 rounded-full whitespace-nowrap ${
-              senal.resultado === "tp"
-                ? "bg-gain/15 text-gain"
-                : "bg-loss/15 text-loss"
-            }`}
-          >
-            {senal.resultado === "tp" ? "TP tocado" : "SL tocado"}
-          </span>
-        )}
       </div>
     </div>
   );
