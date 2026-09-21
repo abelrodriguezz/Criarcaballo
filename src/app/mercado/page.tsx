@@ -11,6 +11,7 @@ import {
 } from "@/lib/market/acciones";
 import { obtenerUsuarioActual } from "@/lib/auth/sesion";
 import { crearClienteSupabaseServidor } from "@/lib/supabase/server";
+import { obtenerDiccionario } from "@/lib/i18n/servidor";
 
 const PARES_CRIPTO = ["BTCUSDT", "ETHUSDT", "SOLUSDT", "XRPUSDT", "HBARUSDT"];
 const SIMBOLOS_INDICES = ["SPX", "IXIC", "DJI"];
@@ -25,7 +26,10 @@ interface ActivoNormalizado {
 }
 
 export default async function PaginaMercado() {
-  const usuario = await obtenerUsuarioActual();
+  const [usuario, t] = await Promise.all([
+    obtenerUsuarioActual(),
+    obtenerDiccionario(),
+  ]);
 
   const [cripto, indices, favoritos, topCripto, topAcciones] =
     await Promise.all([
@@ -82,24 +86,22 @@ export default async function PaginaMercado() {
     <div className="py-10">
       <h1 className="font-display font-semibold text-[26px] flex items-center gap-2.5 mb-1.5">
         <IconoMercado className="w-6 h-6 text-brand-primary" />
-        Vista de mercado
+        {t.mercado.titulo}
       </h1>
       <p className="text-foreground-muted text-[15px] mb-7">
-        Precios en tiempo real de cripto, índices y acciones. Toca cualquier
-        tarjeta para ver el gráfico en TradingView.
+        {t.mercado.subtitulo}
       </p>
 
       {sinDatos && (
         <p className="text-foreground-muted text-sm border border-dashed border-[var(--border)] rounded-2xl p-6 text-center mb-6">
-          No se pudieron cargar los precios en este momento. Si estás
-          probando en local, revisa tu conexión a internet.
+          {t.mercado.sinDatos}
         </p>
       )}
 
       {topGanadores.length > 0 && (
         <>
           <h2 className="text-[13px] font-semibold text-foreground-muted uppercase tracking-wide mb-3">
-            🔥 Lo que más subió hoy
+            {t.mercado.masSubioHoy}
           </h2>
           <div className="grid md:grid-cols-3 gap-4 mb-8">
             {topGanadores.map((activo) => (
@@ -108,7 +110,11 @@ export default async function PaginaMercado() {
                 simbolo={activo.simbolo}
                 precio={activo.precio}
                 cambioPorc={activo.cambioPorc}
-                etiqueta={activo.tipo}
+                etiqueta={
+                  activo.tipo === "Cripto"
+                    ? t.mercado.criptoEtiqueta
+                    : t.mercado.accionEtiqueta
+                }
                 mostrarFavorito={!!usuario && activo.tipo === "Cripto"}
                 esFavoritoInicial={setFavoritos.has(activo.simbolo)}
                 sparkline={sparklines[activo.simbolo]}
@@ -121,7 +127,7 @@ export default async function PaginaMercado() {
       {cripto.length > 0 && (
         <>
           <h2 className="text-[13px] font-semibold text-foreground-muted uppercase tracking-wide mb-3">
-            Cripto
+            {t.mercado.cripto}
           </h2>
           <div className="grid md:grid-cols-3 gap-4 mb-8">
             {cripto.map((activo) => (
@@ -142,7 +148,7 @@ export default async function PaginaMercado() {
       {indices.length > 0 ? (
         <>
           <h2 className="text-[13px] font-semibold text-foreground-muted uppercase tracking-wide mb-3">
-            Índices
+            {t.mercado.indices}
           </h2>
           <div className="grid md:grid-cols-3 gap-4">
             {indices.map((activo) => (
@@ -158,12 +164,11 @@ export default async function PaginaMercado() {
       ) : (
         <p className="text-xs text-foreground-muted mt-2">
           {process.env.MARKET_API_KEY
-            ? "No se pudieron cargar los índices en este momento (verifica tu plan de Twelve Data o los símbolos usados)."
+            ? t.mercado.sinIndicesConKey
             : (
               <>
-                Índices y acciones: falta configurar <code>MARKET_API_KEY</code> en{" "}
-                <code>.env.local</code> con una key de Twelve Data (plan
-                gratuito en twelvedata.com).
+                {t.mercado.sinIndicesSinKeyPre} <code>MARKET_API_KEY</code>{" "}
+                {t.mercado.sinIndicesSinKeyPost}
               </>
             )}
         </p>

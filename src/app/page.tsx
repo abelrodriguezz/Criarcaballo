@@ -9,11 +9,12 @@ import { formatearPrecio } from "@/lib/format";
 import { crearClienteSupabaseServidor } from "@/lib/supabase/server";
 import { TickerNoticias, type ItemTicker } from "@/components/ui/TickerNoticias";
 import { SparklineChart } from "@/components/mercado/SparklineChart";
+import { obtenerDiccionario } from "@/lib/i18n/servidor";
 import type { Noticia } from "@/lib/types";
 
 export default async function PaginaInicio() {
   const supabase = await crearClienteSupabaseServidor();
-  const [usuario, { hero }, sp500, { data: noticiasPropias }, noticiasExternas] =
+  const [usuario, { hero }, sp500, { data: noticiasPropias }, noticiasExternas, t] =
     await Promise.all([
       obtenerUsuarioActual(),
       obtenerConfigPortada(),
@@ -26,6 +27,7 @@ export default async function PaginaInicio() {
         .limit(6)
         .returns<Noticia[]>(),
       obtenerNoticiasExternas(4),
+      obtenerDiccionario(),
     ]);
   const usuarioEsAdmin = esAdmin(usuario);
 
@@ -69,13 +71,13 @@ export default async function PaginaInicio() {
               href="/registro"
               className="bg-brand-primary hover:bg-brand-primary-hover text-white font-semibold text-[15px] px-6 py-3.5 rounded-xl transition-colors text-center"
             >
-              Crear cuenta gratis
+              {t.home.ctaCrearCuenta}
             </Link>
             <Link
               href="/trade-del-dia"
               className="border-2 border-brand-primary text-brand-primary bg-brand-primary/10 font-semibold text-[15px] px-6 py-3.5 rounded-xl hover:bg-brand-primary/20 transition-colors text-center"
             >
-              Trade del día
+              {t.home.ctaTradeDelDia}
             </Link>
           </div>
         </div>
@@ -91,7 +93,7 @@ export default async function PaginaInicio() {
                 >
                   {sp500.cambioPorc >= 0 ? "▲" : "▼"}{" "}
                   {sp500.cambioPorc >= 0 ? "+" : ""}
-                  {sp500.cambioPorc.toFixed(2)}% hoy
+                  {sp500.cambioPorc.toFixed(2)}% {t.home.hoy}
                 </div>
                 <div className="font-display font-semibold text-[15px]">
                   S&P 500
@@ -114,7 +116,7 @@ export default async function PaginaInicio() {
                   S&P 500
                 </div>
                 <p className="text-[13px] text-foreground-muted max-w-[220px]">
-                  Índices en vivo próximamente.
+                  {t.home.sp500Proximamente}
                 </p>
               </div>
             )}
@@ -123,7 +125,7 @@ export default async function PaginaInicio() {
       </div>
 
       <div className="mt-8">
-        <TickerNoticias items={itemsTicker} />
+        <TickerNoticias items={itemsTicker} etiqueta={t.home.noticiasEtiqueta} />
       </div>
 
       <div className="bg-foreground text-background dark:bg-surface dark:text-foreground rounded-3xl p-6 sm:p-10 md:p-12 mt-16 grid md:grid-cols-3 gap-8">
@@ -132,11 +134,10 @@ export default async function PaginaInicio() {
             <IconoMercado />
           </div>
           <h3 className="font-display font-semibold text-lg mb-2">
-            Datos reales, no decorativos
+            {t.home.feature1Titulo}
           </h3>
           <p className="text-sm opacity-70 leading-relaxed">
-            Precios de cripto, índices y acciones en tiempo real, directo de
-            la fuente.
+            {t.home.feature1Texto}
           </p>
         </div>
         <div>
@@ -144,11 +145,10 @@ export default async function PaginaInicio() {
             <IconoSenales />
           </div>
           <h3 className="font-display font-semibold text-lg mb-2">
-            Análisis publicado a diario
+            {t.home.feature2Titulo}
           </h3>
           <p className="text-sm opacity-70 leading-relaxed">
-            Entradas, stop loss y take profit explicados, no solo números
-            sueltos.
+            {t.home.feature2Texto}
           </p>
         </div>
         <div>
@@ -156,11 +156,10 @@ export default async function PaginaInicio() {
             <IconoReto />
           </div>
           <h3 className="font-display font-semibold text-lg mb-2">
-            Práctica con saldo virtual
+            {t.home.feature3Titulo}
           </h3>
           <p className="text-sm opacity-70 leading-relaxed">
-            Opera el &quot;pick del día&quot; sin dinero real y mide tu
-            progreso con el tiempo.
+            {t.home.feature3Texto}
           </p>
         </div>
       </div>

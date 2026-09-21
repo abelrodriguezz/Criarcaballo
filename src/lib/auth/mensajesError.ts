@@ -1,4 +1,7 @@
 import type { AuthError } from "@supabase/supabase-js";
+import type { Locale } from "@/lib/i18n";
+import { es } from "@/lib/i18n/diccionarios/es";
+import { en } from "@/lib/i18n/diccionarios/en";
 
 /**
  * Traduce los errores de Supabase Auth a algo que una persona entienda.
@@ -13,36 +16,38 @@ import type { AuthError } from "@supabase/supabase-js";
  */
 export function mensajeErrorAuth(
   error: AuthError | null,
-  respaldo: string
+  respaldo: string,
+  locale: Locale = "es"
 ): string {
   if (!error) return respaldo;
 
+  const errores = locale === "en" ? en.errores : es.errores;
   const codigo = error.code ?? "";
   const texto = error.message ?? "";
 
   if (codigo === "over_email_send_rate_limit" || /email rate limit/i.test(texto)) {
-    return "Se alcanzó el límite de correos por hora del servidor. Espera unos minutos y vuelve a intentarlo.";
+    return errores.limiteCorreo;
   }
   if (codigo === "over_request_rate_limit" || error.status === 429) {
-    return "Demasiados intentos seguidos. Espera un momento antes de volver a intentarlo.";
+    return errores.limiteIntentos;
   }
   if (codigo === "weak_password" || /password should be at least/i.test(texto)) {
-    return "La contraseña es demasiado débil. Usa al menos 8 caracteres.";
+    return errores.contrasenaDebil;
   }
   if (codigo === "email_address_invalid" || /email address .* is invalid/i.test(texto)) {
-    return "Ese correo no parece válido. Revísalo e inténtalo de nuevo.";
+    return errores.correoInvalido;
   }
   if (codigo === "signup_disabled" || /signups not allowed/i.test(texto)) {
-    return "El registro de cuentas nuevas está deshabilitado en este momento.";
+    return errores.registroDeshabilitado;
   }
   if (codigo === "user_already_exists" || /already registered/i.test(texto)) {
-    return "Ese correo ya tiene una cuenta.";
+    return errores.correoYaRegistrado;
   }
   if (codigo === "email_not_confirmed") {
-    return "Todavía no confirmaste tu correo. Revisa tu bandeja de entrada.";
+    return errores.correoSinConfirmar;
   }
   if (/error sending/i.test(texto)) {
-    return "No se pudo enviar el correo de confirmación. Inténtalo más tarde o escribe a soporte.";
+    return errores.errorEnvioCorreo;
   }
 
   return respaldo;

@@ -5,12 +5,13 @@ import Link from "next/link";
 import { crearClienteSupabase } from "@/lib/supabase/client";
 import { mensajeErrorAuth } from "@/lib/auth/mensajesError";
 import { Turnstile } from "@/components/auth/Turnstile";
+import type { Diccionario, Locale } from "@/lib/i18n";
 
 // Ver nota en LoginForm.tsx: sin site key configurada, el captcha se omite
 // en vez de dejar el formulario deshabilitado para siempre.
 const TURNSTILE_CONFIGURADO = !!process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
 
-export function RecuperarForm() {
+export function RecuperarForm({ t, locale }: { t: Diccionario; locale: Locale }) {
   const [email, setEmail] = useState("");
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -22,7 +23,7 @@ export function RecuperarForm() {
     setError(null);
 
     if (TURNSTILE_CONFIGURADO && !captchaToken) {
-      setError("Completa la verificación antes de continuar.");
+      setError(t.auth.completaVerificacion);
       return;
     }
 
@@ -39,12 +40,7 @@ export function RecuperarForm() {
     if (!error) {
       setEnviado(true);
     } else {
-      setError(
-        mensajeErrorAuth(
-          error,
-          "No se pudo procesar la solicitud. Intenta de nuevo."
-        )
-      );
+      setError(mensajeErrorAuth(error, t.auth.errorRecuperarGenerico, locale));
       setCaptchaToken(null);
     }
   }
@@ -53,11 +49,18 @@ export function RecuperarForm() {
     return (
       <div className="bg-surface border border-[var(--border)] rounded-2xl p-6 max-w-[400px] w-full mx-auto text-center">
         <h1 className="font-display font-semibold text-lg mb-2">
-          Revisa tu correo
+          {t.auth.revisaTuCorreoTitulo}
         </h1>
         <p className="text-sm text-foreground-muted">
-          Si <strong>{email}</strong> tiene una cuenta, te enviamos un enlace
-          para restablecer tu contraseña.
+          {locale === "en" ? (
+            <>
+              If <strong>{email}</strong> {t.auth.revisaTuCorreoRecuperar}
+            </>
+          ) : (
+            <>
+              Si <strong>{email}</strong> {t.auth.revisaTuCorreoRecuperar}
+            </>
+          )}
         </p>
       </div>
     );
@@ -69,14 +72,14 @@ export function RecuperarForm() {
       className="bg-surface border border-[var(--border)] rounded-2xl p-6 max-w-[400px] w-full mx-auto"
     >
       <h1 className="font-display font-semibold text-lg mb-2">
-        Recuperar contraseña
+        {t.auth.recuperarTitulo}
       </h1>
       <p className="text-[13px] text-foreground-muted mb-5">
-        Te enviaremos un enlace a tu correo para crear una nueva contraseña.
+        {t.auth.recuperarSubtitulo}
       </p>
 
       <label className="block text-[13px] font-medium mb-1.5">
-        Correo electrónico
+        {t.auth.correo}
       </label>
       <input
         type="email"
@@ -84,7 +87,7 @@ export function RecuperarForm() {
         value={email}
         onChange={(e) => setEmail(e.target.value)}
         className="w-full px-3.5 py-2.5 mb-4 rounded-lg border border-[var(--border)] bg-background text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary"
-        placeholder="tucorreo@ejemplo.com"
+        placeholder={t.auth.correoPlaceholder}
       />
 
       {error && (
@@ -105,12 +108,12 @@ export function RecuperarForm() {
         disabled={cargando || (TURNSTILE_CONFIGURADO && !captchaToken)}
         className="w-full bg-brand-primary hover:bg-brand-primary-hover disabled:opacity-60 text-white font-semibold text-sm py-3 rounded-xl transition-colors"
       >
-        {cargando ? "Enviando..." : "Enviar enlace"}
+        {cargando ? t.auth.enviando : t.auth.enviarEnlace}
       </button>
 
       <p className="text-center text-[13px] text-foreground-muted mt-4">
         <Link href="/login" className="text-brand-primary font-semibold">
-          ← Volver a iniciar sesión
+          {t.auth.volverAIniciarSesion}
         </Link>
       </p>
     </form>

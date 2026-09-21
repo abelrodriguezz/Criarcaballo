@@ -1,8 +1,15 @@
 "use client";
 
 import { useState } from "react";
+import type { Diccionario } from "@/lib/i18n";
 
-export function CopiarBoton({ texto }: { texto: string }) {
+export function CopiarBoton({
+  texto,
+  t,
+}: {
+  texto: string;
+  t?: Diccionario;
+}) {
   const [copiado, setCopiado] = useState(false);
 
   async function copiar() {
@@ -21,7 +28,7 @@ export function CopiarBoton({ texto }: { texto: string }) {
       disabled={!texto}
       className="bg-brand-primary hover:bg-brand-primary-hover disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-semibold px-4 py-2 rounded-lg transition-colors whitespace-nowrap"
     >
-      {copiado ? "¡Copiado!" : "Copiar"}
+      {copiado ? (t?.copiar.copiado ?? "¡Copiado!") : (t?.copiar.copiar ?? "Copiar")}
     </button>
   );
 }

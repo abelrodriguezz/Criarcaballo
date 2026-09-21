@@ -6,6 +6,7 @@ import { NavBar } from "@/components/layout/NavBar";
 import { MobileTabBar } from "@/components/layout/MobileTabBar";
 import { BarridoTransition } from "@/components/layout/BarridoTransition";
 import { obtenerUsuarioActual } from "@/lib/auth/sesion";
+import { obtenerLocale, obtenerDiccionario } from "@/lib/i18n/servidor";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -46,11 +47,15 @@ const SCRIPT_TEMA_INICIAL = `
 `;
 
 export default async function RootLayout({ children }: LayoutProps<"/">) {
-  const usuario = await obtenerUsuarioActual();
+  const [usuario, locale, t] = await Promise.all([
+    obtenerUsuarioActual(),
+    obtenerLocale(),
+    obtenerDiccionario(),
+  ]);
 
   return (
     <html
-      lang="es"
+      lang={locale}
       className={`${inter.variable} ${spaceGrotesk.variable} ${jetbrainsMono.variable} h-full antialiased`}
       suppressHydrationWarning
     >
@@ -60,11 +65,11 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
         </Script>
       </head>
       <body className="min-h-full flex flex-col bg-background text-foreground overflow-x-hidden">
-        <NavBar usuario={usuario} />
+        <NavBar usuario={usuario} locale={locale} t={t} />
         <main className="flex-1 max-w-[1080px] mx-auto w-full px-6 pb-24 md:pb-16">
           <BarridoTransition>{children}</BarridoTransition>
         </main>
-        <MobileTabBar />
+        <MobileTabBar t={t} />
       </body>
     </html>
   );

@@ -5,6 +5,7 @@ import { AdminSenalForm } from "@/components/admin/AdminSenalForm";
 import { TarjetaSenalAdmin } from "@/components/admin/TarjetaSenalAdmin";
 import { AutoRefresco } from "@/components/ui/AutoRefresco";
 import { revisarYCerrarSenalesActivas } from "@/lib/senales/verificarTpSl";
+import { obtenerDiccionario, obtenerLocale } from "@/lib/i18n/servidor";
 import type { Senal } from "@/lib/types";
 
 export default async function PaginaSenales({
@@ -13,7 +14,11 @@ export default async function PaginaSenales({
   searchParams: Promise<{ desde?: string; hasta?: string }>;
 }) {
   const { desde, hasta } = await searchParams;
-  const usuario = await obtenerUsuarioActual();
+  const [usuario, t, locale] = await Promise.all([
+    obtenerUsuarioActual(),
+    obtenerDiccionario(),
+    obtenerLocale(),
+  ]);
   const usuarioEsAdmin = esAdmin(usuario);
 
   // Revisa las velas de Binance y cierra automáticamente cualquier señal
@@ -50,21 +55,20 @@ export default async function PaginaSenales({
       <AutoRefresco />
       <h1 className="font-display font-semibold text-[26px] flex items-center gap-2.5 mb-1.5">
         <IconoSenales className="w-6 h-6 text-brand-primary" />
-        Señales
+        {t.senales.titulo}
       </h1>
       <p className="text-foreground-muted text-[15px] mb-7">
-        Publicadas desde el panel admin, con razón incluida. Toca cualquier
-        señal para ver su gráfico en TradingView.
+        {t.senales.subtitulo}
       </p>
 
       {usuarioEsAdmin && <AdminSenalForm />}
 
       <h2 className="font-display font-semibold text-lg mb-3">
-        Señales recientes
+        {t.senales.recientes}
       </h2>
       {recientes.length === 0 ? (
         <p className="text-foreground-muted text-sm border border-dashed border-[var(--border)] rounded-2xl p-6 text-center mb-8">
-          Todavía no hay señales recientes.
+          {t.senales.sinRecientes}
         </p>
       ) : (
         <div className="grid md:grid-cols-2 gap-4 mb-8">
@@ -73,13 +77,15 @@ export default async function PaginaSenales({
               key={senal.id}
               senal={senal}
               esAdmin={usuarioEsAdmin}
+              t={t}
+              locale={locale}
             />
           ))}
         </div>
       )}
 
       <h2 className="font-display font-semibold text-lg mb-3">
-        Señales que tocaron TP o SL
+        {t.senales.tocaronTpSl}
       </h2>
 
       <form
@@ -88,7 +94,7 @@ export default async function PaginaSenales({
       >
         <div>
           <label className="block text-[12px] text-foreground-muted mb-1">
-            Desde
+            {t.senales.desde}
           </label>
           <input
             type="date"
@@ -99,7 +105,7 @@ export default async function PaginaSenales({
         </div>
         <div>
           <label className="block text-[12px] text-foreground-muted mb-1">
-            Hasta
+            {t.senales.hasta}
           </label>
           <input
             type="date"
@@ -112,14 +118,14 @@ export default async function PaginaSenales({
           type="submit"
           className="bg-brand-primary hover:bg-brand-primary-hover text-white font-semibold text-sm px-5 py-2.5 rounded-lg transition-colors"
         >
-          Filtrar
+          {t.senales.filtrar}
         </button>
         {(desde || hasta) && (
           <a
             href="/senales"
             className="text-xs text-foreground-muted hover:underline"
           >
-            Quitar filtro
+            {t.senales.quitarFiltro}
           </a>
         )}
       </form>
@@ -127,13 +133,19 @@ export default async function PaginaSenales({
       {conResultado.length === 0 ? (
         <p className="text-foreground-muted text-sm border border-dashed border-[var(--border)] rounded-2xl p-6 text-center">
           {desde || hasta
-            ? "Ninguna señal cerrada coincide con ese rango de fechas."
-            : "Todavía ninguna señal tocó take profit o stop loss."}
+            ? t.senales.sinResultadoConFiltro
+            : t.senales.sinResultadoSinFiltro}
         </p>
       ) : (
         <div className="grid md:grid-cols-2 gap-4">
           {conResultado.map((senal) => (
-            <TarjetaSenalAdmin key={senal.id} senal={senal} esAdmin={usuarioEsAdmin} />
+            <TarjetaSenalAdmin
+              key={senal.id}
+              senal={senal}
+              esAdmin={usuarioEsAdmin}
+              t={t}
+              locale={locale}
+            />
           ))}
         </div>
       )}

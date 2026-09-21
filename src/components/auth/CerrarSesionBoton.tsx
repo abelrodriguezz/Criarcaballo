@@ -2,8 +2,9 @@
 
 import { useRouter } from "next/navigation";
 import { crearClienteSupabase } from "@/lib/supabase/client";
+import type { Diccionario } from "@/lib/i18n";
 
-export function CerrarSesionBoton() {
+export function CerrarSesionBoton({ t }: { t: Diccionario }) {
   const router = useRouter();
 
   async function cerrarSesion() {
@@ -18,7 +19,7 @@ export function CerrarSesionBoton() {
       onClick={cerrarSesion}
       className="text-sm font-semibold text-loss hover:underline"
     >
-      Cerrar sesión
+      {t.perfil.cerrarSesion}
     </button>
   );
 }

@@ -14,7 +14,13 @@ export interface ItemTicker {
  * La lista se duplica una vez para que el loop de la animación no se
  * note el salto — se pausa al pasar el mouse para poder leer/hacer clic.
  */
-export function TickerNoticias({ items }: { items: ItemTicker[] }) {
+export function TickerNoticias({
+  items,
+  etiqueta = "Noticias",
+}: {
+  items: ItemTicker[];
+  etiqueta?: string;
+}) {
   // El título viene de la base (lo escribe el admin) o del RSS de un medio
   // externo; la URL, de los mismos dos sitios. React ya escapa el texto,
   // pero un href con "javascript:" sí se ejecutaría: se descarta el enlace
@@ -31,7 +37,7 @@ export function TickerNoticias({ items }: { items: ItemTicker[] }) {
     <div className="border border-[var(--border)] rounded-2xl bg-surface overflow-hidden flex items-stretch">
       <div className="shrink-0 bg-brand-secondary text-white text-[11px] font-bold uppercase tracking-wide px-3.5 flex items-center gap-1.5 z-10">
         <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
-        Noticias
+        {etiqueta}
       </div>
       <div className="overflow-hidden flex-1 py-3">
         <div className="ticker-pista flex w-max gap-10 px-6">

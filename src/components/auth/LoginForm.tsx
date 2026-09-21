@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { crearClienteSupabase } from "@/lib/supabase/client";
 import { Turnstile } from "@/components/auth/Turnstile";
+import type { Diccionario, Locale } from "@/lib/i18n";
 
 // Sin site key configurada, Turnstile no puede renderizar un widget real y
 // nunca llegaría un captchaToken — en ese caso el captcha se omite en vez
@@ -12,7 +13,10 @@ import { Turnstile } from "@/components/auth/Turnstile";
 // exige el token cuando tú actives "Attack Protection" con la secret key.
 const TURNSTILE_CONFIGURADO = !!process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
 
-export function LoginForm() {
+// `locale` no se usa en este formulario en particular (no pasa por
+// mensajeErrorAuth), pero se recibe para que las 4 páginas de auth tengan
+// la misma firma y no haya que recordar cuál sí la necesita.
+export function LoginForm({ t }: { t: Diccionario; locale: Locale }) {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -25,7 +29,7 @@ export function LoginForm() {
     setError(null);
 
     if (TURNSTILE_CONFIGURADO && !captchaToken) {
-      setError("Completa la verificación antes de continuar.");
+      setError(t.auth.completaVerificacion);
       return;
     }
 
@@ -41,7 +45,7 @@ export function LoginForm() {
     setCargando(false);
 
     if (error || !data.user) {
-      setError("Correo o contraseña incorrectos.");
+      setError(t.auth.correoIncorrecto);
       setCaptchaToken(null); // el token de Turnstile es de un solo uso
       return;
     }
@@ -54,7 +58,7 @@ export function LoginForm() {
 
     if (perfil && perfil.activo === false) {
       await supabase.auth.signOut();
-      setError("Esta cuenta fue desactivada. Contacta al equipo de soporte.");
+      setError(t.auth.cuentaDesactivadaLogin);
       setCaptchaToken(null);
       return;
     }
@@ -69,11 +73,11 @@ export function LoginForm() {
       className="bg-surface border border-[var(--border)] rounded-2xl p-6 max-w-[400px] w-full mx-auto"
     >
       <h1 className="font-display font-semibold text-lg mb-5">
-        Iniciar sesión
+        {t.auth.iniciarSesionTitulo}
       </h1>
 
       <label htmlFor="login-email" className="block text-[13px] font-medium mb-1.5">
-        Correo electrónico
+        {t.auth.correo}
       </label>
       <input
         id="login-email"
@@ -82,18 +86,18 @@ export function LoginForm() {
         value={email}
         onChange={(e) => setEmail(e.target.value)}
         className="w-full px-3.5 py-2.5 mb-3 rounded-lg border border-[var(--border)] bg-background text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary"
-        placeholder="tucorreo@ejemplo.com"
+        placeholder={t.auth.correoPlaceholder}
       />
 
       <div className="flex justify-between items-baseline mb-1.5">
         <label htmlFor="login-password" className="block text-[13px] font-medium">
-          Contraseña
+          {t.auth.contrasena}
         </label>
         <Link
           href="/recuperar-contrasena"
           className="text-[12px] text-brand-primary font-semibold"
         >
-          ¿Olvidaste tu contraseña?
+          {t.auth.olvidasteContrasena}
         </Link>
       </div>
       <input
@@ -121,13 +125,13 @@ export function LoginForm() {
         disabled={cargando || (TURNSTILE_CONFIGURADO && !captchaToken)}
         className="w-full bg-brand-primary hover:bg-brand-primary-hover disabled:opacity-60 text-white font-semibold text-sm py-3 rounded-xl transition-colors"
       >
-        {cargando ? "Ingresando..." : "Iniciar sesión"}
+        {cargando ? t.auth.ingresando : t.auth.iniciarSesionTitulo}
       </button>
 
       <p className="text-center text-[13px] text-foreground-muted mt-4">
-        ¿No tienes cuenta?{" "}
+        {t.auth.noTienesCuenta}{" "}
         <Link href="/registro" className="text-brand-primary font-semibold">
-          Regístrate
+          {t.auth.registrate}
         </Link>
       </p>
     </form>

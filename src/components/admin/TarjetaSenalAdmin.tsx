@@ -8,13 +8,18 @@ import { crearClienteSupabase } from "@/lib/supabase/client";
 import { urlGraficoTradingView } from "@/lib/format";
 import { IconoTendenciaSubida } from "@/components/ui/Iconos";
 import type { Senal } from "@/lib/types";
+import type { Diccionario, Locale } from "@/lib/i18n";
 
 export function TarjetaSenalAdmin({
   senal,
   esAdmin,
+  t,
+  locale = "es",
 }: {
   senal: Senal;
   esAdmin: boolean;
+  t: Diccionario;
+  locale?: Locale;
 }) {
   const router = useRouter();
   const [editando, setEditando] = useState(false);
@@ -86,8 +91,8 @@ export function TarjetaSenalAdmin({
   const resultadoInfo = senal.resultado && (
     <div className="text-[13px] text-foreground-muted mt-1">
       {senal.precio_cierre != null
-        ? `Cerró en ${senal.precio_cierre}`
-        : "Cerrada manualmente (sin precio registrado)"}
+        ? `${t.senales.cerroEn} ${senal.precio_cierre}`
+        : t.senales.cerradaManual}
       {senal.porcentaje_resultado != null && (
         <span
           className={senal.porcentaje_resultado >= 0 ? "text-gain" : "text-loss"}
@@ -100,11 +105,10 @@ export function TarjetaSenalAdmin({
       {senal.cerrado_en && (
         <>
           {" · "}
-          {new Date(senal.cerrado_en).toLocaleDateString("es-DO", {
-            day: "numeric",
-            month: "short",
-            year: "numeric",
-          })}
+          {new Date(senal.cerrado_en).toLocaleDateString(
+            locale === "en" ? "en-US" : "es-DO",
+            { day: "numeric", month: "short", year: "numeric" }
+          )}
         </>
       )}
     </div>
@@ -195,7 +199,7 @@ export function TarjetaSenalAdmin({
                 esCompra ? "bg-gain/15 text-gain" : "bg-loss/15 text-loss"
               }`}
             >
-              {esCompra ? "Compra" : "Venta"}
+              {esCompra ? t.senales.compra : t.senales.venta}
             </span>
             {senal.resultado && (
               <span
@@ -205,7 +209,7 @@ export function TarjetaSenalAdmin({
                     : "bg-loss/15 text-loss"
                 }`}
               >
-                {senal.resultado === "tp" ? "TP tocado" : "SL tocado"}
+                {senal.resultado === "tp" ? t.senales.tpTocado : t.senales.slTocado}
               </span>
             )}
           </div>
@@ -214,7 +218,7 @@ export function TarjetaSenalAdmin({
         <div className="grid grid-cols-3 gap-2 mb-3.5">
           <div className="bg-background px-2.5 py-2 text-center">
             <div className="text-[10px] uppercase tracking-wide text-foreground-muted">
-              Entrada
+              {t.senales.entrada}
             </div>
             <div className="font-display font-bold text-sm tabular">
               {senal.entrada}
@@ -222,7 +226,7 @@ export function TarjetaSenalAdmin({
           </div>
           <div className="bg-loss/10 px-2.5 py-2 text-center">
             <div className="text-[10px] uppercase tracking-wide text-loss">
-              Stop loss
+              {t.senales.stopLoss}
             </div>
             <div className="font-display font-bold text-sm tabular text-loss">
               {senal.stop_loss ?? "—"}
@@ -230,7 +234,7 @@ export function TarjetaSenalAdmin({
           </div>
           <div className="bg-gain/10 px-2.5 py-2 text-center">
             <div className="text-[10px] uppercase tracking-wide text-gain">
-              Take profit
+              {t.senales.takeProfit}
             </div>
             <div className="font-display font-bold text-sm tabular text-gain">
               {senal.take_profit ?? "—"}

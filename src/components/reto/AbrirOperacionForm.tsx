@@ -3,17 +3,20 @@
 import { useState } from "react";
 import { abrirOperacion } from "@/lib/actions/paperTrading";
 import { formatearDinero } from "@/lib/format";
+import type { Diccionario } from "@/lib/i18n";
 
 export function AbrirOperacionForm({
   activo,
   saldoDisponible,
   mercadoAbierto,
   esAdmin,
+  t,
 }: {
   activo: string;
   saldoDisponible: number;
   mercadoAbierto: boolean;
   esAdmin: boolean;
+  t: Diccionario;
 }) {
   const puedeOperar = mercadoAbierto || esAdmin;
   const [tipo, setTipo] = useState<"compra" | "venta">("compra");
@@ -30,9 +33,7 @@ export function AbrirOperacionForm({
       const resultado = await abrirOperacion(formData);
       if (!resultado.ok) setError(resultado.error);
     } catch {
-      setError(
-        "No se pudo abrir la operación en este momento. Inténtalo de nuevo."
-      );
+      setError(t.abrirOperacion.errorGenerico);
     } finally {
       setEnviando(false);
     }
@@ -52,7 +53,7 @@ export function AbrirOperacionForm({
               : "border-[var(--border)] text-foreground-muted"
           }`}
         >
-          Compra
+          {t.tradeDelDia.compra}
         </button>
         <button
           type="button"
@@ -63,7 +64,7 @@ export function AbrirOperacionForm({
               : "border-[var(--border)] text-foreground-muted"
           }`}
         >
-          Venta
+          {t.tradeDelDia.venta}
         </button>
       </div>
       <input type="hidden" name="tipo" value={tipo} />
@@ -80,19 +81,19 @@ export function AbrirOperacionForm({
           max={Math.floor(saldoDisponible * 100) / 100}
           step="0.01"
           required
-          placeholder="Monto de tu saldo de inversión a usar (USD)"
+          placeholder={t.abrirOperacion.montoPlaceholder}
           className="w-full px-3.5 py-2.5 rounded-lg border border-[var(--border)] bg-background text-sm"
         />
         <p className="text-[12px] text-foreground-muted mt-1">
-          Disponible: ${formatearDinero(saldoDisponible)}
+          {t.abrirOperacion.disponible}: ${formatearDinero(saldoDisponible)}
         </p>
       </div>
 
       {!mercadoAbierto && (
         <p className="text-[12px] text-brand-secondary bg-brand-secondary/10 rounded-lg px-3 py-2">
           {esAdmin
-            ? "El mercado está cerrado — como admin puedes operar igual."
-            : "El mercado está cerrado. Se puede operar de lunes a viernes, 9:30am a 4:00pm hora de Nueva York."}
+            ? t.abrirOperacion.mercadoCerradoAdmin
+            : t.abrirOperacion.mercadoCerrado}
         </p>
       )}
 
@@ -103,7 +104,7 @@ export function AbrirOperacionForm({
         disabled={enviando || saldoDisponible <= 0 || !puedeOperar}
         className="w-full bg-brand-primary hover:bg-brand-primary-hover disabled:opacity-60 text-white font-semibold text-sm py-3 rounded-xl transition-colors"
       >
-        {enviando ? "Abriendo..." : "Abrir operación"}
+        {enviando ? t.abrirOperacion.abriendo : t.abrirOperacion.abrirOperacion}
       </button>
     </form>
   );

@@ -6,12 +6,13 @@ import { useSearchParams } from "next/navigation";
 import { crearClienteSupabase } from "@/lib/supabase/client";
 import { mensajeErrorAuth } from "@/lib/auth/mensajesError";
 import { Turnstile } from "@/components/auth/Turnstile";
+import type { Diccionario, Locale } from "@/lib/i18n";
 
 // Ver nota en LoginForm.tsx: sin site key configurada, el captcha se omite
 // en vez de dejar el formulario deshabilitado para siempre.
 const TURNSTILE_CONFIGURADO = !!process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
 
-export function RegistroForm() {
+export function RegistroForm({ t, locale }: { t: Diccionario; locale: Locale }) {
   const searchParams = useSearchParams();
   const codigoRef = searchParams.get("ref");
 
@@ -28,15 +29,15 @@ export function RegistroForm() {
     setError(null);
 
     if (password !== confirmar) {
-      setError("Las contraseñas no coinciden.");
+      setError(t.auth.contrasenasNoCoinciden);
       return;
     }
     if (password.length < 8) {
-      setError("La contraseña debe tener al menos 8 caracteres.");
+      setError(t.auth.contrasenaCorta);
       return;
     }
     if (TURNSTILE_CONFIGURADO && !captchaToken) {
-      setError("Completa la verificación antes de continuar.");
+      setError(t.auth.completaVerificacion);
       return;
     }
 
@@ -53,9 +54,7 @@ export function RegistroForm() {
     setCargando(false);
 
     if (error) {
-      setError(
-        mensajeErrorAuth(error, "No se pudo crear la cuenta. Intenta de nuevo.")
-      );
+      setError(mensajeErrorAuth(error, t.auth.errorRegistroGenerico, locale));
       setCaptchaToken(null); // el token de Turnstile es de un solo uso
       return;
     }
@@ -67,11 +66,20 @@ export function RegistroForm() {
     return (
       <div className="bg-surface border border-[var(--border)] rounded-2xl p-6 max-w-[400px] w-full mx-auto text-center">
         <h1 className="font-display font-semibold text-lg mb-2">
-          Revisa tu correo
+          {t.auth.revisaTuCorreoTitulo}
         </h1>
         <p className="text-sm text-foreground-muted">
-          Te enviamos un enlace de confirmación a <strong>{email}</strong>.
-          Confírmalo para poder iniciar sesión.
+          {locale === "en" ? (
+            <>
+              We sent a confirmation link to <strong>{email}</strong>.{" "}
+              {t.auth.revisaTuCorreoRegistro}
+            </>
+          ) : (
+            <>
+              Te enviamos un enlace de confirmación a <strong>{email}</strong>.{" "}
+              {t.auth.revisaTuCorreoRegistro}
+            </>
+          )}
         </p>
       </div>
     );
@@ -83,11 +91,11 @@ export function RegistroForm() {
       className="bg-surface border border-[var(--border)] rounded-2xl p-6 max-w-[400px] w-full mx-auto"
     >
       <h1 className="font-display font-semibold text-lg mb-5">
-        Crear cuenta
+        {t.auth.crearCuentaTitulo}
       </h1>
 
       <label htmlFor="registro-email" className="block text-[13px] font-medium mb-1.5">
-        Correo electrónico
+        {t.auth.correo}
       </label>
       <input
         id="registro-email"
@@ -96,11 +104,11 @@ export function RegistroForm() {
         value={email}
         onChange={(e) => setEmail(e.target.value)}
         className="w-full px-3.5 py-2.5 mb-3 rounded-lg border border-[var(--border)] bg-background text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary"
-        placeholder="tucorreo@ejemplo.com"
+        placeholder={t.auth.correoPlaceholder}
       />
 
       <label htmlFor="registro-password" className="block text-[13px] font-medium mb-1.5">
-        Contraseña
+        {t.auth.contrasena}
       </label>
       <input
         id="registro-password"
@@ -109,11 +117,11 @@ export function RegistroForm() {
         value={password}
         onChange={(e) => setPassword(e.target.value)}
         className="w-full px-3.5 py-2.5 mb-3 rounded-lg border border-[var(--border)] bg-background text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary"
-        placeholder="Mínimo 8 caracteres"
+        placeholder={t.auth.contrasenaMinima}
       />
 
       <label htmlFor="registro-confirmar" className="block text-[13px] font-medium mb-1.5">
-        Confirmar contraseña
+        {t.auth.confirmarContrasena}
       </label>
       <input
         id="registro-confirmar"
@@ -140,13 +148,13 @@ export function RegistroForm() {
         disabled={cargando || (TURNSTILE_CONFIGURADO && !captchaToken)}
         className="w-full bg-brand-primary hover:bg-brand-primary-hover disabled:opacity-60 text-white font-semibold text-sm py-3 rounded-xl transition-colors"
       >
-        {cargando ? "Creando cuenta..." : "Crear cuenta"}
+        {cargando ? t.auth.creandoCuenta : t.auth.crearCuenta}
       </button>
 
       <p className="text-center text-[13px] text-foreground-muted mt-4">
-        ¿Ya tienes cuenta?{" "}
+        {t.auth.yaTienesCuenta}{" "}
         <Link href="/login" className="text-brand-primary font-semibold">
-          Inicia sesión
+          {t.auth.iniciaSesion}
         </Link>
       </p>
     </form>

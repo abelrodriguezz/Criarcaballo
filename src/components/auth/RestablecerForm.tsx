@@ -4,8 +4,9 @@ import { useEffect, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { crearClienteSupabase } from "@/lib/supabase/client";
 import { mensajeErrorAuth } from "@/lib/auth/mensajesError";
+import type { Diccionario, Locale } from "@/lib/i18n";
 
-export function RestablecerForm() {
+export function RestablecerForm({ t, locale }: { t: Diccionario; locale: Locale }) {
   const router = useRouter();
   const [listo, setListo] = useState(false);
   const [enlaceInvalido, setEnlaceInvalido] = useState(false);
@@ -40,10 +41,10 @@ export function RestablecerForm() {
   // Si en unos segundos no se detectó una sesión de recuperación válida,
   // asumimos que el enlace venció o es inválido.
   useEffect(() => {
-    const t = setTimeout(() => {
+    const temporizador = setTimeout(() => {
       if (!listo) setEnlaceInvalido(true);
     }, 4000);
-    return () => clearTimeout(t);
+    return () => clearTimeout(temporizador);
   }, [listo]);
 
   async function manejarEnvio(e: FormEvent) {
@@ -51,7 +52,7 @@ export function RestablecerForm() {
     setError(null);
 
     if (password !== confirmar) {
-      setError("Las contraseñas no coinciden.");
+      setError(t.auth.contrasenasNoCoinciden);
       return;
     }
     // 8 caracteres, igual que el registro. Estaba en 6 aquí: el usuario
@@ -59,7 +60,7 @@ export function RestablecerForm() {
     // genérico de Supabase ("No se pudo actualizar la contraseña") sin
     // saber nunca cuál era el problema real.
     if (password.length < 8) {
-      setError("La contraseña debe tener al menos 8 caracteres.");
+      setError(t.auth.contrasenaCorta);
       return;
     }
 
@@ -69,12 +70,7 @@ export function RestablecerForm() {
     setCargando(false);
 
     if (error) {
-      setError(
-        mensajeErrorAuth(
-          error,
-          "No se pudo actualizar la contraseña. Intenta de nuevo."
-        )
-      );
+      setError(mensajeErrorAuth(error, t.auth.errorRestablecerGenerico, locale));
       return;
     }
 
@@ -89,9 +85,9 @@ export function RestablecerForm() {
     return (
       <div className="bg-surface border border-[var(--border)] rounded-2xl p-6 max-w-[400px] w-full mx-auto text-center">
         <h1 className="font-display font-semibold text-lg mb-2">
-          Contraseña actualizada
+          {t.auth.contrasenaActualizadaTitulo}
         </h1>
-        <p className="text-sm text-foreground-muted">Redirigiendo...</p>
+        <p className="text-sm text-foreground-muted">{t.auth.redirigiendo}</p>
       </div>
     );
   }
@@ -100,17 +96,16 @@ export function RestablecerForm() {
     return (
       <div className="bg-surface border border-[var(--border)] rounded-2xl p-6 max-w-[400px] w-full mx-auto text-center">
         <h1 className="font-display font-semibold text-lg mb-2">
-          Enlace inválido o vencido
+          {t.auth.enlaceInvalidoTitulo}
         </h1>
         <p className="text-sm text-foreground-muted mb-4">
-          Los enlaces de recuperación expiran después de un tiempo. Solicita
-          uno nuevo.
+          {t.auth.enlaceInvalidoTexto}
         </p>
         <a
           href="/recuperar-contrasena"
           className="text-brand-primary font-semibold text-sm"
         >
-          Solicitar enlace nuevo
+          {t.auth.solicitarEnlaceNuevo}
         </a>
       </div>
     );
@@ -119,7 +114,7 @@ export function RestablecerForm() {
   if (!listo) {
     return (
       <div className="bg-surface border border-[var(--border)] rounded-2xl p-6 max-w-[400px] w-full mx-auto text-center">
-        <p className="text-sm text-foreground-muted">Verificando enlace...</p>
+        <p className="text-sm text-foreground-muted">{t.auth.verificandoEnlace}</p>
       </div>
     );
   }
@@ -130,14 +125,14 @@ export function RestablecerForm() {
       className="bg-surface border border-[var(--border)] rounded-2xl p-6 max-w-[400px] w-full mx-auto"
     >
       <h1 className="font-display font-semibold text-lg mb-5">
-        Nueva contraseña
+        {t.auth.nuevaContrasenaTitulo}
       </h1>
 
       <label
         htmlFor="restablecer-password"
         className="block text-[13px] font-medium mb-1.5"
       >
-        Nueva contraseña
+        {t.auth.nuevaContrasenaTitulo}
       </label>
       <input
         id="restablecer-password"
@@ -146,14 +141,14 @@ export function RestablecerForm() {
         value={password}
         onChange={(e) => setPassword(e.target.value)}
         className="w-full px-3.5 py-2.5 mb-3 rounded-lg border border-[var(--border)] bg-background text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary"
-        placeholder="Mínimo 8 caracteres"
+        placeholder={t.auth.contrasenaMinima}
       />
 
       <label
         htmlFor="restablecer-confirmar"
         className="block text-[13px] font-medium mb-1.5"
       >
-        Confirmar contraseña
+        {t.auth.confirmarContrasena}
       </label>
       <input
         id="restablecer-confirmar"
@@ -176,7 +171,7 @@ export function RestablecerForm() {
         disabled={cargando}
         className="w-full bg-brand-primary hover:bg-brand-primary-hover disabled:opacity-60 text-white font-semibold text-sm py-3 rounded-xl transition-colors"
       >
-        {cargando ? "Guardando..." : "Guardar nueva contraseña"}
+        {cargando ? t.auth.guardando : t.auth.guardarNuevaContrasena}
       </button>
     </form>
   );

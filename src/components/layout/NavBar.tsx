@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Logo } from "@/components/ui/Logo";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
+import { LanguageToggle } from "@/components/ui/LanguageToggle";
 import {
   IconoMercado,
   IconoSenales,
@@ -12,16 +13,25 @@ import {
   IconoPerfil,
 } from "@/components/ui/Iconos";
 import type { SesionUsuario } from "@/lib/auth/sesion";
+import type { Diccionario, Locale } from "@/lib/i18n";
 
-const ENLACES = [
-  { href: "/mercado", label: "Mercado", Icono: IconoMercado },
-  { href: "/senales", label: "Señales", Icono: IconoSenales },
-  { href: "/comunidad", label: "Comunidad", Icono: IconoComunidad },
-  { href: "/trade-del-dia", label: "Trade del día", Icono: IconoReto },
-];
-
-export function NavBar({ usuario }: { usuario: SesionUsuario | null }) {
+export function NavBar({
+  usuario,
+  locale,
+  t,
+}: {
+  usuario: SesionUsuario | null;
+  locale: Locale;
+  t: Diccionario;
+}) {
   const pathname = usePathname();
+
+  const ENLACES = [
+    { href: "/mercado", label: t.nav.mercado, Icono: IconoMercado },
+    { href: "/senales", label: t.nav.senales, Icono: IconoSenales },
+    { href: "/comunidad", label: t.nav.comunidad, Icono: IconoComunidad },
+    { href: "/trade-del-dia", label: t.nav.tradeDelDia, Icono: IconoReto },
+  ];
 
   return (
     <header className="max-w-[1080px] mx-auto w-full px-6 py-6 flex items-center justify-between">
@@ -72,9 +82,10 @@ export function NavBar({ usuario }: { usuario: SesionUsuario | null }) {
             href="/login"
             className="inline-flex items-center px-3 md:px-4 py-2 rounded-xl text-[13px] md:text-sm font-semibold bg-brand-primary text-white hover:bg-brand-primary-hover transition-colors whitespace-nowrap"
           >
-            Iniciar sesión
+            {t.nav.iniciarSesion}
           </Link>
         )}
+        <LanguageToggle locale={locale} />
         <ThemeToggle />
       </div>
     </header>

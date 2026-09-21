@@ -5,13 +5,16 @@ import { useRouter } from "next/navigation";
 import { crearClienteSupabase } from "@/lib/supabase/client";
 import { esWalletErc20Valida } from "@/lib/wallet";
 import { IconoWallet } from "@/components/ui/Iconos";
+import type { Diccionario } from "@/lib/i18n";
 
 export function WalletForm({
   usuarioId,
   walletActual,
+  t,
 }: {
   usuarioId: string;
   walletActual: string | null;
+  t: Diccionario;
 }) {
   const router = useRouter();
   const [editando, setEditando] = useState(false);
@@ -25,9 +28,7 @@ export function WalletForm({
 
     const limpio = valor.trim();
     if (limpio && !esWalletErc20Valida(limpio)) {
-      setError(
-        "Formato inválido. Debe ser una dirección ERC20 (empieza con 0x, 42 caracteres)."
-      );
+      setError(t.wallet.formatoInvalido);
       return;
     }
 
@@ -40,7 +41,7 @@ export function WalletForm({
     setGuardando(false);
 
     if (error) {
-      setError("No se pudo guardar. Intenta de nuevo.");
+      setError(t.wallet.errorGuardar);
       return;
     }
 
@@ -58,16 +59,14 @@ export function WalletForm({
           <IconoWallet />
         </div>
         <div className="min-w-0 flex-1">
-          <div className="font-medium text-sm">
-            Wallet para recompensas (USDT · ERC20)
-          </div>
+          <div className="font-medium text-sm">{t.wallet.titulo}</div>
           {walletActual ? (
             <div className="text-[13px] text-foreground-muted font-mono truncate">
               {walletActual}
             </div>
           ) : (
             <div className="text-[13px] text-foreground-muted">
-              No has agregado una wallet todavía.
+              {t.wallet.sinWallet}
             </div>
           )}
         </div>
@@ -92,9 +91,7 @@ export function WalletForm({
       className="border border-[var(--brand-primary)] bg-[var(--brand-primary)]/5 rounded-2xl p-5 mb-4"
     >
       <div className="flex justify-between items-center mb-2.5">
-        <div className="font-medium text-sm">
-          Wallet para recompensas (USDT · ERC20)
-        </div>
+        <div className="font-medium text-sm">{t.wallet.titulo}</div>
         <button
           type="button"
           onClick={() => {
@@ -104,7 +101,7 @@ export function WalletForm({
           }}
           className="text-xs text-foreground-muted"
         >
-          Cancelar
+          {t.wallet.cancelar}
         </button>
       </div>
 
@@ -115,11 +112,7 @@ export function WalletForm({
         className="w-full px-3.5 py-2.5 mb-1.5 rounded-lg border border-[var(--border)] bg-background text-sm font-mono"
       />
       <p className="text-[12px] text-foreground-muted mb-3">
-        Solo se usa para enviarte recompensas si ganas un concurso — no
-        habilita depósitos ni retiros en la plataforma. Asegúrate de que
-        sea tu dirección en la red <strong>Ethereum (ERC20)</strong>, no en
-        BSC, Polygon u otra red compatible — el formato es el mismo pero
-        el pago se hace específicamente en ERC20.
+        {t.wallet.descripcion}
       </p>
 
       {error && <p className="text-loss text-[13px] mb-2">{error}</p>}
@@ -129,7 +122,7 @@ export function WalletForm({
         disabled={guardando}
         className="bg-brand-primary hover:bg-brand-primary-hover disabled:opacity-60 text-white font-semibold text-sm px-5 py-2.5 rounded-lg transition-colors"
       >
-        {guardando ? "Guardando..." : "Guardar"}
+        {guardando ? t.wallet.guardando : t.wallet.guardar}
       </button>
     </form>
   );

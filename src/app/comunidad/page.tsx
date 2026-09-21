@@ -4,6 +4,7 @@ import { IconoComunidad } from "@/components/ui/Iconos";
 import { CopiarBoton } from "@/components/ui/CopiarBoton";
 import { obtenerUsuarioActual } from "@/lib/auth/sesion";
 import { crearClienteSupabaseServidor } from "@/lib/supabase/server";
+import { obtenerDiccionario } from "@/lib/i18n/servidor";
 
 export default async function PaginaComunidad() {
   const usuario = await obtenerUsuarioActual();
@@ -12,13 +13,14 @@ export default async function PaginaComunidad() {
 
   const supabase = await crearClienteSupabaseServidor();
 
-  const [{ data: perfil }, { data: totalInvitados }] = await Promise.all([
+  const [{ data: perfil }, { data: totalInvitados }, t] = await Promise.all([
     supabase
       .from("usuarios")
       .select("codigo_invitacion")
       .eq("id", usuario.id)
       .single(),
     supabase.rpc("contar_invitados"),
+    obtenerDiccionario(),
   ]);
 
   const headersList = await headers();
@@ -33,22 +35,20 @@ export default async function PaginaComunidad() {
     <div className="py-10">
       <h1 className="font-display font-semibold text-[26px] flex items-center gap-2.5 mb-1.5">
         <IconoComunidad className="w-6 h-6 text-brand-primary" />
-        Comunidad
+        {t.comunidad.titulo}
       </h1>
       <p className="text-foreground-muted text-[15px] mb-7">
-        Invita a más personas a la plataforma — sin comisiones ni pagos por
-        referidos, solo crecimiento de la comunidad.
+        {t.comunidad.subtitulo}
       </p>
 
       {!codigo ? (
         <p className="text-foreground-muted text-sm border border-dashed border-[var(--border)] rounded-2xl p-6 text-center mb-4">
-          Todavía no tienes un código de invitación asignado. Si tu cuenta es
-          anterior a esta función, pide al admin que te genere uno.
+          {t.comunidad.sinCodigo}
         </p>
       ) : (
         <div className="border border-[var(--border)] rounded-2xl p-5 mb-4">
           <label className="block text-[13px] font-medium text-foreground-muted mb-1.5">
-            Enlace de invitación
+            {t.comunidad.enlaceInvitacion}
           </label>
           <div className="flex gap-2 mb-4">
             <input
@@ -56,11 +56,11 @@ export default async function PaginaComunidad() {
               value={linkInvitacion}
               className="flex-1 min-w-0 px-3.5 py-2.5 rounded-lg border border-[var(--border)] bg-surface text-sm text-foreground-muted truncate"
             />
-            <CopiarBoton texto={linkInvitacion} />
+            <CopiarBoton texto={linkInvitacion} t={t} />
           </div>
 
           <label className="block text-[13px] font-medium text-foreground-muted mb-1.5">
-            Código de invitación
+            {t.comunidad.codigoInvitacion}
           </label>
           <div className="flex gap-2">
             <input
@@ -68,7 +68,7 @@ export default async function PaginaComunidad() {
               value={codigo}
               className="flex-1 min-w-0 px-3.5 py-2.5 rounded-lg border border-[var(--border)] bg-surface text-sm font-display font-semibold"
             />
-            <CopiarBoton texto={codigo} />
+            <CopiarBoton texto={codigo} t={t} />
           </div>
         </div>
       )}
@@ -79,13 +79,13 @@ export default async function PaginaComunidad() {
             {totalInvitados ?? 0}
           </div>
           <div className="text-[13px] text-foreground-muted">
-            miembros invitados por ti
+            {t.comunidad.miembrosInvitados}
           </div>
         </div>
         <div className="border border-[var(--border)] rounded-2xl p-4.5 text-center">
           <div className="font-display font-bold text-2xl">$0.00</div>
           <div className="text-[13px] text-foreground-muted">
-            comisiones por invitar — no aplica
+            {t.comunidad.comisionesInvitar}
           </div>
         </div>
       </div>
