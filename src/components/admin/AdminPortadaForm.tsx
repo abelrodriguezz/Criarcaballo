@@ -3,12 +3,17 @@
 import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { crearClienteSupabase } from "@/lib/supabase/client";
-import type { ConfigHero } from "@/lib/config-portada";
+import type { ConfigHeroAmbosIdiomas } from "@/lib/config-portada";
 
-export function AdminPortadaForm({ heroActual }: { heroActual: ConfigHero }) {
+export function AdminPortadaForm({
+  heroActual,
+}: {
+  heroActual: ConfigHeroAmbosIdiomas;
+}) {
   const router = useRouter();
   const [abierto, setAbierto] = useState(false);
   const [hero, setHero] = useState(heroActual);
+  const [idioma, setIdioma] = useState<"es" | "en">("es");
   const [error, setError] = useState<string | null>(null);
   const [guardando, setGuardando] = useState(false);
 
@@ -44,6 +49,15 @@ export function AdminPortadaForm({ heroActual }: { heroActual: ConfigHero }) {
     );
   }
 
+  // Los nombres de campo cambian según el idioma que se esté editando
+  // (badge vs badge_en, etc.) — la portada pública lee el que corresponda
+  // según el idioma que la persona haya elegido con el toggle ES/EN.
+  const sufijo = idioma === "en" ? "_en" : "";
+  const badge = idioma === "en" ? hero.badge_en : hero.badge;
+  const titulo1 = idioma === "en" ? hero.titulo_linea1_en : hero.titulo_linea1;
+  const titulo2 = idioma === "en" ? hero.titulo_linea2_en : hero.titulo_linea2;
+  const subtitulo = idioma === "en" ? hero.subtitulo_en : hero.subtitulo;
+
   return (
     <form
       onSubmit={manejarEnvio}
@@ -62,12 +76,39 @@ export function AdminPortadaForm({ heroActual }: { heroActual: ConfigHero }) {
         </button>
       </div>
 
+      <div className="flex items-center border border-[var(--border)] w-fit mb-4 text-[11px] font-bold">
+        <button
+          type="button"
+          onClick={() => setIdioma("es")}
+          className={`px-3 py-1.5 transition-colors ${
+            idioma === "es"
+              ? "bg-brand-primary text-white"
+              : "text-foreground-muted"
+          }`}
+        >
+          Español
+        </button>
+        <button
+          type="button"
+          onClick={() => setIdioma("en")}
+          className={`px-3 py-1.5 transition-colors ${
+            idioma === "en"
+              ? "bg-brand-primary text-white"
+              : "text-foreground-muted"
+          }`}
+        >
+          English
+        </button>
+      </div>
+
       <label className="block text-[12px] font-medium text-foreground-muted mb-1">
         Badge superior
       </label>
       <input
-        value={hero.badge}
-        onChange={(e) => setHero({ ...hero, badge: e.target.value })}
+        value={badge}
+        onChange={(e) =>
+          setHero({ ...hero, [`badge${sufijo}`]: e.target.value })
+        }
         className="w-full px-3 py-2 mb-2.5 rounded-lg border border-[var(--border)] bg-background text-sm"
       />
 
@@ -77,9 +118,9 @@ export function AdminPortadaForm({ heroActual }: { heroActual: ConfigHero }) {
             Título — línea 1
           </label>
           <input
-            value={hero.titulo_linea1}
+            value={titulo1}
             onChange={(e) =>
-              setHero({ ...hero, titulo_linea1: e.target.value })
+              setHero({ ...hero, [`titulo_linea1${sufijo}`]: e.target.value })
             }
             className="w-full px-3 py-2 rounded-lg border border-[var(--border)] bg-background text-sm"
           />
@@ -89,9 +130,9 @@ export function AdminPortadaForm({ heroActual }: { heroActual: ConfigHero }) {
             Título — línea 2
           </label>
           <input
-            value={hero.titulo_linea2}
+            value={titulo2}
             onChange={(e) =>
-              setHero({ ...hero, titulo_linea2: e.target.value })
+              setHero({ ...hero, [`titulo_linea2${sufijo}`]: e.target.value })
             }
             className="w-full px-3 py-2 rounded-lg border border-[var(--border)] bg-background text-sm"
           />
@@ -102,8 +143,10 @@ export function AdminPortadaForm({ heroActual }: { heroActual: ConfigHero }) {
         Subtítulo
       </label>
       <textarea
-        value={hero.subtitulo}
-        onChange={(e) => setHero({ ...hero, subtitulo: e.target.value })}
+        value={subtitulo}
+        onChange={(e) =>
+          setHero({ ...hero, [`subtitulo${sufijo}`]: e.target.value })
+        }
         rows={2}
         className="w-full px-3 py-2 mb-4 rounded-lg border border-[var(--border)] bg-background text-sm resize-none"
       />

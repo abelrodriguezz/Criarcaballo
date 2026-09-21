@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { IconoMercado, IconoSenales, IconoReto } from "@/components/ui/Iconos";
 import { esAdmin, obtenerUsuarioActual } from "@/lib/auth/sesion";
-import { obtenerConfigPortada } from "@/lib/config-portada";
+import { obtenerConfigPortada, obtenerConfigPortadaCompleta } from "@/lib/config-portada";
 import { AdminPortadaForm } from "@/components/admin/AdminPortadaForm";
 import { obtenerPrecioIndice } from "@/lib/market/yahoo";
 import { obtenerNoticiasExternas } from "@/lib/noticias/feedExterno";
@@ -9,15 +9,15 @@ import { formatearPrecio } from "@/lib/format";
 import { crearClienteSupabaseServidor } from "@/lib/supabase/server";
 import { TickerNoticias, type ItemTicker } from "@/components/ui/TickerNoticias";
 import { SparklineChart } from "@/components/mercado/SparklineChart";
-import { obtenerDiccionario } from "@/lib/i18n/servidor";
+import { obtenerDiccionario, obtenerLocale } from "@/lib/i18n/servidor";
 import type { Noticia } from "@/lib/types";
 
 export default async function PaginaInicio() {
   const supabase = await crearClienteSupabaseServidor();
-  const [usuario, { hero }, sp500, { data: noticiasPropias }, noticiasExternas, t] =
+  const [usuario, locale, sp500, { data: noticiasPropias }, noticiasExternas, t] =
     await Promise.all([
       obtenerUsuarioActual(),
-      obtenerConfigPortada(),
+      obtenerLocale(),
       obtenerPrecioIndice("^GSPC"),
       supabase
         .from("noticias")
@@ -30,6 +30,10 @@ export default async function PaginaInicio() {
       obtenerDiccionario(),
     ]);
   const usuarioEsAdmin = esAdmin(usuario);
+  const [{ hero }, heroCompleto] = await Promise.all([
+    obtenerConfigPortada(locale),
+    usuarioEsAdmin ? obtenerConfigPortadaCompleta() : Promise.resolve(null),
+  ]);
 
   // Primero lo que tú publicaste (con estrella si está destacada), luego
   // titulares reales de Cointelegraph/MarketWatch para que el ticker
@@ -51,7 +55,9 @@ export default async function PaginaInicio() {
 
   return (
     <div className="pt-10 pb-20">
-      {usuarioEsAdmin && <AdminPortadaForm heroActual={hero} />}
+      {usuarioEsAdmin && heroCompleto && (
+        <AdminPortadaForm heroActual={heroCompleto} />
+      )}
 
       <div className="grid md:grid-cols-2 gap-10 md:gap-12 items-center">
         <div>
