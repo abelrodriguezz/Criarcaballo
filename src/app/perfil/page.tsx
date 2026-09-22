@@ -205,6 +205,15 @@ export default async function PaginaPerfil() {
         />
       )}
 
+      {esAdmin(usuario) && (
+        <TarjetaMenu
+          href="/referidos"
+          icono={<IconoUsuarios />}
+          titulo="Referidos"
+          subtitulo="Quién invitó a quién y premios por referido"
+        />
+      )}
+
       <div className="border border-[var(--border)] rounded-2xl p-5 mb-4 mt-1">
         <div className="font-medium text-sm mb-3">{t.perfil.ganancias}</div>
         <div

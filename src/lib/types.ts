@@ -86,6 +86,9 @@ export interface GananciaConcurso {
   pagado: boolean;
   pagado_en: string | null;
   pagado_por: string | null;
+  origen: "concurso" | "trade" | "referido";
+  operacion_id: string | null;
+  invitado_id: string | null;
 }
 
 export interface DepositoSimulado {

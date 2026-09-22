@@ -3,6 +3,7 @@
 interface FilaReporte {
   idCorto: number | null;
   email: string;
+  wallet: string | null;
   operoEseDia: boolean;
   numOperaciones: number;
   gananciaNeta: number;
@@ -24,6 +25,7 @@ export function BotonExportarCSV({
     const encabezados = [
       "ID",
       "Correo",
+      "Wallet (USDT-ERC20)",
       "Operó ese día",
       "N° de operaciones",
       "Ganancia/Pérdida neta (USD)",
@@ -51,6 +53,7 @@ export function BotonExportarCSV({
       [
         escapar(f.idCorto ?? ""),
         escapar(f.email),
+        escapar(f.wallet ?? ""),
         escapar(f.operoEseDia ? "Sí" : "No"),
         escapar(f.numOperaciones),
         escapar(f.gananciaNeta.toFixed(2)),

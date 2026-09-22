@@ -19,7 +19,7 @@ interface FilaAgregado {
 }
 
 type GananciaPendiente = GananciaConcurso & {
-  usuarios: { email: string; id_corto: number | null } | null;
+  usuarios: { email: string; id_corto: number | null; wallet_usdt_erc20: string | null } | null;
 };
 
 export default async function PaginaReportes({
@@ -62,7 +62,7 @@ export default async function PaginaReportes({
     await Promise.all([
       supabase
         .from("usuarios")
-        .select("id, email, id_corto")
+        .select("id, email, id_corto, wallet_usdt_erc20")
         .order("email"),
       supabase.rpc("reporte_operaciones_por_dia", {
         p_inicio: inicio,
@@ -74,7 +74,7 @@ export default async function PaginaReportes({
         // PostgREST no sabe cuál usar y devuelve el error PGRST201 en vez
         // de datos (el filtro quedaba silenciosamente vacío).
         .from("ganancias_concursos")
-        .select("*, usuarios!usuario_id(email, id_corto)")
+        .select("*, usuarios!usuario_id(email, id_corto, wallet_usdt_erc20)")
         .eq("pagado", false)
         .order("created_at", { ascending: true })
         .returns<GananciaPendiente[]>(),
@@ -99,6 +99,7 @@ export default async function PaginaReportes({
       id: u.id,
       idCorto: u.id_corto,
       email: u.email,
+      wallet: u.wallet_usdt_erc20 ?? null,
       operoEseDia: numOperaciones > 0,
       numOperaciones,
       gananciaNeta: agr ? Number(agr.ganancia_neta) : 0,
@@ -192,6 +193,9 @@ export default async function PaginaReportes({
                       month: "short",
                       year: "numeric",
                     })}
+                  </div>
+                  <div className="text-[11px] text-foreground-muted font-mono truncate">
+                    {p.usuarios?.wallet_usdt_erc20 ?? "Sin wallet"}
                   </div>
                 </div>
                 <div className="flex items-center gap-3 shrink-0">
@@ -316,6 +320,9 @@ export default async function PaginaReportes({
                   {f.numOperaciones}{" "}
                   {f.numOperaciones === 1 ? "operación" : "operaciones"} ese
                   día
+                </div>
+                <div className="text-[11px] text-foreground-muted font-mono truncate">
+                  {f.wallet ?? "Sin wallet"}
                 </div>
               </div>
               <div className="flex items-center gap-3 shrink-0">

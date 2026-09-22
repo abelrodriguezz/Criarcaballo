@@ -23,6 +23,11 @@ export function AbrirOperacionForm({
   const [enviando, setEnviando] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Se opera siempre con el saldo completo — el campo se deja visible pero
+  // de solo lectura (no "disabled": un input disabled no se manda en el
+  // FormData, y la server action necesita recibir este valor igual).
+  const montoCompleto = Math.floor(saldoDisponible * 100) / 100;
+
   async function accion(formData: FormData) {
     setError(null);
     setEnviando(true);
@@ -73,16 +78,10 @@ export function AbrirOperacionForm({
         <input
           name="monto"
           type="number"
-          min="1"
-          // El saldo tiene muchos decimales (la ganancia es diferencia de
-          // precio × cantidad) y con step="0.01" el navegador rechazaría
-          // por "paso inválido" un monto igual al máximo exacto: se
-          // redondea hacia abajo a centavos.
-          max={Math.floor(saldoDisponible * 100) / 100}
-          step="0.01"
-          required
-          placeholder={t.abrirOperacion.montoPlaceholder}
-          className="w-full px-3.5 py-2.5 rounded-lg border border-[var(--border)] bg-background text-sm"
+          readOnly
+          value={montoCompleto}
+          aria-label={t.abrirOperacion.montoPlaceholder}
+          className="w-full px-3.5 py-2.5 rounded-lg border border-[var(--border)] bg-surface text-sm text-foreground-muted cursor-not-allowed"
         />
         <p className="text-[12px] text-foreground-muted mt-1">
           {t.abrirOperacion.disponible}: ${formatearDinero(saldoDisponible)}
