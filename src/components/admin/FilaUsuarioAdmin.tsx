@@ -4,16 +4,19 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { crearClienteSupabase } from "@/lib/supabase/client";
-import type { Usuario } from "@/lib/types";
+import { BotonEliminarAdmin } from "@/components/admin/BotonEliminarAdmin";
+import type { Usuario, DepositoSimulado } from "@/lib/types";
 
 export function FilaUsuarioAdmin({
   usuario,
   esUnoMismo,
   cantidadInvitados,
+  depositoSimulado,
 }: {
   usuario: Usuario;
   esUnoMismo: boolean;
   cantidadInvitados: number;
+  depositoSimulado: DepositoSimulado | null;
 }) {
   const router = useRouter();
   const [guardando, setGuardando] = useState(false);
@@ -95,6 +98,18 @@ export function FilaUsuarioAdmin({
         {usuario.wallet_usdt_erc20 && (
           <div className="text-[11px] text-foreground-muted font-mono truncate mt-0.5">
             {usuario.wallet_usdt_erc20}
+          </div>
+        )}
+        {depositoSimulado && (
+          <div className="flex items-center gap-2 mt-1">
+            <span className="text-[11px] font-bold bg-gain/15 text-gain px-2 py-0.5 rounded-full">
+              Depósito simulado: ${depositoSimulado.monto.toFixed(2)}
+            </span>
+            <BotonEliminarAdmin
+              tabla="depositos_simulados"
+              id={depositoSimulado.id}
+              textoConfirmacion="¿Eliminar este depósito simulado? El usuario podrá volver a hacer la simulación una vez."
+            />
           </div>
         )}
         {error && <p className="text-loss text-[12px] mt-0.5">{error}</p>}

@@ -85,6 +85,14 @@ export interface GananciaConcurso {
   pagado_por: string | null;
 }
 
+export interface DepositoSimulado {
+  id: string;
+  usuario_id: string;
+  monto: number;
+  wallet_mostrada: string | null;
+  created_at: string;
+}
+
 export interface MensajeSoporte {
   id: string;
   usuario_id: string;

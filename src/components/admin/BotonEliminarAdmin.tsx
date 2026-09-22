@@ -9,7 +9,7 @@ export function BotonEliminarAdmin({
   id,
   textoConfirmacion,
 }: {
-  tabla: "senales" | "noticias" | "ganancias_concursos";
+  tabla: "senales" | "noticias" | "ganancias_concursos" | "depositos_simulados";
   id: string;
   textoConfirmacion: string;
 }) {

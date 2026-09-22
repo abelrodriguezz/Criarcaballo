@@ -2,16 +2,24 @@
 
 import { useMemo, useState } from "react";
 import { FilaUsuarioAdmin } from "@/components/admin/FilaUsuarioAdmin";
-import type { Usuario } from "@/lib/types";
+import type { Usuario, DepositoSimulado } from "@/lib/types";
 
 export function ListaUsuariosAdmin({
   usuarios,
   miId,
+  depositosSimulados,
 }: {
   usuarios: Usuario[];
   miId: string;
+  depositosSimulados: DepositoSimulado[];
 }) {
   const [busqueda, setBusqueda] = useState("");
+
+  const depositosPorUsuario = useMemo(() => {
+    const mapa = new Map<string, DepositoSimulado>();
+    for (const d of depositosSimulados) mapa.set(d.usuario_id, d);
+    return mapa;
+  }, [depositosSimulados]);
 
   // Se calcula una sola vez a partir de la lista completa — cada usuario
   // ya trae su propio invitado_por, así que contar cuántos apuntan a cada
@@ -58,6 +66,7 @@ export function ListaUsuariosAdmin({
               usuario={u}
               esUnoMismo={u.id === miId}
               cantidadInvitados={conteoInvitados.get(u.id) ?? 0}
+              depositoSimulado={depositosPorUsuario.get(u.id) ?? null}
             />
           ))}
         </div>

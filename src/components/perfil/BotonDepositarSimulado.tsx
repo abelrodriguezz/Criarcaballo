@@ -1,24 +1,32 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { crearClienteSupabase } from "@/lib/supabase/client";
 import { CopiarBoton } from "@/components/ui/CopiarBoton";
 import { IconoWallet } from "@/components/ui/Iconos";
 import type { Diccionario } from "@/lib/i18n";
 
 export function BotonDepositarSimulado({
+  usuarioId,
   walletsAdmin,
   mensajeSimulacion,
+  depositoExistente,
   t,
 }: {
+  usuarioId: string;
   walletsAdmin: string[];
   mensajeSimulacion: string;
+  depositoExistente: { monto: number } | null;
   t: Diccionario;
 }) {
+  const router = useRouter();
   const [abierto, setAbierto] = useState(false);
   const [walletElegida, setWalletElegida] = useState<string | null>(null);
   const [monto, setMonto] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [enviado, setEnviado] = useState(false);
+  const [enviando, setEnviando] = useState(false);
 
   function abrir() {
     // Al azar cada vez que se abre, no solo una vez por carga de página.
@@ -35,18 +43,52 @@ export function BotonDepositarSimulado({
 
   function cerrar() {
     setAbierto(false);
+    // Si se acaba de registrar el depósito, refresca para que el resto de
+    // la página (y este mismo componente) refleje el estado "ya hecho".
+    if (enviado) router.refresh();
   }
 
-  function manejarEnviar() {
+  async function manejarEnviar() {
     const num = Number(monto.replace(",", "."));
     if (!Number.isFinite(num) || num <= 0) {
       setError(t.perfil.depositarMontoInvalido);
       return;
     }
     setError(null);
-    // Es una simulación a propósito: no se llama ninguna API ni se guarda
-    // nada — el único efecto es mostrar el mensaje que el admin configuró.
+    setEnviando(true);
+    // Sigue siendo una simulación (no se mueve dinero real ni se llama a
+    // ninguna wallet) — pero ahora sí queda registrado el monto para que
+    // el admin lo vea en Gestión de usuarios. El unique(usuario_id) en la
+    // tabla es lo que impone "una sola vez" a nivel de base de datos.
+    const supabase = crearClienteSupabase();
+    const { error: dbError } = await supabase.from("depositos_simulados").insert({
+      usuario_id: usuarioId,
+      monto: num,
+      wallet_mostrada: walletElegida,
+    });
+    setEnviando(false);
+
+    if (dbError) {
+      setError(t.perfil.depositarErrorGuardar);
+      return;
+    }
     setEnviado(true);
+  }
+
+  if (depositoExistente) {
+    return (
+      <div className="w-full border border-[var(--border)] rounded-2xl p-4 mb-3 flex items-center gap-3.5">
+        <div className="shrink-0 w-10 h-10 rounded-[4px] bg-gain/10 text-gain flex items-center justify-center">
+          <IconoWallet />
+        </div>
+        <div className="min-w-0 flex-1">
+          <div className="font-medium text-sm">{t.perfil.depositarYaHecho}</div>
+          <div className="text-[12px] text-foreground-muted tabular">
+            ${depositoExistente.monto.toFixed(2)} USDT
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -135,7 +177,8 @@ export function BotonDepositarSimulado({
 
                 <button
                   onClick={manejarEnviar}
-                  className="w-full bg-brand-primary hover:bg-brand-primary-hover text-white font-semibold text-sm py-3 rounded-xl transition-colors"
+                  disabled={enviando}
+                  className="w-full bg-brand-primary hover:bg-brand-primary-hover disabled:opacity-60 text-white font-semibold text-sm py-3 rounded-xl transition-colors"
                 >
                   {t.perfil.depositarEnviar}
                 </button>

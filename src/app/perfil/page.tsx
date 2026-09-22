@@ -42,6 +42,7 @@ export default async function PaginaPerfil() {
     { data: ganancias },
     walletsAdminRaw,
     simulacion,
+    depositoSimuladoRaw,
   ] = await Promise.all([
     supabase
       .from("saldo_virtual")
@@ -81,8 +82,16 @@ export default async function PaginaPerfil() {
     usuarioEsAdmin
       ? obtenerMensajeSimulacionCompleto()
       : obtenerMensajeSimulacion(locale),
+    usuarioEsAdmin
+      ? Promise.resolve({ data: null as { monto: number } | null })
+      : supabase
+          .from("depositos_simulados")
+          .select("monto")
+          .eq("usuario_id", usuario.id)
+          .maybeSingle(),
   ]);
   const walletsAdmin = walletsAdminRaw.data ?? [];
+  const depositoSimulado = depositoSimuladoRaw.data ?? null;
 
   const totalGanancias = (ganancias ?? []).reduce(
     (suma, g) => suma + g.monto,
@@ -141,8 +150,10 @@ export default async function PaginaPerfil() {
         />
       ) : (
         <BotonDepositarSimulado
+          usuarioId={usuario.id}
           walletsAdmin={walletsAdmin}
           mensajeSimulacion={simulacion as string}
+          depositoExistente={depositoSimulado}
           t={t}
         />
       )}

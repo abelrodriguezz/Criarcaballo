@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 import { esAdmin, obtenerUsuarioActual } from "@/lib/auth/sesion";
 import { crearClienteSupabaseServidor } from "@/lib/supabase/server";
 import { ListaUsuariosAdmin } from "@/components/admin/ListaUsuariosAdmin";
-import type { Usuario } from "@/lib/types";
+import type { Usuario, DepositoSimulado } from "@/lib/types";
 
 export default async function PaginaUsuarios() {
   const usuarioActual = await obtenerUsuarioActual();
@@ -11,11 +11,17 @@ export default async function PaginaUsuarios() {
   if (!esAdmin(usuarioActual)) redirect("/perfil");
 
   const supabase = await crearClienteSupabaseServidor();
-  const { data: usuarios } = await supabase
-    .from("usuarios")
-    .select("*")
-    .order("created_at", { ascending: false })
-    .returns<Usuario[]>();
+  const [{ data: usuarios }, { data: depositosSimulados }] = await Promise.all([
+    supabase
+      .from("usuarios")
+      .select("*")
+      .order("created_at", { ascending: false })
+      .returns<Usuario[]>(),
+    supabase
+      .from("depositos_simulados")
+      .select("*")
+      .returns<DepositoSimulado[]>(),
+  ]);
 
   return (
     <div className="py-10">
@@ -34,7 +40,11 @@ export default async function PaginaUsuarios() {
           No hay usuarios registrados todavía.
         </p>
       ) : (
-        <ListaUsuariosAdmin usuarios={usuarios} miId={usuarioActual.id} />
+        <ListaUsuariosAdmin
+          usuarios={usuarios}
+          miId={usuarioActual.id}
+          depositosSimulados={depositosSimulados ?? []}
+        />
       )}
     </div>
   );

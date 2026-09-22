@@ -140,6 +140,8 @@ export const es = {
     depositarSinWallets:
       "El admin todavía no configuró ninguna wallet para esta simulación.",
     depositarMontoInvalido: "Ingresa un monto mayor a cero.",
+    depositarYaHecho: "Ya hiciste tu depósito simulado",
+    depositarErrorGuardar: "No se pudo registrar. Intenta de nuevo.",
   },
   tradeDelDia: {
     titulo: "Trade del día",
