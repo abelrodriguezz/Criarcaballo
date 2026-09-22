@@ -13,6 +13,18 @@ import { urlSeguraParaEnlace } from "@/lib/url";
 import { obtenerDiccionario, obtenerLocale } from "@/lib/i18n/servidor";
 import type { Noticia } from "@/lib/types";
 
+// Alturas (%) para las "velas" decorativas del fondo de cada tarjeta de
+// noticia — determinístico según el índice de la tarjeta (misma tarjeta,
+// mismo patrón siempre) y con tendencia ascendente para que se lea como
+// un mini-gráfico de mercado, no como ruido aleatorio.
+function velasDecorativas(semilla: number): number[] {
+  return Array.from({ length: 16 }, (_, i) => {
+    const tendencia = 30 + (i / 15) * 45;
+    const ondulacion = Math.sin(semilla * 12.9898 + i * 4.5) * 20;
+    return Math.min(95, Math.max(15, Math.round(tendencia + ondulacion)));
+  });
+}
+
 export default async function PaginaInicio() {
   const supabase = await crearClienteSupabaseServidor();
   const [usuario, locale, sp500, { data: noticiasPropias }, noticiasExternas, t] =
@@ -173,7 +185,23 @@ export default async function PaginaInicio() {
                     background: `radial-gradient(120% 100% at 100% 0%, color-mix(in srgb, ${colorAcento} 10%, var(--surface)) 0%, var(--surface) 60%)`,
                   }}
                 >
-                  <div className="flex items-center justify-between">
+                  {/* Fondo decorativo tipo velas de trading — puramente
+                      estético, apenas visible, para que la tarjeta se
+                      sienta "de mercado" y no un recuadro de texto suelto. */}
+                  <div
+                    className="absolute inset-x-0 bottom-0 h-16 flex items-end justify-end gap-[3px] px-4 opacity-[0.14] pointer-events-none"
+                    aria-hidden
+                  >
+                    {velasDecorativas(i).map((alto, idx) => (
+                      <div
+                        key={idx}
+                        className="w-[5px] rounded-t-[1px]"
+                        style={{ height: `${alto}%`, background: colorAcento }}
+                      />
+                    ))}
+                  </div>
+
+                  <div className="relative z-10 flex items-center justify-between">
                     <div
                       className="w-9 h-9 rounded-[4px] flex items-center justify-center text-white shrink-0"
                       style={{ background: colorAcento }}
@@ -192,10 +220,10 @@ export default async function PaginaInicio() {
                         : t.home.noticiasStocksEtiqueta}
                     </span>
                   </div>
-                  <p className="text-[15px] font-semibold leading-snug group-hover:text-brand-primary transition-colors">
+                  <p className="relative z-10 text-[15px] font-semibold leading-snug group-hover:text-brand-primary transition-colors">
                     {n.titulo}
                   </p>
-                  <div className="flex items-center justify-between mt-auto pt-1">
+                  <div className="relative z-10 flex items-center justify-between mt-auto pt-1">
                     <span className="text-[12px] text-foreground-muted">
                       {n.fuente}
                     </span>
