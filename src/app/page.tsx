@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { IconoTendenciaSubida } from "@/components/ui/Iconos";
 import { esAdmin, obtenerUsuarioActual } from "@/lib/auth/sesion";
 import { obtenerConfigPortada, obtenerConfigPortadaCompleta } from "@/lib/config-portada";
 import { AdminPortadaForm } from "@/components/admin/AdminPortadaForm";
@@ -57,7 +58,7 @@ export default async function PaginaInicio() {
   // MarketWatch = stocks) — solo externas, así la etiqueta Cripto/Stocks
   // siempre es correcta (las propias del admin no traen esa distinción).
   const noticiasCards = noticiasExternas
-    .slice(0, 3)
+    .slice(0, 6)
     .map((n) => ({
       titulo: n.titulo,
       fuente: n.fuente,
@@ -156,31 +157,55 @@ export default async function PaginaInicio() {
             {t.home.noticiasImportantesSub}
           </p>
           <div className="grid md:grid-cols-3 gap-4">
-            {noticiasCards.map((n, i) => (
-              <a
-                key={`${n.url}-${i}`}
-                href={n.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="border border-[var(--border)] bg-surface p-5 flex flex-col gap-3 hover:border-brand-primary/40 transition-colors"
-              >
-                <span
-                  className={`text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 w-fit ${
-                    n.esCripto
-                      ? "bg-brand-secondary/15 text-brand-secondary"
-                      : "bg-brand-primary/15 text-brand-primary"
-                  }`}
+            {noticiasCards.map((n, i) => {
+              const colorAcento = n.esCripto
+                ? "var(--brand-secondary)"
+                : "var(--brand-primary)";
+              return (
+                <a
+                  key={`${n.url}-${i}`}
+                  href={n.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="group relative border-l-4 bg-surface p-5 overflow-hidden flex flex-col gap-3 transition-transform hover:-translate-y-0.5"
+                  style={{
+                    borderColor: colorAcento,
+                    background: `radial-gradient(120% 100% at 100% 0%, color-mix(in srgb, ${colorAcento} 10%, var(--surface)) 0%, var(--surface) 60%)`,
+                  }}
                 >
-                  {n.esCripto
-                    ? t.home.noticiasCriptoEtiqueta
-                    : t.home.noticiasStocksEtiqueta}
-                </span>
-                <p className="text-sm font-medium leading-snug">{n.titulo}</p>
-                <span className="text-[12px] text-foreground-muted mt-auto">
-                  {n.fuente}
-                </span>
-              </a>
-            ))}
+                  <div className="flex items-center justify-between">
+                    <div
+                      className="w-9 h-9 rounded-[4px] flex items-center justify-center text-white shrink-0"
+                      style={{ background: colorAcento }}
+                    >
+                      <IconoTendenciaSubida className="w-4 h-4" />
+                    </div>
+                    <span
+                      className={`text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 ${
+                        n.esCripto
+                          ? "bg-brand-secondary/15 text-brand-secondary"
+                          : "bg-brand-primary/15 text-brand-primary"
+                      }`}
+                    >
+                      {n.esCripto
+                        ? t.home.noticiasCriptoEtiqueta
+                        : t.home.noticiasStocksEtiqueta}
+                    </span>
+                  </div>
+                  <p className="text-[15px] font-semibold leading-snug group-hover:text-brand-primary transition-colors">
+                    {n.titulo}
+                  </p>
+                  <div className="flex items-center justify-between mt-auto pt-1">
+                    <span className="text-[12px] text-foreground-muted">
+                      {n.fuente}
+                    </span>
+                    <span className="text-sm font-bold text-brand-primary opacity-0 -translate-x-1 group-hover:opacity-100 group-hover:translate-x-0 transition-all">
+                      →
+                    </span>
+                  </div>
+                </a>
+              );
+            })}
           </div>
         </div>
       )}
