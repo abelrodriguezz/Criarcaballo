@@ -131,6 +131,15 @@ export const es = {
     notificacionesProximamente: "Notificaciones próximamente",
     cerrarSesion: "Cerrar sesión",
     admin: "Admin",
+    depositar: "Depositar para invertir",
+    depositarModalTitulo: "Depositar (simulación)",
+    depositarWalletLabel: "Envía tu depósito a esta wallet",
+    depositarMontoLabel: "Monto en USDT",
+    depositarEnviar: "Enviar",
+    depositarEntendido: "Entendido",
+    depositarSinWallets:
+      "El admin todavía no configuró ninguna wallet para esta simulación.",
+    depositarMontoInvalido: "Ingresa un monto mayor a cero.",
   },
   tradeDelDia: {
     titulo: "Trade del día",

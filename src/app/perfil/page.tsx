@@ -4,11 +4,18 @@ import { crearClienteSupabaseServidor } from "@/lib/supabase/server";
 import { CerrarSesionBoton } from "@/components/auth/CerrarSesionBoton";
 import { BotonFavorito } from "@/components/mercado/BotonFavorito";
 import { WalletForm } from "@/components/perfil/WalletForm";
+import { BotonDepositarSimulado } from "@/components/perfil/BotonDepositarSimulado";
+import { AdminSimulacionForm } from "@/components/admin/AdminSimulacionForm";
 import { TarjetaMenu } from "@/components/ui/TarjetaMenu";
 import { IconoUsuarios, IconoSoporte, IconoReportes } from "@/components/ui/Iconos";
 import { obtenerVariosPreciosCripto } from "@/lib/market/binance";
 import { formatearDinero, formatearPrecio } from "@/lib/format";
 import { obtenerDiccionario, obtenerLocale } from "@/lib/i18n/servidor";
+import {
+  obtenerMensajeSimulacion,
+  obtenerMensajeSimulacionCompleto,
+  type ConfigSimulacionAmbosIdiomas,
+} from "@/lib/config-simulacion";
 import type { GananciaConcurso } from "@/lib/types";
 
 export default async function PaginaPerfil() {
@@ -25,6 +32,7 @@ export default async function PaginaPerfil() {
     redirect("/cuenta-desactivada");
   }
 
+  const usuarioEsAdmin = esAdmin(usuario);
   const supabase = await crearClienteSupabaseServidor();
   const [
     { data: saldo },
@@ -32,6 +40,8 @@ export default async function PaginaPerfil() {
     { count: noLeidos },
     { data: perfilExtra },
     { data: ganancias },
+    walletsAdminRaw,
+    simulacion,
   ] = await Promise.all([
     supabase
       .from("saldo_virtual")
@@ -63,7 +73,16 @@ export default async function PaginaPerfil() {
       .eq("usuario_id", usuario.id)
       .order("created_at", { ascending: false })
       .returns<GananciaConcurso[]>(),
+    // Solo hace falta para el botón de depósito simulado de un usuario
+    // normal — al admin no le sirve ver sus propias wallets ahí.
+    usuarioEsAdmin
+      ? Promise.resolve({ data: null as string[] | null })
+      : supabase.rpc("obtener_wallets_admin"),
+    usuarioEsAdmin
+      ? obtenerMensajeSimulacionCompleto()
+      : obtenerMensajeSimulacion(locale),
   ]);
+  const walletsAdmin = walletsAdminRaw.data ?? [];
 
   const totalGanancias = (ganancias ?? []).reduce(
     (suma, g) => suma + g.monto,
@@ -116,9 +135,21 @@ export default async function PaginaPerfil() {
 
       {/* Grupo de accesos tipo menú — estilo distinto de las tarjetas de
           solo-datos de abajo, uno debajo del otro en orden. */}
+      {usuarioEsAdmin ? (
+        <AdminSimulacionForm
+          simulacionActual={simulacion as ConfigSimulacionAmbosIdiomas}
+        />
+      ) : (
+        <BotonDepositarSimulado
+          walletsAdmin={walletsAdmin}
+          mensajeSimulacion={simulacion as string}
+          t={t}
+        />
+      )}
+
       <WalletForm
         usuarioId={usuario.id}
-        esAdmin={esAdmin(usuario)}
+        esAdmin={usuarioEsAdmin}
         walletActual={perfilExtra?.wallet_usdt_erc20 ?? null}
         wallet2Actual={perfilExtra?.wallet_usdt_erc20_2 ?? null}
         wallet3Actual={perfilExtra?.wallet_usdt_erc20_3 ?? null}
