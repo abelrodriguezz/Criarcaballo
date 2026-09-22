@@ -8,6 +8,7 @@ import {
 import {
   obtenerVariosPreciosAcciones,
   obtenerTopGanadoresAcciones,
+  obtenerTopPerdedoresAcciones,
 } from "@/lib/market/acciones";
 import { obtenerUsuarioActual } from "@/lib/auth/sesion";
 import { crearClienteSupabaseServidor } from "@/lib/supabase/server";
@@ -31,7 +32,7 @@ export default async function PaginaMercado() {
     obtenerDiccionario(),
   ]);
 
-  const [cripto, indices, favoritos, topCripto, topAcciones] =
+  const [cripto, indices, favoritos, topCripto, topAcciones, topPerdedoresAcciones] =
     await Promise.all([
       obtenerVariosPreciosCripto(PARES_CRIPTO),
       obtenerVariosPreciosAcciones(SIMBOLOS_INDICES),
@@ -45,6 +46,7 @@ export default async function PaginaMercado() {
         : Promise.resolve({ data: null }),
       obtenerTopGanadoresCripto(5),
       obtenerTopGanadoresAcciones(5),
+      obtenerTopPerdedoresAcciones(5),
     ]);
 
   const setFavoritos = new Set(
@@ -150,7 +152,7 @@ export default async function PaginaMercado() {
           <h2 className="text-[13px] font-semibold text-foreground-muted uppercase tracking-wide mb-3">
             {t.mercado.indices}
           </h2>
-          <div className="grid md:grid-cols-3 gap-4">
+          <div className="grid md:grid-cols-3 gap-4 mb-8">
             {indices.map((activo) => (
               <TarjetaActivo
                 key={activo.simbolo}
@@ -162,7 +164,7 @@ export default async function PaginaMercado() {
           </div>
         </>
       ) : (
-        <p className="text-xs text-foreground-muted mt-2">
+        <p className="text-xs text-foreground-muted mt-2 mb-8">
           {process.env.MARKET_API_KEY
             ? t.mercado.sinIndicesConKey
             : (
@@ -172,6 +174,42 @@ export default async function PaginaMercado() {
               </>
             )}
         </p>
+      )}
+
+      {topAcciones.length > 0 && (
+        <>
+          <h2 className="text-[13px] font-semibold text-foreground-muted uppercase tracking-wide mb-3">
+            {t.mercado.topGanadorAcciones}
+          </h2>
+          <div className="grid md:grid-cols-3 gap-4 mb-8">
+            {topAcciones.map((activo) => (
+              <TarjetaActivo
+                key={`gainer-${activo.simbolo}`}
+                simbolo={activo.simbolo}
+                precio={activo.precio}
+                cambioPorc={activo.cambioPorc}
+              />
+            ))}
+          </div>
+        </>
+      )}
+
+      {topPerdedoresAcciones.length > 0 && (
+        <>
+          <h2 className="text-[13px] font-semibold text-foreground-muted uppercase tracking-wide mb-3">
+            {t.mercado.topPerdedorAcciones}
+          </h2>
+          <div className="grid md:grid-cols-3 gap-4">
+            {topPerdedoresAcciones.map((activo) => (
+              <TarjetaActivo
+                key={`loser-${activo.simbolo}`}
+                simbolo={activo.simbolo}
+                precio={activo.precio}
+                cambioPorc={activo.cambioPorc}
+              />
+            ))}
+          </div>
+        </>
       )}
     </div>
   );

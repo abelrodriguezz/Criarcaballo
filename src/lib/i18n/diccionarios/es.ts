@@ -182,6 +182,8 @@ export const es = {
     masSubioHoy: "🔥 Lo que más subió hoy",
     cripto: "Cripto",
     indices: "Índices",
+    topGanadorAcciones: "Top Gainer del día",
+    topPerdedorAcciones: "Top Loser del día",
     criptoEtiqueta: "Cripto",
     accionEtiqueta: "Acción",
     sinIndicesConKey:

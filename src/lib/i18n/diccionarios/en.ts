@@ -179,6 +179,8 @@ export const en: typeof es = {
     masSubioHoy: "🔥 Today's top gainers",
     cripto: "Crypto",
     indices: "Indices",
+    topGanadorAcciones: "Top Gainer of the day",
+    topPerdedorAcciones: "Top Loser of the day",
     criptoEtiqueta: "Crypto",
     accionEtiqueta: "Stock",
     sinIndicesConKey:

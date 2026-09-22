@@ -60,20 +60,21 @@ export async function obtenerVariosPreciosAcciones(
 }
 
 /**
- * Top acciones que más subieron hoy (mercado de EE.UU.), vía el endpoint
- * de "market movers" de Twelve Data. Requiere una key con acceso a ese
- * endpoint — si no hay key, o el plan no lo incluye, se omite en silencio
- * igual que el resto de la sección de acciones/índices.
+ * Top acciones que más subieron/bajaron hoy (mercado de EE.UU.), vía el
+ * endpoint de "market movers" de Twelve Data. Requiere una key con acceso
+ * a ese endpoint — si no hay key, o el plan no lo incluye, se omite en
+ * silencio igual que el resto de la sección de acciones/índices.
  */
-export async function obtenerTopGanadoresAcciones(
-  limite = 5
+async function obtenerMovidasAcciones(
+  direccion: "gainers" | "losers",
+  limite: number
 ): Promise<PrecioActivo[]> {
   const apiKey = process.env.MARKET_API_KEY;
   if (!apiKey) return [];
 
   try {
     const res = await fetch(
-      `https://api.twelvedata.com/market_movers/stocks?direction=gainers&country=United States&outputsize=${limite}&apikey=${apiKey}`,
+      `https://api.twelvedata.com/market_movers/stocks?direction=${direccion}&country=United States&outputsize=${limite}&apikey=${apiKey}`,
       { cache: "no-store", signal: AbortSignal.timeout(10_000) }
     );
     if (!res.ok) return [];
@@ -92,4 +93,12 @@ export async function obtenerTopGanadoresAcciones(
   } catch {
     return [];
   }
+}
+
+export function obtenerTopGanadoresAcciones(limite = 5): Promise<PrecioActivo[]> {
+  return obtenerMovidasAcciones("gainers", limite);
+}
+
+export function obtenerTopPerdedoresAcciones(limite = 5): Promise<PrecioActivo[]> {
+  return obtenerMovidasAcciones("losers", limite);
 }
