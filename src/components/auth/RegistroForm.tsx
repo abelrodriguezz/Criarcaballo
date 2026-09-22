@@ -43,7 +43,7 @@ export function RegistroForm({ t, locale }: { t: Diccionario; locale: Locale }) 
 
     setCargando(true);
     const supabase = crearClienteSupabase();
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
@@ -56,6 +56,18 @@ export function RegistroForm({ t, locale }: { t: Diccionario; locale: Locale }) 
     if (error) {
       setError(mensajeErrorAuth(error, t.auth.errorRegistroGenerico, locale));
       setCaptchaToken(null); // el token de Turnstile es de un solo uso
+      return;
+    }
+
+    // Con "Confirm email" activo, Supabase no devuelve un error cuando el
+    // correo ya tiene cuenta (para no confirmarle a un atacante que ese
+    // correo existe) — en vez de eso responde igual que un registro nuevo
+    // pero con `identities: []`. Sin este chequeo, alguien que ya tiene
+    // cuenta y se re-registra por error veía "revisa tu correo" como si se
+    // hubiera creado algo, sin que llegara ningún email de verdad.
+    if (data.user && data.user.identities && data.user.identities.length === 0) {
+      setError(t.errores.correoYaRegistrado);
+      setCaptchaToken(null);
       return;
     }
 
