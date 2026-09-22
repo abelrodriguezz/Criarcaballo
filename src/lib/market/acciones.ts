@@ -60,45 +60,59 @@ export async function obtenerVariosPreciosAcciones(
 }
 
 /**
- * Top acciones que más subieron/bajaron hoy (mercado de EE.UU.), vía el
- * endpoint de "market movers" de Twelve Data. Requiere una key con acceso
- * a ese endpoint — si no hay key, o el plan no lo incluye, se omite en
- * silencio igual que el resto de la sección de acciones/índices.
+ * Top acciones que más subieron/bajaron hoy (mercado de EE.UU.) — vía el
+ * screener no oficial (sin key) de Yahoo Finance, NO Twelve Data.
+ *
+ * Se probó primero con el endpoint "market_movers" de Twelve Data, pero
+ * ese endpoint está bloqueado para el plan Basic/gratuito (requiere el
+ * plan Grow, USD 29/mes) — con una key gratis simplemente nunca hubiera
+ * devuelto nada. Mismo espíritu que src/lib/market/yahoo.ts para el S&P
+ * 500: no es una API oficial/documentada, así que puede cambiar o
+ * bloquear peticiones sin aviso; si eso pasa, devuelve un arreglo vacío
+ * y la sección correspondiente simplemente no se muestra.
  */
-async function obtenerMovidasAcciones(
-  direccion: "gainers" | "losers",
+async function obtenerMovidasAccionesYahoo(
+  scrId: "day_gainers" | "day_losers",
   limite: number
 ): Promise<PrecioActivo[]> {
-  const apiKey = process.env.MARKET_API_KEY;
-  if (!apiKey) return [];
-
   try {
     const res = await fetch(
-      `https://api.twelvedata.com/market_movers/stocks?direction=${direccion}&country=United States&outputsize=${limite}&apikey=${apiKey}`,
-      { cache: "no-store", signal: AbortSignal.timeout(10_000) }
+      `https://query1.finance.yahoo.com/v1/finance/screener/predefined/saved?formatted=false&lang=en-US&region=US&scrIds=${scrId}&count=${limite}&corsDomain=finance.yahoo.com`,
+      {
+        cache: "no-store",
+        signal: AbortSignal.timeout(10_000),
+        headers: { "User-Agent": "Mozilla/5.0" },
+      }
     );
     if (!res.ok) return [];
 
     const data = await res.json();
-    if (data.status === "error" || !Array.isArray(data.values)) return [];
+    const quotes: unknown[] = data?.finance?.result?.[0]?.quotes;
+    if (!Array.isArray(quotes)) return [];
 
-    return data.values
-      .map((v: Record<string, string>) => ({
-        simbolo: v.symbol,
-        nombre: v.name ?? v.symbol,
-        precio: parseFloat(v.last),
-        cambioPorc: parseFloat(v.percent_change),
-      }))
-      .filter((v: PrecioActivo) => !isNaN(v.precio) && !isNaN(v.cambioPorc));
+    return quotes
+      .map((q) => {
+        const r = q as Record<string, unknown>;
+        return {
+          simbolo: String(r.symbol ?? ""),
+          nombre: String(r.shortName ?? r.symbol ?? ""),
+          precio: Number(r.regularMarketPrice),
+          cambioPorc: Number(r.regularMarketChangePercent),
+        };
+      })
+      .filter(
+        (v): v is PrecioActivo =>
+          v.simbolo !== "" && Number.isFinite(v.precio) && Number.isFinite(v.cambioPorc)
+      );
   } catch {
     return [];
   }
 }
 
 export function obtenerTopGanadoresAcciones(limite = 5): Promise<PrecioActivo[]> {
-  return obtenerMovidasAcciones("gainers", limite);
+  return obtenerMovidasAccionesYahoo("day_gainers", limite);
 }
 
 export function obtenerTopPerdedoresAcciones(limite = 5): Promise<PrecioActivo[]> {
-  return obtenerMovidasAcciones("losers", limite);
+  return obtenerMovidasAccionesYahoo("day_losers", limite);
 }
