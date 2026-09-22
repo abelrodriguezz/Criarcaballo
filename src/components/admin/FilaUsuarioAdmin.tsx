@@ -23,8 +23,13 @@ export function FilaUsuarioAdmin({
   const [guardando, setGuardando] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // El admin principal solo se puede modificar a sí mismo — ver migración
+  // 029. La base ya lo bloquea; esto es solo para no mostrarle a otro
+  // admin controles que van a fallar con un error de Postgres.
+  const protegido = usuario.es_principal && !esUnoMismo;
+
   async function cambiarRol(nuevoRol: "user" | "admin") {
-    if (esUnoMismo) return; // ver select deshabilitado — nunca debería llamarse
+    if (esUnoMismo || protegido) return; // ver select deshabilitado — nunca debería llamarse
 
     setError(null);
     setGuardando(true);
@@ -43,7 +48,7 @@ export function FilaUsuarioAdmin({
   }
 
   async function alternarActivo() {
-    if (esUnoMismo) return; // ver botón deshabilitado abajo — nunca debería llamarse
+    if (esUnoMismo || protegido) return; // ver botón deshabilitado abajo — nunca debería llamarse
 
     setError(null);
     setGuardando(true);
@@ -62,6 +67,7 @@ export function FilaUsuarioAdmin({
   }
 
   async function alternarTrading() {
+    if (protegido) return; // ver botón deshabilitado abajo — nunca debería llamarse
     setError(null);
     setGuardando(true);
     const supabase = crearClienteSupabase();
@@ -90,6 +96,11 @@ export function FilaUsuarioAdmin({
           {usuario.email}
           {esUnoMismo && (
             <span className="text-foreground-muted font-normal"> (tú)</span>
+          )}
+          {usuario.es_principal && (
+            <span className="ml-1.5 align-middle text-[10px] font-bold bg-brand-primary/15 text-brand-primary px-2 py-0.5 rounded-full">
+              Principal
+            </span>
           )}
         </div>
         {(usuario.nombre || usuario.telefono) && (
@@ -136,9 +147,15 @@ export function FilaUsuarioAdmin({
         <select
           aria-label="Rol"
           value={usuario.role}
-          disabled={guardando || esUnoMismo}
+          disabled={guardando || esUnoMismo || protegido}
           onChange={(e) => cambiarRol(e.target.value as "user" | "admin")}
-          title={esUnoMismo ? "No puedes cambiar tu propio rol" : undefined}
+          title={
+            esUnoMismo
+              ? "No puedes cambiar tu propio rol"
+              : protegido
+                ? "Es el administrador principal — solo esa cuenta puede modificarse a sí misma"
+                : undefined
+          }
           className="px-2.5 py-1.5 rounded-lg border border-[var(--border)] bg-background text-xs font-medium disabled:opacity-50"
         >
           <option value="user">Usuario</option>
@@ -147,8 +164,14 @@ export function FilaUsuarioAdmin({
 
         <button
           onClick={alternarActivo}
-          disabled={guardando || esUnoMismo}
-          title={esUnoMismo ? "No puedes desactivar tu propia cuenta" : undefined}
+          disabled={guardando || esUnoMismo || protegido}
+          title={
+            esUnoMismo
+              ? "No puedes desactivar tu propia cuenta"
+              : protegido
+                ? "Es el administrador principal — solo esa cuenta puede modificarse a sí misma"
+                : undefined
+          }
           className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors disabled:opacity-50 ${
             usuario.activo
               ? "bg-gain/15 text-gain"
@@ -160,8 +183,12 @@ export function FilaUsuarioAdmin({
 
         <button
           onClick={alternarTrading}
-          disabled={guardando}
-          title="Permitir o bloquear que este usuario opere en Trade del día"
+          disabled={guardando || protegido}
+          title={
+            protegido
+              ? "Es el administrador principal — solo esa cuenta puede modificarse a sí misma"
+              : "Permitir o bloquear que este usuario opere en Trade del día"
+          }
           className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors disabled:opacity-50 ${
             usuario.trading_habilitado
               ? "bg-brand-primary/15 text-brand-primary"

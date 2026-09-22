@@ -15,6 +15,7 @@ export interface Usuario {
   created_at: string;
   nombre: string | null;
   telefono: string | null;
+  es_principal: boolean;
 }
 
 export interface Senal {
