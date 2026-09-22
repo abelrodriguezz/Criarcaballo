@@ -5,7 +5,7 @@ import { obtenerConfigPortada, obtenerConfigPortadaCompleta } from "@/lib/config
 import { AdminPortadaForm } from "@/components/admin/AdminPortadaForm";
 import { obtenerPrecioIndice } from "@/lib/market/yahoo";
 import { obtenerNoticiasExternas } from "@/lib/noticias/feedExterno";
-import { formatearPrecio } from "@/lib/format";
+import { formatearPrecio, urlGraficoTradingView } from "@/lib/format";
 import { crearClienteSupabaseServidor } from "@/lib/supabase/server";
 import { TickerNoticias, type ItemTicker } from "@/components/ui/TickerNoticias";
 import { SparklineChart } from "@/components/mercado/SparklineChart";
@@ -114,8 +114,17 @@ export default async function PaginaInicio() {
           </div>
         </div>
 
-        <div className="relative">
-          <div className="bg-surface border border-[var(--border)] rounded-[6px] p-6 relative min-h-[212px] flex flex-col">
+        <div className="relative group">
+          {sp500 && (
+            <a
+              href={urlGraficoTradingView("SPX")}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="absolute inset-0 z-10 rounded-[6px]"
+              aria-label="Ver gráfico del S&P 500 en TradingView"
+            />
+          )}
+          <div className="bg-surface border border-[var(--border)] group-hover:border-brand-primary/40 transition-colors rounded-[6px] p-6 relative min-h-[212px] flex flex-col">
             {sp500 ? (
               <>
                 <div
