@@ -31,12 +31,16 @@ export function BotonOtorgarPremioReferido({
     setError(null);
     setGuardando(true);
     const supabase = crearClienteSupabase();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
     const { error } = await supabase.from("ganancias_concursos").insert({
       usuario_id: invitadorId,
       monto,
       concepto: `Referido: ${invitadoEmail}`,
       origen: "referido",
       invitado_id: invitadoId,
+      creado_por: user?.id ?? null,
     });
     setGuardando(false);
 

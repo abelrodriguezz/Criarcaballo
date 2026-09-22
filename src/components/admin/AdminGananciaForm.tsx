@@ -47,6 +47,9 @@ export function AdminGananciaForm({
 
     setGuardando(true);
     const supabase = crearClienteSupabase();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
 
     const { error } = esEdicion
       ? await supabase
@@ -57,6 +60,7 @@ export function AdminGananciaForm({
           usuario_id: usuarioId,
           monto: montoNum,
           concepto: concepto || null,
+          creado_por: user?.id ?? null,
         });
 
     setGuardando(false);
