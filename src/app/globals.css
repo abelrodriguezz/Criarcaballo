@@ -25,9 +25,11 @@
   --foreground-muted: #6b7280;
 
   /* Marca — ámbar de terminal financiera en vez del violeta genérico de
-     "SaaS con IA"; ámbar-800 tiene contraste AA sobre blanco. */
-  --brand-primary: #92400e;
-  --brand-primary-hover: #78350f;
+     "SaaS con IA". Ámbar-800 (#92400e) cumplía contraste pero se veía
+     marrón/óxido en vez de ámbar — ámbar-700 sigue en ~5:1 de contraste
+     sobre blanco (AA para texto normal) pero se lee como ámbar de verdad. */
+  --brand-primary: #b45309;
+  --brand-primary-hover: #92400e;
   --brand-primary-tint: #fef3e2; /* fondo suave para badges/resaltados */
   --brand-secondary: #0e7490; /* cian-azulado, contraste frío frente al ámbar */
 
