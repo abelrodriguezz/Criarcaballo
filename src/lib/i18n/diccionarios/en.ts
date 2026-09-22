@@ -29,6 +29,10 @@ export const en: typeof es = {
     feature3Titulo: "Practice with virtual balance",
     feature3Texto:
       'Trade the "pick of the day" without real money and track your progress over time.',
+    noticiasImportantesTitulo: "Important news",
+    noticiasImportantesSub: "The latest on crypto and stocks, straight from the source.",
+    noticiasCriptoEtiqueta: "Crypto",
+    noticiasStocksEtiqueta: "Stocks",
   },
   auth: {
     iniciarSesionTitulo: "Log in",

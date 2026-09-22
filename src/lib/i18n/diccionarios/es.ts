@@ -27,6 +27,10 @@ export const es = {
     feature3Titulo: "Práctica con saldo virtual",
     feature3Texto:
       'Opera el "pick del día" sin dinero real y mide tu progreso con el tiempo.',
+    noticiasImportantesTitulo: "Noticias importantes",
+    noticiasImportantesSub: "Lo último de cripto y acciones, directo de la fuente.",
+    noticiasCriptoEtiqueta: "Cripto",
+    noticiasStocksEtiqueta: "Stocks",
   },
   auth: {
     iniciarSesionTitulo: "Iniciar sesión",

@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { IconoMercado, IconoSenales, IconoReto } from "@/components/ui/Iconos";
 import { esAdmin, obtenerUsuarioActual } from "@/lib/auth/sesion";
 import { obtenerConfigPortada, obtenerConfigPortadaCompleta } from "@/lib/config-portada";
 import { AdminPortadaForm } from "@/components/admin/AdminPortadaForm";
@@ -9,6 +8,7 @@ import { formatearPrecio } from "@/lib/format";
 import { crearClienteSupabaseServidor } from "@/lib/supabase/server";
 import { TickerNoticias, type ItemTicker } from "@/components/ui/TickerNoticias";
 import { SparklineChart } from "@/components/mercado/SparklineChart";
+import { urlSeguraParaEnlace } from "@/lib/url";
 import { obtenerDiccionario, obtenerLocale } from "@/lib/i18n/servidor";
 import type { Noticia } from "@/lib/types";
 
@@ -52,6 +52,19 @@ export default async function PaginaInicio() {
       externo: true,
     })),
   ];
+
+  // Noticias importantes en forma de card (Cointelegraph = cripto,
+  // MarketWatch = stocks) — solo externas, así la etiqueta Cripto/Stocks
+  // siempre es correcta (las propias del admin no traen esa distinción).
+  const noticiasCards = noticiasExternas
+    .slice(0, 3)
+    .map((n) => ({
+      titulo: n.titulo,
+      fuente: n.fuente,
+      esCripto: n.fuente === "Cointelegraph",
+      url: urlSeguraParaEnlace(n.url),
+    }))
+    .filter((n): n is typeof n & { url: string } => n.url !== null);
 
   return (
     <div className="pt-10 pb-20">
@@ -134,41 +147,43 @@ export default async function PaginaInicio() {
         <TickerNoticias items={itemsTicker} etiqueta={t.home.noticiasEtiqueta} />
       </div>
 
-      <div className="bg-foreground text-background dark:bg-surface dark:text-foreground rounded-3xl p-6 sm:p-10 md:p-12 mt-16 grid md:grid-cols-3 gap-8">
-        <div>
-          <div className="w-10 h-10 rounded-[4px] bg-brand-secondary flex items-center justify-center text-white mb-4">
-            <IconoMercado />
-          </div>
-          <h3 className="font-display font-semibold text-lg mb-2">
-            {t.home.feature1Titulo}
-          </h3>
-          <p className="text-sm opacity-70 leading-relaxed">
-            {t.home.feature1Texto}
+      {noticiasCards.length > 0 && (
+        <div className="mt-16">
+          <h2 className="font-display font-semibold text-2xl mb-1.5">
+            {t.home.noticiasImportantesTitulo}
+          </h2>
+          <p className="text-foreground-muted text-[15px] mb-6">
+            {t.home.noticiasImportantesSub}
           </p>
-        </div>
-        <div>
-          <div className="w-10 h-10 rounded-[4px] bg-brand-secondary flex items-center justify-center text-white mb-4">
-            <IconoSenales />
+          <div className="grid md:grid-cols-3 gap-4">
+            {noticiasCards.map((n, i) => (
+              <a
+                key={`${n.url}-${i}`}
+                href={n.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="border border-[var(--border)] bg-surface p-5 flex flex-col gap-3 hover:border-brand-primary/40 transition-colors"
+              >
+                <span
+                  className={`text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 w-fit ${
+                    n.esCripto
+                      ? "bg-brand-secondary/15 text-brand-secondary"
+                      : "bg-brand-primary/15 text-brand-primary"
+                  }`}
+                >
+                  {n.esCripto
+                    ? t.home.noticiasCriptoEtiqueta
+                    : t.home.noticiasStocksEtiqueta}
+                </span>
+                <p className="text-sm font-medium leading-snug">{n.titulo}</p>
+                <span className="text-[12px] text-foreground-muted mt-auto">
+                  {n.fuente}
+                </span>
+              </a>
+            ))}
           </div>
-          <h3 className="font-display font-semibold text-lg mb-2">
-            {t.home.feature2Titulo}
-          </h3>
-          <p className="text-sm opacity-70 leading-relaxed">
-            {t.home.feature2Texto}
-          </p>
         </div>
-        <div>
-          <div className="w-10 h-10 rounded-[4px] bg-brand-secondary flex items-center justify-center text-white mb-4">
-            <IconoReto />
-          </div>
-          <h3 className="font-display font-semibold text-lg mb-2">
-            {t.home.feature3Titulo}
-          </h3>
-          <p className="text-sm opacity-70 leading-relaxed">
-            {t.home.feature3Texto}
-          </p>
-        </div>
-      </div>
+      )}
     </div>
   );
 }
