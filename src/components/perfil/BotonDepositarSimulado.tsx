@@ -5,7 +5,14 @@ import { useRouter } from "next/navigation";
 import { crearClienteSupabase } from "@/lib/supabase/client";
 import { CopiarBoton } from "@/components/ui/CopiarBoton";
 import { IconoWallet } from "@/components/ui/Iconos";
+import { formatearDinero, parsearMontoUsuario } from "@/lib/format";
 import type { Diccionario } from "@/lib/i18n";
+
+// Tope del monto simulado. Tiene que coincidir con el `check` de la
+// migración 027: así un monto absurdo se rechaza aquí con un mensaje
+// claro en vez de llegar a la base y volver como un error de guardado
+// genérico.
+const MONTO_MAXIMO = 100_000_000;
 
 export function BotonDepositarSimulado({
   usuarioId,
@@ -49,9 +56,18 @@ export function BotonDepositarSimulado({
   }
 
   async function manejarEnviar() {
-    const num = Number(monto.replace(",", "."));
-    if (!Number.isFinite(num) || num <= 0) {
+    if (enviando) return; // doble clic: un segundo envío no debe colarse
+    const num = parsearMontoUsuario(monto);
+    // La columna es numeric(14,2): redondear aquí igual que la base para
+    // que un "0.004" no pase esta validación y muera después contra el
+    // check (monto > 0) con un error de guardado sin explicación.
+    const redondeado = Math.round(num * 100) / 100;
+    if (!Number.isFinite(redondeado) || redondeado <= 0) {
       setError(t.perfil.depositarMontoInvalido);
+      return;
+    }
+    if (redondeado > MONTO_MAXIMO) {
+      setError(t.perfil.depositarMontoMaximo);
       return;
     }
     setError(null);
@@ -63,7 +79,7 @@ export function BotonDepositarSimulado({
     const supabase = crearClienteSupabase();
     const { error: dbError } = await supabase.from("depositos_simulados").insert({
       usuario_id: usuarioId,
-      monto: num,
+      monto: redondeado,
       wallet_mostrada: walletElegida,
     });
     setEnviando(false);
@@ -84,7 +100,10 @@ export function BotonDepositarSimulado({
         <div className="min-w-0 flex-1">
           <div className="font-medium text-sm">{t.perfil.depositarYaHecho}</div>
           <div className="text-[12px] text-foreground-muted tabular">
-            ${depositoExistente.monto.toFixed(2)} USDT
+            {/* formatearDinero en vez de .toFixed: PostgREST devuelve un
+                numeric no finito como string ("NaN"), y .toFixed sobre un
+                string reventaba la página entera con un TypeError. */}
+            ${formatearDinero(Number(depositoExistente.monto))} USDT
           </div>
         </div>
       </div>

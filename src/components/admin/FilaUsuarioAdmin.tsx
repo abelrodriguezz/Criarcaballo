@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { crearClienteSupabase } from "@/lib/supabase/client";
 import { BotonEliminarAdmin } from "@/components/admin/BotonEliminarAdmin";
+import { formatearDinero } from "@/lib/format";
 import type { Usuario, DepositoSimulado } from "@/lib/types";
 
 export function FilaUsuarioAdmin({
@@ -103,7 +104,11 @@ export function FilaUsuarioAdmin({
         {depositoSimulado && (
           <div className="flex items-center gap-2 mt-1">
             <span className="text-[11px] font-bold bg-gain/15 text-gain px-2 py-0.5 rounded-full">
-              Depósito simulado: ${depositoSimulado.monto.toFixed(2)}
+              {/* formatearDinero en vez de .toFixed: un numeric no finito
+                  ("NaN"/"Infinity") llega desde PostgREST como string y
+                  .toFixed lanzaba un TypeError que tumbaba toda esta
+                  página (500), dejando al admin sin Gestión de usuarios. */}
+              Depósito simulado: ${formatearDinero(Number(depositoSimulado.monto))}
             </span>
             <BotonEliminarAdmin
               tabla="depositos_simulados"

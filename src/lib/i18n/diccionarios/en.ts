@@ -137,6 +137,7 @@ export const en: typeof es = {
     depositarEntendido: "Got it",
     depositarSinWallets: "The admin hasn't set up any wallet for this simulation yet.",
     depositarMontoInvalido: "Enter an amount greater than zero.",
+    depositarMontoMaximo: "The maximum amount is 100,000,000 USDT.",
     depositarYaHecho: "You already made your simulated deposit",
     depositarErrorGuardar: "Couldn't save it. Try again.",
   },

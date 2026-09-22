@@ -140,6 +140,7 @@ export const es = {
     depositarSinWallets:
       "El admin todavía no configuró ninguna wallet para esta simulación.",
     depositarMontoInvalido: "Ingresa un monto mayor a cero.",
+    depositarMontoMaximo: "El monto máximo es 100,000,000 USDT.",
     depositarYaHecho: "Ya hiciste tu depósito simulado",
     depositarErrorGuardar: "No se pudo registrar. Intenta de nuevo.",
   },

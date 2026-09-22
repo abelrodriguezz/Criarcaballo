@@ -9,6 +9,40 @@ export function parsearNumero(texto: string): number {
 }
 
 /**
+ * Lee un monto tecleado a mano, donde la coma puede ser decimal ("1,50"
+ * = uno con cincuenta, como se escribe en español) o separador de miles
+ * ("1,000" = mil). parsearNumero() asume siempre lo segundo — correcto
+ * para montos que la app imprime en formato en-US, pero no para lo que
+ * escribe un usuario hispanohablante: ahí "1,50" se leería como 150.
+ *
+ * Regla: si aparecen los dos separadores, el ÚLTIMO es el decimal
+ * ("1.000,50" → 1000.50). Si solo hay comas, una sola coma seguida de 1
+ * o 2 dígitos es decimal ("1,50" → 1.5) y cualquier otro caso son miles
+ * ("1,000" → 1000). Devuelve NaN si el texto no es un número limpio, en
+ * vez de quedarse con el prefijo numérico como hace parseFloat.
+ */
+export function parsearMontoUsuario(texto: string): number {
+  const limpio = texto.replace(/\s/g, "");
+  if (!/^[+-]?[\d.,]+$/.test(limpio)) return NaN;
+
+  const ultimaComa = limpio.lastIndexOf(",");
+  const ultimoPunto = limpio.lastIndexOf(".");
+
+  let comaEsDecimal: boolean;
+  if (ultimaComa >= 0 && ultimoPunto >= 0) {
+    comaEsDecimal = ultimaComa > ultimoPunto;
+  } else {
+    comaEsDecimal = ultimaComa >= 0 && /^[+-]?\d+,\d{1,2}$/.test(limpio);
+  }
+
+  const normalizado = comaEsDecimal
+    ? limpio.replace(/\./g, "").replace(",", ".")
+    : limpio.replace(/,/g, "");
+
+  return Number(normalizado);
+}
+
+/**
  * Formato para importes en dólares (saldo virtual, ganancias, premios):
  * SIEMPRE 2 decimales.
  *
