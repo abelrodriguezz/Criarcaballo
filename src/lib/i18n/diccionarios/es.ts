@@ -192,6 +192,16 @@ export const es = {
     descripcion:
       "Solo se usa para enviarte recompensas si ganas un concurso — no habilita depósitos ni retiros en la plataforma. Asegúrate de que sea tu dirección en la red Ethereum (ERC20), no en BSC, Polygon u otra red compatible — el formato es el mismo pero el pago se hace específicamente en ERC20.",
   },
+  datosContacto: {
+    titulo: "Datos de contacto",
+    sinDatos: "No has agregado tu nombre ni teléfono todavía.",
+    nombreLabel: "Nombre",
+    nombrePlaceholder: "Tu nombre (opcional)",
+    telefonoLabel: "Teléfono",
+    telefonoPlaceholder: "+1 809 555 1234 (opcional)",
+    formatoInvalido: "Ese teléfono no parece válido.",
+    descripcion: "Ambos campos son opcionales. Solo se usan para contactarte si hace falta — no se muestran a otros usuarios.",
+  },
   mercado: {
     titulo: "Vista de mercado",
     subtitulo:

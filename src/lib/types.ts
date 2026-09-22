@@ -13,6 +13,8 @@ export interface Usuario {
   id_corto: number | null;
   trading_habilitado: boolean;
   created_at: string;
+  nombre: string | null;
+  telefono: string | null;
 }
 
 export interface Senal {

@@ -4,6 +4,7 @@ import { crearClienteSupabaseServidor } from "@/lib/supabase/server";
 import { CerrarSesionBoton } from "@/components/auth/CerrarSesionBoton";
 import { BotonFavorito } from "@/components/mercado/BotonFavorito";
 import { WalletForm } from "@/components/perfil/WalletForm";
+import { DatosContactoForm } from "@/components/perfil/DatosContactoForm";
 import { BotonDepositarSimulado } from "@/components/perfil/BotonDepositarSimulado";
 import { AdminSimulacionForm } from "@/components/admin/AdminSimulacionForm";
 import { TarjetaMenu } from "@/components/ui/TarjetaMenu";
@@ -65,7 +66,7 @@ export default async function PaginaPerfil() {
           .eq("leido_usuario", false),
     supabase
       .from("usuarios")
-      .select("wallet_usdt_erc20, wallet_usdt_erc20_2, wallet_usdt_erc20_3, id_corto")
+      .select("wallet_usdt_erc20, wallet_usdt_erc20_2, wallet_usdt_erc20_3, id_corto, nombre, telefono")
       .eq("id", usuario.id)
       .single(),
     supabase
@@ -157,6 +158,13 @@ export default async function PaginaPerfil() {
           t={t}
         />
       )}
+
+      <DatosContactoForm
+        usuarioId={usuario.id}
+        nombreActual={perfilExtra?.nombre ?? null}
+        telefonoActual={perfilExtra?.telefono ?? null}
+        t={t}
+      />
 
       <WalletForm
         usuarioId={usuario.id}

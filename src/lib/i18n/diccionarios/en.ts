@@ -188,6 +188,16 @@ export const en: typeof es = {
     descripcion:
       "This is only used to send you rewards if you win a contest — it does not enable deposits or withdrawals on the platform. Make sure it's your address on the Ethereum (ERC20) network, not BSC, Polygon or another compatible network — the format is the same but the payment is made specifically in ERC20.",
   },
+  datosContacto: {
+    titulo: "Contact details",
+    sinDatos: "You haven't added your name or phone number yet.",
+    nombreLabel: "Name",
+    nombrePlaceholder: "Your name (optional)",
+    telefonoLabel: "Phone",
+    telefonoPlaceholder: "+1 809 555 1234 (optional)",
+    formatoInvalido: "That phone number doesn't look valid.",
+    descripcion: "Both fields are optional. Only used to contact you if needed — never shown to other users.",
+  },
   mercado: {
     titulo: "Market view",
     subtitulo:
