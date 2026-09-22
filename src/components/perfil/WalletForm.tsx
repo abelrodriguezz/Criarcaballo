@@ -9,34 +9,65 @@ import type { Diccionario } from "@/lib/i18n";
 
 export function WalletForm({
   usuarioId,
+  esAdmin = false,
   walletActual,
+  wallet2Actual = null,
+  wallet3Actual = null,
   t,
 }: {
   usuarioId: string;
+  /** Solo el admin puede guardar más de una wallet — un usuario normal
+   * siempre ve y edita exactamente el mismo campo único de siempre. */
+  esAdmin?: boolean;
   walletActual: string | null;
+  wallet2Actual?: string | null;
+  wallet3Actual?: string | null;
   t: Diccionario;
 }) {
   const router = useRouter();
   const [editando, setEditando] = useState(false);
   const [valor, setValor] = useState(walletActual ?? "");
+  const [valor2, setValor2] = useState(wallet2Actual ?? "");
+  const [valor3, setValor3] = useState(wallet3Actual ?? "");
   const [error, setError] = useState<string | null>(null);
   const [guardando, setGuardando] = useState(false);
+
+  const walletsConfiguradas = esAdmin
+    ? [walletActual, wallet2Actual, wallet3Actual].filter(Boolean).length
+    : walletActual
+      ? 1
+      : 0;
 
   async function manejarEnvio(e: FormEvent) {
     e.preventDefault();
     setError(null);
 
     const limpio = valor.trim();
-    if (limpio && !esWalletErc20Valida(limpio)) {
-      setError(t.wallet.formatoInvalido);
-      return;
+    const limpio2 = valor2.trim();
+    const limpio3 = valor3.trim();
+
+    for (const v of esAdmin ? [limpio, limpio2, limpio3] : [limpio]) {
+      if (v && !esWalletErc20Valida(v)) {
+        setError(t.wallet.formatoInvalido);
+        return;
+      }
     }
 
     setGuardando(true);
     const supabase = crearClienteSupabase();
+    const datos: Record<string, string | null> = {
+      wallet_usdt_erc20: limpio || null,
+    };
+    // Un usuario normal no tiene permiso (a nivel de base, no solo de
+    // interfaz) para tocar estas dos columnas — ni se envían si no es admin.
+    if (esAdmin) {
+      datos.wallet_usdt_erc20_2 = limpio2 || null;
+      datos.wallet_usdt_erc20_3 = limpio3 || null;
+    }
+
     const { error } = await supabase
       .from("usuarios")
-      .update({ wallet_usdt_erc20: limpio || null })
+      .update(datos)
       .eq("id", usuarioId);
     setGuardando(false);
 
@@ -60,7 +91,13 @@ export function WalletForm({
         </div>
         <div className="min-w-0 flex-1">
           <div className="font-medium text-sm">{t.wallet.titulo}</div>
-          {walletActual ? (
+          {esAdmin ? (
+            <div className="text-[13px] text-foreground-muted">
+              {walletsConfiguradas > 0
+                ? `${walletsConfiguradas}/3 ${t.wallet.configuradas}`
+                : t.wallet.sinWallet}
+            </div>
+          ) : walletActual ? (
             <div className="text-[13px] text-foreground-muted font-mono truncate">
               {walletActual}
             </div>
@@ -97,6 +134,8 @@ export function WalletForm({
           onClick={() => {
             setEditando(false);
             setValor(walletActual ?? "");
+            setValor2(wallet2Actual ?? "");
+            setValor3(wallet3Actual ?? "");
             setError(null);
           }}
           className="text-xs text-foreground-muted"
@@ -105,12 +144,35 @@ export function WalletForm({
         </button>
       </div>
 
-      <input
-        value={valor}
-        onChange={(e) => setValor(e.target.value)}
-        placeholder="0x..."
-        className="w-full px-3.5 py-2.5 mb-1.5 rounded-lg border border-[var(--border)] bg-background text-sm font-mono"
-      />
+      {esAdmin ? (
+        <div className="flex flex-col gap-1.5 mb-1.5">
+          <input
+            value={valor}
+            onChange={(e) => setValor(e.target.value)}
+            placeholder={`${t.wallet.walletLabel} 1 — 0x...`}
+            className="w-full px-3.5 py-2.5 rounded-lg border border-[var(--border)] bg-background text-sm font-mono"
+          />
+          <input
+            value={valor2}
+            onChange={(e) => setValor2(e.target.value)}
+            placeholder={`${t.wallet.walletLabel} 2 — 0x...`}
+            className="w-full px-3.5 py-2.5 rounded-lg border border-[var(--border)] bg-background text-sm font-mono"
+          />
+          <input
+            value={valor3}
+            onChange={(e) => setValor3(e.target.value)}
+            placeholder={`${t.wallet.walletLabel} 3 — 0x...`}
+            className="w-full px-3.5 py-2.5 rounded-lg border border-[var(--border)] bg-background text-sm font-mono"
+          />
+        </div>
+      ) : (
+        <input
+          value={valor}
+          onChange={(e) => setValor(e.target.value)}
+          placeholder="0x..."
+          className="w-full px-3.5 py-2.5 mb-1.5 rounded-lg border border-[var(--border)] bg-background text-sm font-mono"
+        />
+      )}
       <p className="text-[12px] text-foreground-muted mb-3">
         {t.wallet.descripcion}
       </p>

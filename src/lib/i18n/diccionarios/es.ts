@@ -169,6 +169,8 @@ export const es = {
   wallet: {
     titulo: "Wallet para recompensas (USDT · ERC20)",
     sinWallet: "No has agregado una wallet todavía.",
+    configuradas: "wallets configuradas",
+    walletLabel: "Wallet",
     cancelar: "Cancelar",
     guardando: "Guardando...",
     guardar: "Guardar",

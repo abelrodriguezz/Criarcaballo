@@ -166,6 +166,8 @@ export const en: typeof es = {
   wallet: {
     titulo: "Rewards wallet (USDT · ERC20)",
     sinWallet: "You haven't added a wallet yet.",
+    configuradas: "wallets configured",
+    walletLabel: "Wallet",
     cancelar: "Cancel",
     guardando: "Saving...",
     guardar: "Save",

@@ -54,7 +54,7 @@ export default async function PaginaPerfil() {
           .eq("leido_usuario", false),
     supabase
       .from("usuarios")
-      .select("wallet_usdt_erc20, id_corto")
+      .select("wallet_usdt_erc20, wallet_usdt_erc20_2, wallet_usdt_erc20_3, id_corto")
       .eq("id", usuario.id)
       .single(),
     supabase
@@ -118,7 +118,10 @@ export default async function PaginaPerfil() {
           solo-datos de abajo, uno debajo del otro en orden. */}
       <WalletForm
         usuarioId={usuario.id}
+        esAdmin={esAdmin(usuario)}
         walletActual={perfilExtra?.wallet_usdt_erc20 ?? null}
+        wallet2Actual={perfilExtra?.wallet_usdt_erc20_2 ?? null}
+        wallet3Actual={perfilExtra?.wallet_usdt_erc20_3 ?? null}
         t={t}
       />
 
