@@ -92,6 +92,11 @@ export function FilaUsuarioAdmin({
             <span className="text-foreground-muted font-normal"> (tú)</span>
           )}
         </div>
+        {(usuario.nombre || usuario.telefono) && (
+          <div className="text-[12px] text-foreground-muted">
+            {[usuario.nombre, usuario.telefono].filter(Boolean).join(" · ")}
+          </div>
+        )}
         <div className="text-[11px] text-foreground-muted">
           {cantidadInvitados}{" "}
           {cantidadInvitados === 1 ? "persona invitada" : "personas invitadas"}
