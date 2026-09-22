@@ -5,19 +5,27 @@ import { AdminNoticiaForm } from "@/components/admin/AdminNoticiaForm";
 import { BotonEliminarAdmin } from "@/components/admin/BotonEliminarAdmin";
 import { urlSeguraParaEnlace } from "@/lib/url";
 import type { Noticia } from "@/lib/types";
+import type { Locale } from "@/lib/i18n";
 
 export function TarjetaNoticiaAdmin({
   noticia,
   esAdmin,
+  locale = "es",
 }: {
   noticia: Noticia;
   esAdmin: boolean;
+  locale?: Locale;
 }) {
   const [editando, setEditando] = useState(false);
   // Aunque la base ya solo acepta http/https (constraint
   // noticias_url_fuente_http, migración 021), esto cubre las filas que
   // pudieran venir de antes y cualquier otra vía de escritura futura.
   const urlFuente = urlSeguraParaEnlace(noticia.url_fuente);
+  // Fallback al español si no hay traducción — nunca se muestra vacío.
+  const tituloMostrado =
+    (locale === "en" && noticia.titulo_en?.trim()) || noticia.titulo;
+  const resumenMostrado =
+    (locale === "en" && noticia.resumen_en?.trim()) || noticia.resumen;
 
   if (editando) {
     return (
@@ -32,7 +40,7 @@ export function TarjetaNoticiaAdmin({
     <article className="border border-[var(--border)] rounded-2xl p-5">
       <div className="flex items-start justify-between gap-3 mb-1.5">
         <h2 className="font-display font-semibold text-base">
-          {noticia.titulo}
+          {tituloMostrado}
         </h2>
         {noticia.destacada && (
           <span className="bg-brand-secondary/15 text-brand-secondary text-xs font-bold px-2.5 py-1 rounded-full whitespace-nowrap">
@@ -40,9 +48,9 @@ export function TarjetaNoticiaAdmin({
           </span>
         )}
       </div>
-      {noticia.resumen && (
+      {resumenMostrado && (
         <p className="text-sm text-foreground-muted mb-2">
-          {noticia.resumen}
+          {resumenMostrado}
         </p>
       )}
       {urlFuente && (

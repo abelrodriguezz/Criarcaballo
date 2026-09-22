@@ -230,6 +230,11 @@ export const es = {
     miembrosInvitados: "miembros invitados por ti",
     comisionesInvitar: "comisiones por invitar — no aplica",
   },
+  noticias: {
+    titulo: "Noticias",
+    subtitulo: "Actualizaciones filtradas del mercado.",
+    sinNoticias: "Todavía no hay noticias publicadas.",
+  },
   copiar: {
     copiar: "Copiar",
     copiado: "¡Copiado!",

@@ -87,6 +87,9 @@ export function TarjetaSenalAdmin({
   }
 
   const esCompra = senal.tipo === "compra";
+  // Fallback al español si no hay traducción — nunca se muestra vacío.
+  const razonMostrada =
+    (locale === "en" && senal.razon_en?.trim()) || senal.razon;
 
   const resultadoInfo = senal.resultado && (
     <div className="text-[13px] text-foreground-muted mt-1">
@@ -242,8 +245,8 @@ export function TarjetaSenalAdmin({
           </div>
         </div>
 
-        {senal.razon && (
-          <p className="text-[13px] text-foreground-muted">{senal.razon}</p>
+        {razonMostrada && (
+          <p className="text-[13px] text-foreground-muted">{razonMostrada}</p>
         )}
         {resultadoInfo}
         {botonesAdmin}

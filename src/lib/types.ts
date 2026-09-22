@@ -23,6 +23,7 @@ export interface Senal {
   stop_loss: number | null;
   take_profit: number | null;
   razon: string | null;
+  razon_en: string | null;
   estado: "activa" | "cerrada" | "cancelada";
   resultado: "tp" | "sl" | null;
   precio_cierre: number | null;
@@ -35,7 +36,9 @@ export interface Senal {
 export interface Noticia {
   id: string;
   titulo: string;
+  titulo_en: string | null;
   resumen: string | null;
+  resumen_en: string | null;
   url_fuente: string | null;
   destacada: boolean;
   created_at: string;

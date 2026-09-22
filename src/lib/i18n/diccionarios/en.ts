@@ -227,6 +227,11 @@ export const en: typeof es = {
     miembrosInvitados: "members invited by you",
     comisionesInvitar: "referral commissions — not applicable",
   },
+  noticias: {
+    titulo: "News",
+    subtitulo: "Filtered market updates.",
+    sinNoticias: "No news published yet.",
+  },
   copiar: {
     copiar: "Copy",
     copiado: "Copied!",

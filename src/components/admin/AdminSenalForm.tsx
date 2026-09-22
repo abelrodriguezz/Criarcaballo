@@ -39,6 +39,7 @@ export function AdminSenalForm({
       : ""
   );
   const [razon, setRazon] = useState(senalExistente?.razon ?? "");
+  const [razonEn, setRazonEn] = useState(senalExistente?.razon_en ?? "");
   const [error, setError] = useState<string | null>(null);
   const [guardando, setGuardando] = useState(false);
   const [abierto, setAbierto] = useState(esEdicion);
@@ -123,6 +124,7 @@ export function AdminSenalForm({
       stop_loss: stopLossNum,
       take_profit: takeProfitNum,
       razon: razon || null,
+      razon_en: razonEn || null,
     };
 
     const { error } = esEdicion
@@ -151,6 +153,7 @@ export function AdminSenalForm({
       setStopLoss("");
       setTakeProfit("");
       setRazon("");
+      setRazonEn("");
       setAbierto(false);
     }
     router.refresh();
@@ -238,6 +241,14 @@ export function AdminSenalForm({
         onChange={(e) => setRazon(e.target.value)}
         aria-label="Razón del análisis"
         placeholder="Razón del análisis (opcional)"
+        rows={2}
+        className="w-full px-3 py-2 mb-2.5 rounded-lg border border-[var(--border)] bg-background text-sm resize-none"
+      />
+      <textarea
+        value={razonEn ?? ""}
+        onChange={(e) => setRazonEn(e.target.value)}
+        aria-label="Reason (English)"
+        placeholder="Razón en inglés (opcional — si la dejas vacía, el usuario en inglés ve la razón en español)"
         rows={2}
         className="w-full px-3 py-2 mb-3 rounded-lg border border-[var(--border)] bg-background text-sm resize-none"
       />

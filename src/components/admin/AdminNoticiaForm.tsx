@@ -19,7 +19,9 @@ export function AdminNoticiaForm({
   const esEdicion = !!noticiaExistente;
 
   const [titulo, setTitulo] = useState(noticiaExistente?.titulo ?? "");
+  const [tituloEn, setTituloEn] = useState(noticiaExistente?.titulo_en ?? "");
   const [resumen, setResumen] = useState(noticiaExistente?.resumen ?? "");
+  const [resumenEn, setResumenEn] = useState(noticiaExistente?.resumen_en ?? "");
   const [urlFuente, setUrlFuente] = useState(
     noticiaExistente?.url_fuente ?? ""
   );
@@ -60,7 +62,9 @@ export function AdminNoticiaForm({
     const supabase = crearClienteSupabase();
     const datos = {
       titulo: titulo.trim(),
+      titulo_en: tituloEn.trim() || null,
       resumen: resumen || null,
+      resumen_en: resumenEn || null,
       url_fuente: urlLimpia,
       destacada,
     };
@@ -83,7 +87,9 @@ export function AdminNoticiaForm({
       onCancelar?.();
     } else {
       setTitulo("");
+      setTituloEn("");
       setResumen("");
+      setResumenEn("");
       setUrlFuente("");
       setDestacada(false);
       setAbierto(false);
@@ -133,6 +139,21 @@ export function AdminNoticiaForm({
         onChange={(e) => setResumen(e.target.value)}
         aria-label="Resumen"
         placeholder="Resumen (opcional)"
+        rows={2}
+        className="w-full px-3 py-2 mb-2.5 rounded-lg border border-[var(--border)] bg-background text-sm resize-none"
+      />
+      <input
+        value={tituloEn}
+        onChange={(e) => setTituloEn(e.target.value)}
+        aria-label="Title (English)"
+        placeholder="Título en inglés (opcional)"
+        className="w-full px-3 py-2 mb-2.5 rounded-lg border border-[var(--border)] bg-background text-sm"
+      />
+      <textarea
+        value={resumenEn ?? ""}
+        onChange={(e) => setResumenEn(e.target.value)}
+        aria-label="Summary (English)"
+        placeholder="Resumen en inglés (opcional)"
         rows={2}
         className="w-full px-3 py-2 mb-2.5 rounded-lg border border-[var(--border)] bg-background text-sm resize-none"
       />

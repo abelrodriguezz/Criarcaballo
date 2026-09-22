@@ -54,7 +54,8 @@ export default async function PaginaInicio() {
   const itemsTicker: ItemTicker[] = [
     ...(noticiasPropias ?? []).map((n) => ({
       id: n.id,
-      titulo: n.titulo,
+      // Fallback al español si no hay traducción — nunca se muestra vacío.
+      titulo: (locale === "en" && n.titulo_en?.trim()) || n.titulo,
       url: n.url_fuente || "/noticias",
       destacada: n.destacada,
     })),
