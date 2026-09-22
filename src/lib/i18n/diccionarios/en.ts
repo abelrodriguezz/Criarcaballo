@@ -232,11 +232,6 @@ export const en: typeof es = {
     copiado: "Copied!",
   },
   nosotros: {
-    titulo: "About Trade4U",
-    parrafo1:
-      "Trade4U was built to give anyone access to real market data — crypto, stocks and indices — without decoration or promises of returns. We believe understanding the market before risking real money is the foundation of any responsible trading decision.",
-    parrafo2:
-      "That's why we built a space to practice with a virtual balance, follow daily analysis with the reasoning included, and track your progress over time — all with real-time prices, straight from the source.",
     disclaimerTitulo: "Important notice",
     disclaimer:
       "Trade4U is an educational and practice tool. Nothing on this platform constitutes financial advice, and no past figure or result guarantees future results.",

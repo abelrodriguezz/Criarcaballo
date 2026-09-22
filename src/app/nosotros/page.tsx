@@ -1,23 +1,45 @@
 import { IconoInfo } from "@/components/ui/Iconos";
-import { obtenerDiccionario } from "@/lib/i18n/servidor";
+import { esAdmin, obtenerUsuarioActual } from "@/lib/auth/sesion";
+import {
+  obtenerConfigNosotros,
+  obtenerConfigNosotrosCompleto,
+} from "@/lib/config-nosotros";
+import { AdminNosotrosForm } from "@/components/admin/AdminNosotrosForm";
+import { obtenerDiccionario, obtenerLocale } from "@/lib/i18n/servidor";
 
 export default async function PaginaNosotros() {
-  const t = await obtenerDiccionario();
+  const [usuario, locale, t] = await Promise.all([
+    obtenerUsuarioActual(),
+    obtenerLocale(),
+    obtenerDiccionario(),
+  ]);
+  const usuarioEsAdmin = esAdmin(usuario);
+
+  const [nosotros, nosotrosCompleto] = await Promise.all([
+    obtenerConfigNosotros(locale),
+    usuarioEsAdmin ? obtenerConfigNosotrosCompleto() : Promise.resolve(null),
+  ]);
 
   return (
     <div className="py-10 max-w-[640px]">
+      {usuarioEsAdmin && nosotrosCompleto && (
+        <AdminNosotrosForm nosotrosActual={nosotrosCompleto} />
+      )}
+
       <h1 className="font-display font-semibold text-[26px] mb-6">
-        {t.nosotros.titulo}
+        {nosotros.titulo}
       </h1>
 
-      <p className="text-foreground-muted text-[15px] leading-relaxed mb-4">
-        {t.nosotros.parrafo1}
-      </p>
-      <p className="text-foreground-muted text-[15px] leading-relaxed mb-8">
-        {t.nosotros.parrafo2}
-      </p>
+      {nosotros.parrafos.map((parrafo, i) => (
+        <p
+          key={i}
+          className="text-foreground-muted text-[15px] leading-relaxed mb-4"
+        >
+          {parrafo}
+        </p>
+      ))}
 
-      <div className="border border-[var(--border)] bg-surface p-5 flex gap-3">
+      <div className="border border-[var(--border)] bg-surface p-5 flex gap-3 mt-4">
         <IconoInfo className="w-4 h-4 shrink-0 mt-0.5 text-foreground-muted" />
         <div>
           <div className="font-semibold text-sm mb-1">
