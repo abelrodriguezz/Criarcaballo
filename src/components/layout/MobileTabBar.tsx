@@ -8,6 +8,7 @@ import {
   IconoComunidad,
   IconoReto,
   IconoPerfil,
+  IconoInfo,
 } from "@/components/ui/Iconos";
 import type { Diccionario } from "@/lib/i18n";
 
@@ -26,6 +27,7 @@ export function MobileTabBar({ t }: { t: Diccionario }) {
     { href: "/comunidad", label: t.nav.comunidad, Icono: IconoComunidad },
     { href: "/trade-del-dia", label: t.nav.tradeCorto, Icono: IconoReto },
     { href: "/perfil", label: t.nav.perfil, Icono: IconoPerfil },
+    { href: "/nosotros", label: t.nav.nosotros, Icono: IconoInfo },
   ];
 
   return (

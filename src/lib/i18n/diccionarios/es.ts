@@ -10,6 +10,7 @@ export const es = {
     tradeDelDia: "Trade del día",
     tradeCorto: "Trade",
     perfil: "Perfil",
+    nosotros: "Nosotros",
     iniciarSesion: "Iniciar sesión",
   },
   home: {
@@ -232,5 +233,15 @@ export const es = {
   copiar: {
     copiar: "Copiar",
     copiado: "¡Copiado!",
+  },
+  nosotros: {
+    titulo: "Sobre Trade4U",
+    parrafo1:
+      "Trade4U nació para darle a cualquier persona acceso a datos de mercado reales — cripto, acciones e índices — sin adornos ni promesas de rendimiento. Creemos que entender el mercado antes de arriesgar dinero real es la base de cualquier decisión de trading responsable.",
+    parrafo2:
+      "Por eso construimos un espacio para practicar con saldo virtual, seguir análisis publicados a diario con su razonamiento incluido, y medir tu progreso con el tiempo — todo con precios en tiempo real, directo de la fuente.",
+    disclaimerTitulo: "Aviso importante",
+    disclaimer:
+      "Trade4U es una herramienta educativa y de práctica. Nada en esta plataforma constituye asesoría financiera, y ninguna cifra o resultado pasado garantiza resultados futuros.",
   },
 };

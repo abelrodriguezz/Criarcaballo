@@ -11,6 +11,7 @@ import {
   IconoComunidad,
   IconoReto,
   IconoPerfil,
+  IconoInfo,
 } from "@/components/ui/Iconos";
 import type { SesionUsuario } from "@/lib/auth/sesion";
 import type { Diccionario, Locale } from "@/lib/i18n";
@@ -31,6 +32,7 @@ export function NavBar({
     { href: "/senales", label: t.nav.senales, Icono: IconoSenales },
     { href: "/comunidad", label: t.nav.comunidad, Icono: IconoComunidad },
     { href: "/trade-del-dia", label: t.nav.tradeDelDia, Icono: IconoReto },
+    { href: "/nosotros", label: t.nav.nosotros, Icono: IconoInfo },
   ];
 
   return (
@@ -52,7 +54,7 @@ export function NavBar({
                   : "text-foreground-muted hover:text-foreground"
               }`}
             >
-              <Icono />
+              <Icono className="w-[18px] h-[18px]" />
               {label}
             </Link>
           );
