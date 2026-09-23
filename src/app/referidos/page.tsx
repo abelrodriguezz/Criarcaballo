@@ -10,6 +10,7 @@ import type { GananciaConcurso } from "@/lib/types";
 interface FilaUsuarioCompleta {
   id: string;
   email: string;
+  nombre: string | null;
   id_corto: number | null;
   invitado_por: string | null;
   created_at: string;
@@ -32,7 +33,7 @@ export default async function PaginaReferidos() {
     await Promise.all([
       supabase
         .from("usuarios")
-        .select("id, email, id_corto, invitado_por, created_at")
+        .select("id, email, nombre, id_corto, invitado_por, created_at")
         .order("created_at", { ascending: true })
         .returns<FilaUsuarioCompleta[]>(),
       supabase

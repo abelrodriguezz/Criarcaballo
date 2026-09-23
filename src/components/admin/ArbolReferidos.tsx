@@ -4,6 +4,7 @@ import { formatearDinero } from "@/lib/format";
 export interface NodoArbolReferido {
   id: string;
   email: string;
+  nombre: string | null;
   id_corto: number | null;
 }
 
@@ -36,7 +37,7 @@ function nodo(
           href={`/usuarios/${usuario.id}`}
           className="text-sm font-medium hover:text-brand-primary break-all"
         >
-          {usuario.email}
+          {usuario.nombre ? `${usuario.nombre} · ${usuario.email}` : usuario.email}
         </Link>
         {usuario.id_corto != null && (
           <span className="text-[11px] font-mono text-foreground-muted">

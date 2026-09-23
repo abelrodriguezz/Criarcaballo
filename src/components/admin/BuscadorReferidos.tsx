@@ -32,10 +32,11 @@ export function BuscadorReferidos({
 
   // Los Map no viajan como prop de servidor a cliente — se arman aquí,
   // una vez, a partir de los arrays planos que sí llegan serializados.
-  const { emailPorUsuario, hijosPorPadre, raices, comisionPorInvitado, depositoPorUsuario } =
+  const { emailPorUsuario, nombrePorUsuario, hijosPorPadre, raices, comisionPorInvitado, depositoPorUsuario } =
     useMemo(() => {
       const filas = todos.filter((u) => u.invitado_por);
       const emailPorUsuario = new Map(todos.map((u) => [u.id, u.email]));
+      const nombrePorUsuario = new Map(todos.map((u) => [u.id, u.nombre]));
       const hijosPorPadre = new Map<string, UsuarioReferido[]>();
       for (const u of filas) {
         const padre = u.invitado_por as string;
@@ -47,7 +48,7 @@ export function BuscadorReferidos({
         comisiones.map((c) => [c.invitado_id as string, { id: c.id, monto: c.monto, pagado: c.pagado }])
       );
       const depositoPorUsuario = new Map(depositos.map((d) => [d.usuario_id, Number(d.monto)]));
-      return { emailPorUsuario, hijosPorPadre, raices, comisionPorInvitado, depositoPorUsuario };
+      return { emailPorUsuario, nombrePorUsuario, hijosPorPadre, raices, comisionPorInvitado, depositoPorUsuario };
     }, [todos, comisiones, depositos]);
 
   const filas = useMemo(() => todos.filter((u) => u.invitado_por), [todos]);
@@ -62,6 +63,7 @@ export function BuscadorReferidos({
 
     const coincide = (u: UsuarioReferido) =>
       u.email.toLowerCase().includes(termino) ||
+      (!!u.nombre && u.nombre.toLowerCase().includes(termino)) ||
       (u.id_corto != null && String(u.id_corto).includes(termino));
 
     const coincidencias = todos.filter(coincide).map((u) => u.id);
@@ -104,28 +106,36 @@ export function BuscadorReferidos({
     if (!termino) return filas;
     return filas.filter((f) => {
       const emailInvitador = emailPorUsuario.get(f.invitado_por as string) ?? "";
+      const nombreInvitador = nombrePorUsuario.get(f.invitado_por as string) ?? "";
       return (
         f.email.toLowerCase().includes(termino) ||
+        (!!f.nombre && f.nombre.toLowerCase().includes(termino)) ||
         (f.id_corto != null && String(f.id_corto).includes(termino)) ||
-        emailInvitador.toLowerCase().includes(termino)
+        emailInvitador.toLowerCase().includes(termino) ||
+        nombreInvitador.toLowerCase().includes(termino)
       );
     });
-  }, [busqueda, filas, emailPorUsuario]);
+  }, [busqueda, filas, emailPorUsuario, nombrePorUsuario]);
 
   const bonosFiltrados = useMemo(() => {
     const termino = busqueda.trim().toLowerCase();
     if (!termino) return bonos;
-    return bonos.filter((b) =>
-      (emailPorUsuario.get(b.usuario_id) ?? "").toLowerCase().includes(termino)
-    );
-  }, [busqueda, bonos, emailPorUsuario]);
+    return bonos.filter((b) => {
+      const email = emailPorUsuario.get(b.usuario_id) ?? "";
+      const nombre = nombrePorUsuario.get(b.usuario_id) ?? "";
+      return (
+        email.toLowerCase().includes(termino) ||
+        nombre.toLowerCase().includes(termino)
+      );
+    });
+  }, [busqueda, bonos, emailPorUsuario, nombrePorUsuario]);
 
   return (
     <div>
       <input
         value={busqueda}
         onChange={(e) => setBusqueda(e.target.value)}
-        placeholder="Buscar por correo o ID de usuario..."
+        placeholder="Buscar por nombre, correo o ID de usuario..."
         aria-label="Buscar referido"
         className="w-full px-3.5 py-2.5 mb-4 rounded-lg border border-[var(--border)] bg-background text-sm"
       />
@@ -173,7 +183,7 @@ export function BuscadorReferidos({
               >
                 <div className="min-w-0">
                   <div className="text-sm font-medium break-all">
-                    {f.email}
+                    {f.nombre ? `${f.nombre} · ${f.email}` : f.email}
                   </div>
                   <div className="text-[12px] text-foreground-muted break-all">
                     Invitado por{" "}
