@@ -1,0 +1,278 @@
+"use client";
+
+import { useMemo, useState } from "react";
+import Link from "next/link";
+import { ArbolReferidos, type NodoArbolReferido } from "@/components/admin/ArbolReferidos";
+import { BotonPagoGanancia } from "@/components/admin/BotonPagoGanancia";
+import { formatearDinero } from "@/lib/format";
+import type { GananciaConcurso } from "@/lib/types";
+
+interface UsuarioReferido extends NodoArbolReferido {
+  created_at: string;
+  invitado_por: string | null;
+}
+
+interface DepositoPlano {
+  usuario_id: string;
+  monto: number;
+}
+
+export function BuscadorReferidos({
+  todos,
+  comisiones,
+  bonos,
+  depositos,
+}: {
+  todos: UsuarioReferido[];
+  comisiones: GananciaConcurso[];
+  bonos: GananciaConcurso[];
+  depositos: DepositoPlano[];
+}) {
+  const [busqueda, setBusqueda] = useState("");
+
+  // Los Map no viajan como prop de servidor a cliente — se arman aquí,
+  // una vez, a partir de los arrays planos que sí llegan serializados.
+  const { emailPorUsuario, hijosPorPadre, raices, comisionPorInvitado, depositoPorUsuario } =
+    useMemo(() => {
+      const filas = todos.filter((u) => u.invitado_por);
+      const emailPorUsuario = new Map(todos.map((u) => [u.id, u.email]));
+      const hijosPorPadre = new Map<string, UsuarioReferido[]>();
+      for (const u of filas) {
+        const padre = u.invitado_por as string;
+        if (!hijosPorPadre.has(padre)) hijosPorPadre.set(padre, []);
+        hijosPorPadre.get(padre)!.push(u);
+      }
+      const raices = todos.filter((u) => !u.invitado_por && hijosPorPadre.has(u.id));
+      const comisionPorInvitado = new Map(
+        comisiones.map((c) => [c.invitado_id as string, { id: c.id, monto: c.monto, pagado: c.pagado }])
+      );
+      const depositoPorUsuario = new Map(depositos.map((d) => [d.usuario_id, Number(d.monto)]));
+      return { emailPorUsuario, hijosPorPadre, raices, comisionPorInvitado, depositoPorUsuario };
+    }, [todos, comisiones, depositos]);
+
+  const filas = useMemo(() => todos.filter((u) => u.invitado_por), [todos]);
+
+  // Filtrado del árbol: se conserva un nodo si coincide con la búsqueda,
+  // O es ancestro de una coincidencia (da contexto de quién lo invitó a
+  // él), O es descendiente (sus propios referidos) — así buscar a alguien
+  // no lo deja "flotando" sin saber de dónde viene ni qué generó.
+  const { raicesFiltradas, hijosFiltrados } = useMemo(() => {
+    const termino = busqueda.trim().toLowerCase();
+    if (!termino) return { raicesFiltradas: raices, hijosFiltrados: hijosPorPadre };
+
+    const coincide = (u: UsuarioReferido) =>
+      u.email.toLowerCase().includes(termino) ||
+      (u.id_corto != null && String(u.id_corto).includes(termino));
+
+    const coincidencias = todos.filter(coincide).map((u) => u.id);
+    const conservar = new Set<string>(coincidencias);
+
+    // Ancestros de cada coincidencia.
+    const porId = new Map(todos.map((u) => [u.id, u]));
+    for (const id of coincidencias) {
+      let actual = porId.get(id);
+      while (actual?.invitado_por) {
+        conservar.add(actual.invitado_por);
+        actual = porId.get(actual.invitado_por);
+      }
+    }
+
+    // Descendientes de cada coincidencia.
+    const pila = [...coincidencias];
+    while (pila.length > 0) {
+      const id = pila.pop()!;
+      for (const hijo of hijosPorPadre.get(id) ?? []) {
+        if (!conservar.has(hijo.id)) {
+          conservar.add(hijo.id);
+          pila.push(hijo.id);
+        }
+      }
+    }
+
+    const hijosFiltrados = new Map<string, UsuarioReferido[]>();
+    for (const [padre, hijos] of hijosPorPadre) {
+      const restantes = hijos.filter((h) => conservar.has(h.id));
+      if (restantes.length > 0) hijosFiltrados.set(padre, restantes);
+    }
+    const raicesFiltradas = raices.filter((r) => conservar.has(r.id));
+
+    return { raicesFiltradas, hijosFiltrados };
+  }, [busqueda, todos, raices, hijosPorPadre]);
+
+  const filasFiltradas = useMemo(() => {
+    const termino = busqueda.trim().toLowerCase();
+    if (!termino) return filas;
+    return filas.filter((f) => {
+      const emailInvitador = emailPorUsuario.get(f.invitado_por as string) ?? "";
+      return (
+        f.email.toLowerCase().includes(termino) ||
+        (f.id_corto != null && String(f.id_corto).includes(termino)) ||
+        emailInvitador.toLowerCase().includes(termino)
+      );
+    });
+  }, [busqueda, filas, emailPorUsuario]);
+
+  const bonosFiltrados = useMemo(() => {
+    const termino = busqueda.trim().toLowerCase();
+    if (!termino) return bonos;
+    return bonos.filter((b) =>
+      (emailPorUsuario.get(b.usuario_id) ?? "").toLowerCase().includes(termino)
+    );
+  }, [busqueda, bonos, emailPorUsuario]);
+
+  return (
+    <div>
+      <input
+        value={busqueda}
+        onChange={(e) => setBusqueda(e.target.value)}
+        placeholder="Buscar por correo o ID de usuario..."
+        aria-label="Buscar referido"
+        className="w-full px-3.5 py-2.5 mb-4 rounded-lg border border-[var(--border)] bg-background text-sm"
+      />
+
+      <h2 className="font-display font-semibold text-lg mb-3">
+        Árbol de referidos
+      </h2>
+      <p className="text-foreground-muted text-[13px] mb-3">
+        Quién invitó a quién, en cadena — no solo el nivel directo. Cada
+        línea muestra cuántos referidos directos tiene esa persona.
+      </p>
+      {raicesFiltradas.length === 0 ? (
+        <p className="text-foreground-muted text-sm border border-dashed border-[var(--border)] rounded-2xl p-6 text-center mb-8">
+          {busqueda
+            ? `Ningún referido coincide con "${busqueda}".`
+            : "Todavía no hay ninguna cadena de referidos."}
+        </p>
+      ) : (
+        <ArbolReferidos
+          raices={raicesFiltradas}
+          hijosPorPadre={hijosFiltrados}
+          depositoPorUsuario={depositoPorUsuario}
+          comisionPorInvitado={comisionPorInvitado}
+        />
+      )}
+
+      <h2 className="font-display font-semibold text-lg mb-3">
+        Comisiones por referido
+      </h2>
+      {filasFiltradas.length === 0 ? (
+        <p className="text-foreground-muted text-sm border border-dashed border-[var(--border)] rounded-2xl p-6 text-center mb-8">
+          {busqueda
+            ? `Ningún referido coincide con "${busqueda}".`
+            : "Todavía nadie se ha registrado con un código de invitación."}
+        </p>
+      ) : (
+        <div className="flex flex-col gap-2.5 mb-8">
+          {filasFiltradas.map((f) => {
+            const comision = comisionPorInvitado.get(f.id);
+            const deposito = depositoPorUsuario.get(f.id);
+            return (
+              <div
+                key={f.id}
+                className="border border-[var(--border)] rounded-xl p-4 flex flex-wrap items-center justify-between gap-3"
+              >
+                <div className="min-w-0">
+                  <div className="text-sm font-medium break-all">
+                    {f.email}
+                  </div>
+                  <div className="text-[12px] text-foreground-muted break-all">
+                    Invitado por{" "}
+                    <Link
+                      href={`/usuarios/${f.invitado_por}`}
+                      className="font-medium hover:text-brand-primary"
+                    >
+                      {emailPorUsuario.get(f.invitado_por as string) ?? "—"}
+                    </Link>{" "}
+                    ·{" "}
+                    {new Date(f.created_at).toLocaleDateString("es-DO", {
+                      day: "numeric",
+                      month: "short",
+                      year: "numeric",
+                    })}
+                  </div>
+                  <div className="text-[12px] text-foreground-muted">
+                    {deposito != null
+                      ? `Depósito simulado: $${formatearDinero(deposito)}`
+                      : "Todavía no hizo su depósito simulado"}
+                  </div>
+                </div>
+
+                <div className="shrink-0">
+                  {!comision ? (
+                    <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-foreground-muted/15 text-foreground-muted">
+                      Sin comisión todavía
+                    </span>
+                  ) : (
+                    <div className="flex items-center gap-3">
+                      <span
+                        className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${
+                          comision.pagado
+                            ? "bg-gain/15 text-gain"
+                            : "bg-brand-secondary/15 text-brand-secondary"
+                        }`}
+                      >
+                        {comision.pagado ? "Pagado" : "Pendiente"} · $
+                        {formatearDinero(comision.monto)}
+                      </span>
+                      <BotonPagoGanancia
+                        gananciaId={comision.id}
+                        pagado={comision.pagado}
+                      />
+                    </div>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      <h2 className="font-display font-semibold text-lg mb-3">
+        Bonos por meta de referidos
+      </h2>
+      {bonosFiltrados.length === 0 ? (
+        <p className="text-foreground-muted text-sm border border-dashed border-[var(--border)] rounded-2xl p-6 text-center">
+          {busqueda
+            ? `Ningún bono coincide con "${busqueda}".`
+            : "Todavía no se alcanzó ninguna meta de referidos calificados."}
+        </p>
+      ) : (
+        <div className="flex flex-col gap-2.5">
+          {bonosFiltrados.map((b) => (
+            <div
+              key={b.id}
+              className="border border-[var(--border)] rounded-xl p-4 flex flex-wrap items-center justify-between gap-3"
+            >
+              <div className="min-w-0">
+                <div className="text-sm font-medium break-all">
+                  {emailPorUsuario.get(b.usuario_id) ?? "Usuario"}
+                </div>
+                <div className="text-[12px] text-foreground-muted">
+                  {b.concepto} ·{" "}
+                  {new Date(b.created_at).toLocaleDateString("es-DO", {
+                    day: "numeric",
+                    month: "short",
+                    year: "numeric",
+                  })}
+                </div>
+              </div>
+              <div className="flex items-center gap-3 shrink-0">
+                <span
+                  className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${
+                    b.pagado
+                      ? "bg-gain/15 text-gain"
+                      : "bg-brand-secondary/15 text-brand-secondary"
+                  }`}
+                >
+                  {b.pagado ? "Pagado" : "Pendiente"} · $
+                  {formatearDinero(b.monto)}
+                </span>
+                <BotonPagoGanancia gananciaId={b.id} pagado={b.pagado} />
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
