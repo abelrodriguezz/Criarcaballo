@@ -49,12 +49,14 @@ function CajaNodo({
   comision,
   deposito,
   cantidadHijos,
+  onSeleccionar,
 }: {
   usuario: NodoArbolReferido;
   posicion: number | null;
   comision: ComisionResumen | undefined;
   deposito: number | undefined;
   cantidadHijos: number;
+  onSeleccionar: (id: string) => void;
 }) {
   return (
     <div className="flex items-center gap-1.5 shrink-0">
@@ -64,17 +66,28 @@ function CajaNodo({
         </span>
       )}
       <div className="border border-[var(--border)] bg-surface rounded-lg px-3 py-2 flex flex-wrap items-center gap-x-2 gap-y-1 max-w-[320px]">
-        <Link
-          href={`/usuarios/${usuario.id}`}
-          className="text-sm font-medium hover:text-brand-primary break-all"
+        {/* El nombre pone a esta persona como raíz de la vista (ver a
+            quién invitó ella) — no navega. Para ir al perfil de verdad
+            está el enlace "Perfil" aparte, más chico. */}
+        <button
+          type="button"
+          onClick={() => onSeleccionar(usuario.id)}
+          title="Ver la red de referidos de esta persona"
+          className="text-sm font-medium hover:text-brand-primary break-all text-left"
         >
           {usuario.nombre ? `${usuario.nombre} · ${usuario.email}` : usuario.email}
-        </Link>
+        </button>
         {usuario.id_corto != null && (
           <span className="text-[11px] font-mono text-foreground-muted">
             #{usuario.id_corto}
           </span>
         )}
+        <Link
+          href={`/usuarios/${usuario.id}`}
+          className="text-[10px] text-foreground-muted hover:text-brand-primary underline shrink-0"
+        >
+          Perfil
+        </Link>
         {comision ? (
           <span
             className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full ${
@@ -114,12 +127,14 @@ function Nodo({
   hijosPorPadre,
   depositoPorUsuario,
   comisionPorInvitado,
+  onSeleccionar,
 }: {
   usuario: NodoArbolReferido;
   posicion: number | null;
   hijosPorPadre: Map<string, NodoArbolReferido[]>;
   depositoPorUsuario: Map<string, number>;
   comisionPorInvitado: Map<string, ComisionResumen>;
+  onSeleccionar: (id: string) => void;
 }) {
   const hijos = hijosPorPadre.get(usuario.id) ?? [];
   const deposito = depositoPorUsuario.get(usuario.id);
@@ -134,6 +149,7 @@ function Nodo({
           comision={comision}
           deposito={deposito}
           cantidadHijos={hijos.length}
+          onSeleccionar={onSeleccionar}
         />
       </div>
 
@@ -166,6 +182,7 @@ function Nodo({
                       hijosPorPadre={hijosPorPadre}
                       depositoPorUsuario={depositoPorUsuario}
                       comisionPorInvitado={comisionPorInvitado}
+                      onSeleccionar={onSeleccionar}
                     />
                   </div>
                 </div>
@@ -183,11 +200,13 @@ export function ArbolReferidos({
   hijosPorPadre,
   depositoPorUsuario,
   comisionPorInvitado,
+  onSeleccionar,
 }: {
   raices: NodoArbolReferido[];
   hijosPorPadre: Map<string, NodoArbolReferido[]>;
   depositoPorUsuario: Map<string, number>;
   comisionPorInvitado: Map<string, ComisionResumen>;
+  onSeleccionar: (id: string) => void;
 }) {
   if (raices.length === 0) {
     return (
@@ -208,6 +227,7 @@ export function ArbolReferidos({
             hijosPorPadre={hijosPorPadre}
             depositoPorUsuario={depositoPorUsuario}
             comisionPorInvitado={comisionPorInvitado}
+            onSeleccionar={onSeleccionar}
           />
         ))}
       </div>

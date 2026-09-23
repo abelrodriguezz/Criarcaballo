@@ -29,6 +29,9 @@ export function BuscadorReferidos({
   depositos: DepositoPlano[];
 }) {
   const [busqueda, setBusqueda] = useState("");
+  // Al hacer clic en alguien del árbol, se vuelve la "raíz" de la vista
+  // (se ve su propia red hacia abajo) en vez de navegar a su perfil.
+  const [raizManual, setRaizManual] = useState<string | null>(null);
 
   // Los Map no viajan como prop de servidor a cliente — se arman aquí,
   // una vez, a partir de los arrays planos que sí llegan serializados.
@@ -53,53 +56,37 @@ export function BuscadorReferidos({
 
   const filas = useMemo(() => todos.filter((u) => u.invitado_por), [todos]);
 
-  // Filtrado del árbol: se conserva un nodo si coincide con la búsqueda,
-  // O es ancestro de una coincidencia (da contexto de quién lo invitó a
-  // él), O es descendiente (sus propios referidos) — así buscar a alguien
-  // no lo deja "flotando" sin saber de dónde viene ni qué generó.
-  const { raicesFiltradas, hijosFiltrados } = useMemo(() => {
+  // Qué se muestra como "raíz" del árbol:
+  // 1) si se seleccionó a alguien haciendo clic, esa persona sola (con su
+  //    propia red completa hacia abajo, ignorando la búsqueda);
+  // 2) si hay una búsqueda activa, cada coincidencia se vuelve su propia
+  //    raíz — así "buscar a Carlos" muestra a Carlos como principal, no
+  //    enterrado bajo quien lo invitó a él;
+  // 3) si no hay nada de eso, las raíces reales (quienes no fueron
+  //    invitados por nadie).
+  // hijosPorPadre se pasa siempre completo — la raíz elegida muestra TODA
+  // su red hacia abajo, no una versión recortada por el texto buscado.
+  const raicesEfectivas = useMemo(() => {
+    if (raizManual) {
+      const seleccionado = todos.find((u) => u.id === raizManual);
+      if (seleccionado) return [seleccionado];
+    }
+
     const termino = busqueda.trim().toLowerCase();
-    if (!termino) return { raicesFiltradas: raices, hijosFiltrados: hijosPorPadre };
+    if (!termino) return raices;
 
     const coincide = (u: UsuarioReferido) =>
       u.email.toLowerCase().includes(termino) ||
       (!!u.nombre && u.nombre.toLowerCase().includes(termino)) ||
       (u.id_corto != null && String(u.id_corto).includes(termino));
 
-    const coincidencias = todos.filter(coincide).map((u) => u.id);
-    const conservar = new Set<string>(coincidencias);
+    return todos.filter(coincide);
+  }, [raizManual, busqueda, todos, raices]);
 
-    // Ancestros de cada coincidencia.
-    const porId = new Map(todos.map((u) => [u.id, u]));
-    for (const id of coincidencias) {
-      let actual = porId.get(id);
-      while (actual?.invitado_por) {
-        conservar.add(actual.invitado_por);
-        actual = porId.get(actual.invitado_por);
-      }
-    }
-
-    // Descendientes de cada coincidencia.
-    const pila = [...coincidencias];
-    while (pila.length > 0) {
-      const id = pila.pop()!;
-      for (const hijo of hijosPorPadre.get(id) ?? []) {
-        if (!conservar.has(hijo.id)) {
-          conservar.add(hijo.id);
-          pila.push(hijo.id);
-        }
-      }
-    }
-
-    const hijosFiltrados = new Map<string, UsuarioReferido[]>();
-    for (const [padre, hijos] of hijosPorPadre) {
-      const restantes = hijos.filter((h) => conservar.has(h.id));
-      if (restantes.length > 0) hijosFiltrados.set(padre, restantes);
-    }
-    const raicesFiltradas = raices.filter((r) => conservar.has(r.id));
-
-    return { raicesFiltradas, hijosFiltrados };
-  }, [busqueda, todos, raices, hijosPorPadre]);
+  function seleccionarComoPrincipal(id: string) {
+    setRaizManual(id);
+    setBusqueda("");
+  }
 
   const filasFiltradas = useMemo(() => {
     const termino = busqueda.trim().toLowerCase();
@@ -134,7 +121,10 @@ export function BuscadorReferidos({
     <div>
       <input
         value={busqueda}
-        onChange={(e) => setBusqueda(e.target.value)}
+        onChange={(e) => {
+          setBusqueda(e.target.value);
+          setRaizManual(null);
+        }}
         placeholder="Buscar por nombre, correo o ID de usuario..."
         aria-label="Buscar referido"
         className="w-full px-3.5 py-2.5 mb-4 rounded-lg border border-[var(--border)] bg-background text-sm"
@@ -144,10 +134,26 @@ export function BuscadorReferidos({
         Árbol de referidos
       </h2>
       <p className="text-foreground-muted text-[13px] mb-3">
-        Quién invitó a quién, en cadena — no solo el nivel directo. Cada
-        línea muestra cuántos referidos directos tiene esa persona.
+        Quién invitó a quién, en cadena — no solo el nivel directo. Toca
+        el nombre de cualquier persona para verla como principal y ver
+        solo su propia red hacia abajo.
       </p>
-      {raicesFiltradas.length === 0 ? (
+      {raizManual && (
+        <div className="flex flex-wrap items-center gap-2 mb-3 text-[13px]">
+          <span className="text-foreground-muted">Mostrando la red de</span>
+          <span className="font-semibold">
+            {nombrePorUsuario.get(raizManual) ?? emailPorUsuario.get(raizManual) ?? "esta persona"}
+          </span>
+          <button
+            type="button"
+            onClick={() => setRaizManual(null)}
+            className="text-brand-primary font-semibold hover:underline"
+          >
+            ← Volver al árbol completo
+          </button>
+        </div>
+      )}
+      {raicesEfectivas.length === 0 ? (
         <p className="text-foreground-muted text-sm border border-dashed border-[var(--border)] rounded-2xl p-6 text-center mb-8">
           {busqueda
             ? `Ningún referido coincide con "${busqueda}".`
@@ -155,10 +161,11 @@ export function BuscadorReferidos({
         </p>
       ) : (
         <ArbolReferidos
-          raices={raicesFiltradas}
-          hijosPorPadre={hijosFiltrados}
+          raices={raicesEfectivas}
+          hijosPorPadre={hijosPorPadre}
           depositoPorUsuario={depositoPorUsuario}
           comisionPorInvitado={comisionPorInvitado}
+          onSeleccionar={seleccionarComoPrincipal}
         />
       )}
 
