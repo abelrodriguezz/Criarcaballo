@@ -62,8 +62,15 @@ export async function obtenerConfigNosotros(
   const parrafosGuardados = locale === "en" ? guardado.parrafos_en : guardado.parrafos;
   // Si el admin dejó el arreglo vacío a propósito (borró todos los
   // párrafos), se respeta — solo se usa el default si NUNCA se guardó nada.
-  const parrafos =
+  const parrafosCrudos =
     parrafosGuardados !== undefined ? parrafosGuardados : defecto.parrafos;
+
+  // Al agregar un párrafo, el form de admin lo suma en los DOS idiomas a
+  // la vez (misma posición = mismo tema) para que el admin pueda ir
+  // traduciéndolo con calma — pero si todavía no lo tradujo, ese lado
+  // queda como cadena vacía. Sin este filtro, la página pública renderiza
+  // un <p> vacío (hueco visible) hasta que se complete la traducción.
+  const parrafos = parrafosCrudos.filter((p) => p.trim().length > 0);
 
   return { titulo, parrafos };
 }
