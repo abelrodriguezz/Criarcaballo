@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { ArbolReferidos, type NodoArbolReferido } from "@/components/admin/ArbolReferidos";
+import { BotonExportarArbolReferidos } from "@/components/admin/BotonExportarArbolReferidos";
 import { BotonPagoGanancia } from "@/components/admin/BotonPagoGanancia";
 import { formatearDinero } from "@/lib/format";
 import type { GananciaConcurso } from "@/lib/types";
@@ -130,9 +131,19 @@ export function BuscadorReferidos({
         className="w-full px-3.5 py-2.5 mb-4 rounded-lg border border-[var(--border)] bg-background text-sm"
       />
 
-      <h2 className="font-display font-semibold text-lg mb-3">
-        Árbol de referidos
-      </h2>
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
+        <h2 className="font-display font-semibold text-lg">
+          Árbol de referidos
+        </h2>
+        <BotonExportarArbolReferidos
+          raices={raicesEfectivas}
+          hijosPorPadre={hijosPorPadre}
+          depositoPorUsuario={depositoPorUsuario}
+          comisionPorInvitado={comisionPorInvitado}
+          emailPorUsuario={emailPorUsuario}
+          nombrePorUsuario={nombrePorUsuario}
+        />
+      </div>
       <p className="text-foreground-muted text-[12px] mb-3">
         Quién invitó a quién, en cadena — no solo el nivel directo. Toca
         el nombre de cualquier persona para verla como principal y ver
