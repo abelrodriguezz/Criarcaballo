@@ -169,9 +169,15 @@ export function BuscadorReferidos({
         />
       )}
 
-      <h2 className="font-display font-semibold text-lg mb-3">
+      <h2 className="font-display font-semibold text-lg mb-1">
         Comisiones por referido
       </h2>
+      <p className="text-foreground-muted text-[13px] mb-3">
+        Una fila por cada persona invitada. &quot;Sin comisión todavía&quot;
+        significa que esa persona no ha hecho su depósito simulado — en
+        cuanto lo haga, aparece aquí el monto pendiente y el botón para
+        marcarlo pagado.
+      </p>
       {filasFiltradas.length === 0 ? (
         <p className="text-foreground-muted text-sm border border-dashed border-[var(--border)] rounded-2xl p-6 text-center mb-8">
           {busqueda
@@ -244,9 +250,15 @@ export function BuscadorReferidos({
         </div>
       )}
 
-      <h2 className="font-display font-semibold text-lg mb-3">
+      <h2 className="font-display font-semibold text-lg mb-1">
         Bonos por meta de referidos
       </h2>
+      <p className="text-foreground-muted text-[13px] mb-3">
+        Premio extra (aparte de la comisión normal) que se otorga solo
+        cuando alguien acumula referidos que ya depositaron en múltiplos
+        de la cantidad configurada arriba — por ejemplo, al llegar a 10,
+        20, 30... Vacío hasta que alguien alcance la primera meta.
+      </p>
       {bonosFiltrados.length === 0 ? (
         <p className="text-foreground-muted text-sm border border-dashed border-[var(--border)] rounded-2xl p-6 text-center">
           {busqueda
