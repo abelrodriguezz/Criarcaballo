@@ -128,6 +128,7 @@ function Nodo({
   depositoPorUsuario,
   comisionPorInvitado,
   onSeleccionar,
+  ancestros,
 }: {
   usuario: NodoArbolReferido;
   posicion: number | null;
@@ -135,7 +136,23 @@ function Nodo({
   depositoPorUsuario: Map<string, number>;
   comisionPorInvitado: Map<string, ComisionResumen>;
   onSeleccionar: (id: string) => void;
+  ancestros: ReadonlySet<string>;
 }) {
+  // Corta los ciclos de invitado_por (A invitado por B y B por A, o
+  // alguien invitado por sí mismo). El registro normal no los produce,
+  // pero un admin sí puede escribirlos en la columna, y sin este corte la
+  // recursión tumba la página entera con "Maximum call stack size
+  // exceeded". Se avisa en vez de desaparecer el nodo en silencio, para
+  // que el admin vea que esa cadena está mal armada.
+  if (ancestros.has(usuario.id)) {
+    return (
+      <div className="flex items-center text-[11px] text-loss shrink-0">
+        ↩ {usuario.nombre ?? usuario.email} — cadena circular, se corta aquí
+      </div>
+    );
+  }
+  const ancestrosConEste = new Set(ancestros).add(usuario.id);
+
   const hijos = hijosPorPadre.get(usuario.id) ?? [];
   const deposito = depositoPorUsuario.get(usuario.id);
   const comision = comisionPorInvitado.get(usuario.id);
@@ -183,6 +200,7 @@ function Nodo({
                       depositoPorUsuario={depositoPorUsuario}
                       comisionPorInvitado={comisionPorInvitado}
                       onSeleccionar={onSeleccionar}
+                      ancestros={ancestrosConEste}
                     />
                   </div>
                 </div>
@@ -228,6 +246,7 @@ export function ArbolReferidos({
             depositoPorUsuario={depositoPorUsuario}
             comisionPorInvitado={comisionPorInvitado}
             onSeleccionar={onSeleccionar}
+            ancestros={new Set()}
           />
         ))}
       </div>

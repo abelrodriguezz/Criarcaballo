@@ -33,7 +33,21 @@ export function BotonExportarArbolReferidos({
   function exportar() {
     const lineas: string[] = [];
 
-    function aplanar(usuario: UsuarioConInvitador, nivel: number) {
+    // `ancestros` corta los ciclos en la cadena de invitado_por (A invitado
+    // por B y B por A, o alguien invitado por sí mismo). El registro normal
+    // no los produce, pero un admin sí puede escribirlos en la columna, y
+    // sin este corte la recursión revienta con "Maximum call stack size
+    // exceeded" y el export nunca se descarga. Es por rama, no global: si
+    // la misma persona aparece bajo dos raíces distintas (pasa al buscar)
+    // se sigue exportando en las dos, como hasta ahora.
+    function aplanar(
+      usuario: UsuarioConInvitador,
+      nivel: number,
+      ancestros: ReadonlySet<string>
+    ) {
+      if (ancestros.has(usuario.id)) return;
+      const ancestrosConEste = new Set(ancestros).add(usuario.id);
+
       const deposito = depositoPorUsuario.get(usuario.id);
       const comision = comisionPorInvitado.get(usuario.id);
       const estado = comision
@@ -70,12 +84,12 @@ export function BotonExportarArbolReferidos({
       );
 
       for (const hijo of hijosPorPadre.get(usuario.id) ?? []) {
-        aplanar(hijo, nivel + 1);
+        aplanar(hijo, nivel + 1, ancestrosConEste);
       }
     }
 
     for (const raiz of raices) {
-      aplanar(raiz, 1);
+      aplanar(raiz, 1, new Set());
     }
 
     descargarCSV(
