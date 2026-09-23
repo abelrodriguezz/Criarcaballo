@@ -133,7 +133,7 @@ export function BuscadorReferidos({
       <h2 className="font-display font-semibold text-lg mb-3">
         Árbol de referidos
       </h2>
-      <p className="text-foreground-muted text-[13px] mb-3">
+      <p className="text-foreground-muted text-[12px] mb-3">
         Quién invitó a quién, en cadena — no solo el nivel directo. Toca
         el nombre de cualquier persona para verla como principal y ver
         solo su propia red hacia abajo.
@@ -172,7 +172,7 @@ export function BuscadorReferidos({
       <h2 className="font-display font-semibold text-lg mb-1">
         Comisiones por referido
       </h2>
-      <p className="text-foreground-muted text-[13px] mb-3">
+      <p className="text-foreground-muted text-[12px] mb-3">
         Una fila por cada persona invitada. &quot;Sin comisión todavía&quot;
         significa que esa persona no ha hecho su depósito simulado — en
         cuanto lo haga, aparece aquí el monto pendiente y el botón para
@@ -253,7 +253,7 @@ export function BuscadorReferidos({
       <h2 className="font-display font-semibold text-lg mb-1">
         Bonos por meta de referidos
       </h2>
-      <p className="text-foreground-muted text-[13px] mb-3">
+      <p className="text-foreground-muted text-[12px] mb-3">
         Premio extra (aparte de la comisión normal) que se otorga solo
         cuando alguien acumula referidos que ya depositaron en múltiplos
         de la cantidad configurada arriba — por ejemplo, al llegar a 10,
