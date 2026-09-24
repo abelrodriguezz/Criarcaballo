@@ -80,6 +80,14 @@ export const en: typeof es = {
     errorRegistroGenerico: "Couldn't create the account. Try again.",
     errorRecuperarGenerico: "Couldn't process the request. Try again.",
     errorRestablecerGenerico: "Couldn't update the password. Try again.",
+    nombreLabel: "Name",
+    nombrePlaceholder: "Your full name",
+    nombreRequerido: "Enter your name.",
+    telefonoLabel: "Phone",
+    telefonoPlaceholder: "+1 809 555 1234",
+    telefonoRequerido: "Enter your phone number.",
+    codigoInvitacionLabel: "Invitation code (optional)",
+    codigoInvitacionPlaceholder: "If someone invited you, enter it here",
   },
   errores: {
     limiteCorreo:

@@ -80,6 +80,14 @@ export const es = {
     errorRecuperarGenerico: "No se pudo procesar la solicitud. Intenta de nuevo.",
     errorRestablecerGenerico:
       "No se pudo actualizar la contraseña. Intenta de nuevo.",
+    nombreLabel: "Nombre",
+    nombrePlaceholder: "Tu nombre completo",
+    nombreRequerido: "Ingresa tu nombre.",
+    telefonoLabel: "Teléfono",
+    telefonoPlaceholder: "+1 809 555 1234",
+    telefonoRequerido: "Ingresa tu teléfono.",
+    codigoInvitacionLabel: "Código de invitación (opcional)",
+    codigoInvitacionPlaceholder: "Si alguien te invitó, ponlo aquí",
   },
   errores: {
     limiteCorreo:
