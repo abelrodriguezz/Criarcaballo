@@ -12,6 +12,10 @@ import type { Diccionario, Locale } from "@/lib/i18n";
 // en vez de dejar el formulario deshabilitado para siempre.
 const TURNSTILE_CONFIGURADO = !!process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
 
+// Duplicado a propósito de DatosContactoForm.tsx: es un regex autocontenido,
+// sin dependencias, y así este formulario no gana un import extra.
+const TELEFONO_VALIDO = /^[0-9+\-\s()]{6,30}$/;
+
 export function RegistroForm({ t, locale }: { t: Diccionario; locale: Locale }) {
   const searchParams = useSearchParams();
   const codigoRef = searchParams.get("ref");
@@ -19,6 +23,8 @@ export function RegistroForm({ t, locale }: { t: Diccionario; locale: Locale }) 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmar, setConfirmar] = useState("");
+  const [nombre, setNombre] = useState("");
+  const [telefono, setTelefono] = useState("");
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [exito, setExito] = useState(false);
@@ -36,10 +42,17 @@ export function RegistroForm({ t, locale }: { t: Diccionario; locale: Locale }) 
       setError(t.auth.contrasenaCorta);
       return;
     }
+    const telefonoLimpio = telefono.trim();
+    if (telefonoLimpio && !TELEFONO_VALIDO.test(telefonoLimpio)) {
+      setError(t.datosContacto.formatoInvalido);
+      return;
+    }
     if (TURNSTILE_CONFIGURADO && !captchaToken) {
       setError(t.auth.completaVerificacion);
       return;
     }
+
+    const nombreLimpio = nombre.trim();
 
     setCargando(true);
     const supabase = crearClienteSupabase();
@@ -48,7 +61,11 @@ export function RegistroForm({ t, locale }: { t: Diccionario; locale: Locale }) 
       password,
       options: {
         ...(captchaToken ? { captchaToken } : {}),
-        ...(codigoRef ? { data: { ref: codigoRef } } : {}),
+        data: {
+          ...(codigoRef ? { ref: codigoRef } : {}),
+          ...(nombreLimpio ? { nombre: nombreLimpio } : {}),
+          ...(telefonoLimpio ? { telefono: telefonoLimpio } : {}),
+        },
       },
     });
     setCargando(false);
@@ -143,6 +160,33 @@ export function RegistroForm({ t, locale }: { t: Diccionario; locale: Locale }) 
         onChange={(e) => setConfirmar(e.target.value)}
         className="w-full px-3.5 py-2.5 mb-4 rounded-lg border border-[var(--border)] bg-background text-base md:text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary"
         placeholder="••••••••"
+      />
+
+      <p className="text-[12px] text-foreground-muted mb-1.5">
+        {t.datosContacto.descripcion}
+      </p>
+      <label htmlFor="registro-nombre" className="block text-[13px] font-medium mb-1.5">
+        {t.datosContacto.nombreLabel}
+      </label>
+      <input
+        id="registro-nombre"
+        value={nombre}
+        onChange={(e) => setNombre(e.target.value)}
+        maxLength={100}
+        className="w-full px-3.5 py-2.5 mb-3 rounded-lg border border-[var(--border)] bg-background text-base md:text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary"
+        placeholder={t.datosContacto.nombrePlaceholder}
+      />
+
+      <label htmlFor="registro-telefono" className="block text-[13px] font-medium mb-1.5">
+        {t.datosContacto.telefonoLabel}
+      </label>
+      <input
+        id="registro-telefono"
+        value={telefono}
+        onChange={(e) => setTelefono(e.target.value)}
+        maxLength={30}
+        className="w-full px-3.5 py-2.5 mb-4 rounded-lg border border-[var(--border)] bg-background text-base md:text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary"
+        placeholder={t.datosContacto.telefonoPlaceholder}
       />
 
       {error && (

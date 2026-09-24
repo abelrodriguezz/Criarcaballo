@@ -41,5 +41,3 @@ Thumbs.db
 # proyecto ni revelarle nada a quien lo reciba.
 .claude/settings.local.json
 .claude/settings.json
-
-.vercel
