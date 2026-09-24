@@ -19,7 +19,7 @@ export function LanguageToggle({ locale }: { locale: Locale }) {
       <button
         onClick={() => cambiar("es")}
         aria-label="Español"
-        className={`px-2 py-1 transition-colors ${
+        className={`px-1.5 sm:px-2 py-1 transition-colors ${
           locale === "es"
             ? "bg-brand-primary text-white"
             : "text-foreground-muted hover:text-foreground"
@@ -30,7 +30,7 @@ export function LanguageToggle({ locale }: { locale: Locale }) {
       <button
         onClick={() => cambiar("en")}
         aria-label="English"
-        className={`px-2 py-1 transition-colors ${
+        className={`px-1.5 sm:px-2 py-1 transition-colors ${
           locale === "en"
             ? "bg-brand-primary text-white"
             : "text-foreground-muted hover:text-foreground"

@@ -86,7 +86,7 @@ export function RecuperarForm({ t, locale }: { t: Diccionario; locale: Locale })
         required
         value={email}
         onChange={(e) => setEmail(e.target.value)}
-        className="w-full px-3.5 py-2.5 mb-4 rounded-lg border border-[var(--border)] bg-background text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary"
+        className="w-full px-3.5 py-2.5 mb-4 rounded-lg border border-[var(--border)] bg-background text-base md:text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary"
         placeholder={t.auth.correoPlaceholder}
       />
 

@@ -182,7 +182,7 @@ export function TarjetaSenalAdmin({
     >
       {linkGrafico}
       <div className="relative z-10">
-        <div className="flex items-center justify-between mb-3.5 gap-2">
+        <div className="flex flex-wrap items-center justify-between mb-3.5 gap-2">
           <div className="flex items-center gap-2.5 min-w-0">
             <div
               className="w-10 h-10 rounded-[4px] flex items-center justify-center text-white shrink-0"
@@ -192,7 +192,7 @@ export function TarjetaSenalAdmin({
                 className={`w-5 h-5 ${esCompra ? "" : "scale-y-[-1]"}`}
               />
             </div>
-            <div className="font-display font-bold text-xl truncate">
+            <div className="font-display font-bold text-xl whitespace-nowrap">
               {senal.par}
             </div>
           </div>

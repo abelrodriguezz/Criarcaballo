@@ -36,8 +36,8 @@ export function NavBar({
   ];
 
   return (
-    <header className="max-w-[1080px] mx-auto w-full px-6 py-6 flex items-center justify-between">
-      <Link href="/">
+    <header className="max-w-[1080px] mx-auto w-full px-4 sm:px-6 py-6 flex items-center justify-between">
+      <Link href="/" className="shrink-0">
         <Logo />
       </Link>
 
@@ -61,7 +61,7 @@ export function NavBar({
         })}
       </nav>
 
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
         {usuario ? (
           <Link
             href="/perfil"
@@ -82,7 +82,7 @@ export function NavBar({
           // redirect). Se muestra siempre, más compacto en pantalla chica.
           <Link
             href="/login"
-            className="inline-flex items-center px-3 md:px-4 py-2 rounded-xl text-[13px] md:text-sm font-semibold bg-brand-primary text-white hover:bg-brand-primary-hover transition-colors whitespace-nowrap"
+            className="inline-flex items-center px-2.5 md:px-4 py-2 rounded-xl text-[13px] md:text-sm font-semibold bg-brand-primary text-white hover:bg-brand-primary-hover transition-colors whitespace-nowrap"
           >
             {t.nav.iniciarSesion}
           </Link>

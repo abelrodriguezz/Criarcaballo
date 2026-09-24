@@ -89,7 +89,7 @@ export default async function PaginaTradeDelDia() {
       ) : (
         <div className="grid md:grid-cols-[1.3fr_1fr] gap-4">
           <div className="border border-[var(--border)] rounded-2xl p-5 flex flex-col gap-3.5">
-            <div className="flex justify-between items-baseline">
+            <div className="flex flex-wrap justify-between items-baseline gap-x-3 gap-y-1.5">
               <div>
                 {/* Mismo nombre que en /perfil: la tarjeta se llamaba
                     "Saldo virtual" aquí y "Saldo de Inversión" allá, y
@@ -101,7 +101,7 @@ export default async function PaginaTradeDelDia() {
                   ${formatearDinero(saldo?.saldo_usd ?? 0)}
                 </div>
               </div>
-              <span className="bg-gain/15 text-gain text-xs font-bold px-3 py-1 rounded-full">
+              <span className="bg-gain/15 text-gain text-xs font-bold px-3 py-1 rounded-full whitespace-nowrap">
                 {t.tradeDelDia.pickDeHoy}: {pick.activo}
               </span>
             </div>

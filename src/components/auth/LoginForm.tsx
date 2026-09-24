@@ -85,11 +85,11 @@ export function LoginForm({ t }: { t: Diccionario; locale: Locale }) {
         required
         value={email}
         onChange={(e) => setEmail(e.target.value)}
-        className="w-full px-3.5 py-2.5 mb-3 rounded-lg border border-[var(--border)] bg-background text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary"
+        className="w-full px-3.5 py-2.5 mb-3 rounded-lg border border-[var(--border)] bg-background text-base md:text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary"
         placeholder={t.auth.correoPlaceholder}
       />
 
-      <div className="flex justify-between items-baseline mb-1.5">
+      <div className="flex justify-between items-baseline gap-2 mb-1.5">
         <label htmlFor="login-password" className="block text-[13px] font-medium">
           {t.auth.contrasena}
         </label>
@@ -106,7 +106,7 @@ export function LoginForm({ t }: { t: Diccionario; locale: Locale }) {
         required
         value={password}
         onChange={(e) => setPassword(e.target.value)}
-        className="w-full px-3.5 py-2.5 mb-4 rounded-lg border border-[var(--border)] bg-background text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary"
+        className="w-full px-3.5 py-2.5 mb-4 rounded-lg border border-[var(--border)] bg-background text-base md:text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary"
         placeholder="••••••••"
       />
 

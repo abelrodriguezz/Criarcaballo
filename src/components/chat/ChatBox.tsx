@@ -191,7 +191,7 @@ export function ChatBox({
             placeholder="Escribe un mensaje..."
             aria-label="Escribe un mensaje"
             maxLength={2000}
-            className="flex-1 min-w-0 px-3.5 py-2.5 rounded-lg border border-[var(--border)] bg-background text-sm"
+            className="flex-1 min-w-0 px-3.5 py-2.5 rounded-lg border border-[var(--border)] bg-background text-base md:text-sm"
           />
           <button
             type="submit"
