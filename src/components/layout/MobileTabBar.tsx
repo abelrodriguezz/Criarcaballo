@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
+  IconoInicio,
   IconoMercado,
   IconoSenales,
   IconoComunidad,
@@ -22,6 +23,7 @@ export function MobileTabBar({ t }: { t: Diccionario }) {
   const pathname = usePathname();
 
   const ENLACES = [
+    { href: "/", label: t.nav.inicio, Icono: IconoInicio },
     { href: "/mercado", label: t.nav.mercado, Icono: IconoMercado },
     { href: "/senales", label: t.nav.senales, Icono: IconoSenales },
     { href: "/comunidad", label: t.nav.comunidad, Icono: IconoComunidad },
