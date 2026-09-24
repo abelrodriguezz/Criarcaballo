@@ -171,7 +171,7 @@ export default async function PaginaReportes({
             {pendientes.map((p) => (
               <div
                 key={p.id}
-                className="border border-[var(--border)] p-4 flex items-center justify-between gap-3"
+                className="border border-[var(--border)] p-4 flex flex-wrap items-center justify-between gap-3"
               >
                 <div className="min-w-0">
                   <Link
@@ -304,7 +304,7 @@ export default async function PaginaReportes({
           {filasFiltradas.map((f) => (
             <div
               key={f.id}
-              className="border border-[var(--border)] rounded-xl p-4 flex items-center justify-between gap-3"
+              className="border border-[var(--border)] rounded-xl p-4 flex flex-wrap items-center justify-between gap-3"
             >
               <div className="min-w-0">
                 <div className="text-sm font-medium break-all">
