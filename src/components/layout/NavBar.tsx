@@ -6,6 +6,7 @@ import { Logo } from "@/components/ui/Logo";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { LanguageToggle } from "@/components/ui/LanguageToggle";
 import {
+  IconoInicio,
   IconoMercado,
   IconoSenales,
   IconoComunidad,
@@ -28,6 +29,7 @@ export function NavBar({
   const pathname = usePathname();
 
   const ENLACES = [
+    { href: "/", label: t.nav.inicio, Icono: IconoInicio },
     { href: "/mercado", label: t.nav.mercado, Icono: IconoMercado },
     { href: "/senales", label: t.nav.senales, Icono: IconoSenales },
     { href: "/comunidad", label: t.nav.comunidad, Icono: IconoComunidad },

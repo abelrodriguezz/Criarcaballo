@@ -6,6 +6,7 @@ import type { es } from "./es";
 // was written in.
 export const en: typeof es = {
   nav: {
+    inicio: "Home",
     mercado: "Market",
     senales: "Signals",
     comunidad: "Community",

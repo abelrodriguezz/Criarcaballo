@@ -4,6 +4,7 @@
 // señales, noticias) se muestra tal cual lo escribió, sin traducir.
 export const es = {
   nav: {
+    inicio: "Inicio",
     mercado: "Mercado",
     senales: "Señales",
     comunidad: "Comunidad",

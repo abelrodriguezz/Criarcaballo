@@ -11,6 +11,16 @@ const baseProps = {
   strokeLinejoin: "round" as const,
 };
 
+export function IconoInicio({ className = "w-[18px] h-[18px]" }: IconoProps) {
+  return (
+    <svg {...baseProps} className={className}>
+      <path d="M3 11.5 12 4l9 7.5" />
+      <path d="M5.5 9.5V20h13V9.5" />
+      <path d="M9.5 20v-6h5v6" />
+    </svg>
+  );
+}
+
 export function IconoMercado({ className = "w-[18px] h-[18px]" }: IconoProps) {
   return (
     <svg {...baseProps} className={className}>
