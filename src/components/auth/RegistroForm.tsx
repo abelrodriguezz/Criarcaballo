@@ -69,6 +69,27 @@ export function RegistroForm({ t, locale }: { t: Diccionario; locale: Locale }) 
 
     setCargando(true);
     const supabase = crearClienteSupabase();
+
+    // invitado_por es inmutable una vez creada la cuenta (no se puede
+    // corregir después), así que si escribieron algo, confirmamos que
+    // exista ANTES de registrar — no después, cuando ya sería tarde.
+    if (codigoLimpio) {
+      const { data: codigoValido, error: errorCodigo } = await supabase.rpc(
+        "codigo_invitacion_valido",
+        { p_codigo: codigoLimpio }
+      );
+      if (errorCodigo) {
+        setCargando(false);
+        setError(t.auth.errorRegistroGenerico);
+        return;
+      }
+      if (!codigoValido) {
+        setCargando(false);
+        setError(t.auth.codigoInvitacionInvalido);
+        return;
+      }
+    }
+
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
@@ -167,6 +188,8 @@ export function RegistroForm({ t, locale }: { t: Diccionario; locale: Locale }) 
       </label>
       <input
         id="registro-telefono"
+        type="tel"
+        inputMode="tel"
         required
         value={telefono}
         onChange={(e) => setTelefono(e.target.value)}

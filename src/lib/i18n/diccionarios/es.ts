@@ -88,6 +88,7 @@ export const es = {
     telefonoRequerido: "Ingresa tu teléfono.",
     codigoInvitacionLabel: "Código de invitación (opcional)",
     codigoInvitacionPlaceholder: "Si alguien te invitó, ponlo aquí",
+    codigoInvitacionInvalido: "Ese código de invitación no existe. Revísalo o déjalo vacío.",
   },
   errores: {
     limiteCorreo:

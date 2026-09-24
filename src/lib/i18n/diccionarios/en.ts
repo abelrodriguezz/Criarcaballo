@@ -88,6 +88,7 @@ export const en: typeof es = {
     telefonoRequerido: "Enter your phone number.",
     codigoInvitacionLabel: "Invitation code (optional)",
     codigoInvitacionPlaceholder: "If someone invited you, enter it here",
+    codigoInvitacionInvalido: "That invitation code doesn't exist. Check it or leave it blank.",
   },
   errores: {
     limiteCorreo:
