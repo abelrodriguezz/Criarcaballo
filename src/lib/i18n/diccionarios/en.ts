@@ -10,10 +10,12 @@ export const en: typeof es = {
     mercado: "Market",
     senales: "Signals",
     comunidad: "Community",
+    comunidadCorta: "Social",
     tradeDelDia: "Trade of the day",
     tradeCorto: "Trade",
     perfil: "Profile",
     nosotros: "About",
+    nosotrosCorto: "About",
     iniciarSesion: "Log in",
   },
   home: {

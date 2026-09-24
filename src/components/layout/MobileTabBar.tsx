@@ -26,10 +26,10 @@ export function MobileTabBar({ t }: { t: Diccionario }) {
     { href: "/", label: t.nav.inicio, Icono: IconoInicio },
     { href: "/mercado", label: t.nav.mercado, Icono: IconoMercado },
     { href: "/senales", label: t.nav.senales, Icono: IconoSenales },
-    { href: "/comunidad", label: t.nav.comunidad, Icono: IconoComunidad },
+    { href: "/comunidad", label: t.nav.comunidadCorta, Icono: IconoComunidad },
     { href: "/trade-del-dia", label: t.nav.tradeCorto, Icono: IconoReto },
     { href: "/perfil", label: t.nav.perfil, Icono: IconoPerfil },
-    { href: "/nosotros", label: t.nav.nosotros, Icono: IconoInfo },
+    { href: "/nosotros", label: t.nav.nosotrosCorto, Icono: IconoInfo },
   ];
 
   return (
@@ -40,7 +40,7 @@ export function MobileTabBar({ t }: { t: Diccionario }) {
           <Link
             key={href}
             href={href}
-            className={`flex-1 min-w-0 flex flex-col items-center gap-0.5 px-1 py-1 text-[10px] font-medium ${
+            className={`flex-1 min-w-0 flex flex-col items-center gap-0.5 px-0.5 py-1 text-[10px] font-medium ${
               activo ? "text-brand-primary" : "text-foreground-muted"
             }`}
           >

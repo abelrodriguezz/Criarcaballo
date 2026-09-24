@@ -8,10 +8,12 @@ export const es = {
     mercado: "Mercado",
     senales: "Señales",
     comunidad: "Comunidad",
+    comunidadCorta: "Social",
     tradeDelDia: "Trade del día",
     tradeCorto: "Trade",
     perfil: "Perfil",
     nosotros: "Nosotros",
+    nosotrosCorto: "Info",
     iniciarSesion: "Iniciar sesión",
   },
   home: {
