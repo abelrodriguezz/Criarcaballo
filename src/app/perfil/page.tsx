@@ -124,12 +124,14 @@ export default async function PaginaPerfil() {
   const historialRetiros = solicitudesRetiro ?? [];
   const solicitudRetiroPendiente =
     historialRetiros.find((s) => s.estado === "pendiente") ?? null;
-  // Lo ya solicitado (pendiente o pagado) sale del fondo de ganancias
-  // pendientes, para no poder pedir dos veces el mismo dinero — la RPC
-  // solicitar_retiro() recalcula esto mismo server-side antes de aceptar
-  // cualquier solicitud nueva, esto es solo para mostrar el numero aqui.
+  // Solo se resta lo PENDIENTE — un retiro ya pagado se reconcilia
+  // directo en ganancias_concursos.pagado (migración 043), así que
+  // pendienteGanancias ya baja sola cuando eso pasa. Restarlo aquí
+  // también lo contaría dos veces. La RPC solicitar_retiro() recalcula
+  // esto mismo server-side antes de aceptar cualquier solicitud nueva,
+  // esto es solo para mostrar el número aquí.
   const yaSolicitadoRetiro = historialRetiros
-    .filter((s) => s.estado === "pendiente" || s.estado === "pagado")
+    .filter((s) => s.estado === "pendiente")
     .reduce((suma, s) => suma + s.monto, 0);
   // Truncado (no redondeado) a centavos: las ganancias de Trade guardan
   // muchos decimales (ej. 79.4709...) y la suma en JS arrastra error de

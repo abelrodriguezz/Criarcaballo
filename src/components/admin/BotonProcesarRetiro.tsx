@@ -10,17 +10,35 @@ export function BotonProcesarRetiro({ solicitudId }: { solicitudId: string }) {
   const [refrescando, startTransition] = useTransition();
   const deshabilitado = guardando || refrescando;
 
-  async function procesar(estado: "pagado" | "rechazado") {
+  async function marcarPagado() {
     if (
-      estado === "pagado" &&
       !window.confirm("¿Confirmas que ya transferiste el USDT a la wallet del usuario?")
     ) {
       return;
     }
-    let notaAdmin: string | null = null;
-    if (estado === "rechazado") {
-      notaAdmin = window.prompt("Motivo del rechazo (opcional):", "") || null;
+
+    setGuardando(true);
+    const supabase = crearClienteSupabase();
+    // Esta RPC (migración 043) marca la solicitud pagada Y reconcilia
+    // las ganancias correspondientes en ganancias_concursos en la misma
+    // transacción — sin esto, ese mismo dinero podía volver a pagarse
+    // desde Usuarios → Reportes sin que nadie se diera cuenta.
+    const { error } = await supabase.rpc("admin_marcar_retiro_pagado", {
+      p_solicitud_id: solicitudId,
+    });
+    setGuardando(false);
+
+    if (error) {
+      alert(error.message || "No se pudo actualizar. Verifica tu permiso de admin.");
+      startTransition(() => router.refresh());
+      return;
     }
+
+    startTransition(() => router.refresh());
+  }
+
+  async function rechazar() {
+    const notaAdmin = window.prompt("Motivo del rechazo (opcional):", "") || null;
 
     setGuardando(true);
     const supabase = crearClienteSupabase();
@@ -34,7 +52,7 @@ export function BotonProcesarRetiro({ solicitudId }: { solicitudId: string }) {
     const { data, error } = await supabase
       .from("solicitudes_retiro")
       .update({
-        estado,
+        estado: "rechazado",
         nota_admin: notaAdmin,
         procesado_en: new Date().toISOString(),
         procesado_por: user?.id ?? null,
@@ -62,14 +80,14 @@ export function BotonProcesarRetiro({ solicitudId }: { solicitudId: string }) {
   return (
     <div className="flex gap-3 shrink-0">
       <button
-        onClick={() => procesar("pagado")}
+        onClick={marcarPagado}
         disabled={deshabilitado}
         className="text-xs font-semibold text-gain hover:underline disabled:opacity-50"
       >
         {deshabilitado ? "..." : "Marcar pagado"}
       </button>
       <button
-        onClick={() => procesar("rechazado")}
+        onClick={rechazar}
         disabled={deshabilitado}
         className="text-xs font-semibold text-loss hover:underline disabled:opacity-50"
       >
