@@ -64,7 +64,20 @@ export function BotonSolicitarRetiro({
     setEnviando(false);
 
     if (dbError) {
-      setError(dbError.message || t.perfil.retirarErrorGuardar);
+      // La RPC responde siempre en español; se traducen los rechazos
+      // conocidos al idioma activo y el resto cae al mensaje generico.
+      const msg = dbError.message ?? "";
+      setError(
+        msg.includes("pendiente")
+          ? t.perfil.retirarYaPendiente
+          : msg.includes("wallet")
+            ? t.perfil.retirarSinWallet
+            : msg.includes("disponible")
+              ? t.perfil.retirarMontoExcedeDisponible
+              : msg.includes("Monto invalido")
+                ? t.perfil.retirarMontoInvalido
+                : t.perfil.retirarErrorGuardar
+      );
       return;
     }
     setEnviado(true);

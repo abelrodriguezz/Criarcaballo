@@ -131,9 +131,14 @@ export default async function PaginaPerfil() {
   const yaSolicitadoRetiro = historialRetiros
     .filter((s) => s.estado === "pendiente" || s.estado === "pagado")
     .reduce((suma, s) => suma + s.monto, 0);
+  // Truncado (no redondeado) a centavos: las ganancias de Trade guardan
+  // muchos decimales (ej. 79.4709...) y la suma en JS arrastra error de
+  // punto flotante (0.1 + 0.7 = 0.7999...). Si aqui se redondeara hacia
+  // arriba, el boton "Disponible" pondria un monto que la RPC rechaza
+  // por pasarse del disponible real. El 1e-6 absorbe el error flotante.
   const disponibleParaRetirar = Math.max(
     0,
-    pendienteGanancias - yaSolicitadoRetiro
+    Math.floor((pendienteGanancias - yaSolicitadoRetiro) * 100 + 1e-6) / 100
   );
 
   const simbolosFavoritos = (favoritosGuardados ?? []).map((f) => f.activo);
