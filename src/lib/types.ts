@@ -99,6 +99,18 @@ export interface DepositoSimulado {
   created_at: string;
 }
 
+export interface SolicitudRetiro {
+  id: string;
+  usuario_id: string;
+  monto: number;
+  wallet_destino: string;
+  estado: "pendiente" | "pagado" | "rechazado";
+  nota_admin: string | null;
+  created_at: string;
+  procesado_en: string | null;
+  procesado_por: string | null;
+}
+
 export interface MensajeSoporte {
   id: string;
   usuario_id: string;

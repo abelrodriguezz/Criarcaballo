@@ -6,9 +6,10 @@ import { BotonFavorito } from "@/components/mercado/BotonFavorito";
 import { WalletForm } from "@/components/perfil/WalletForm";
 import { DatosContactoForm } from "@/components/perfil/DatosContactoForm";
 import { BotonDepositarSimulado } from "@/components/perfil/BotonDepositarSimulado";
+import { BotonSolicitarRetiro } from "@/components/perfil/BotonSolicitarRetiro";
 import { AdminSimulacionForm } from "@/components/admin/AdminSimulacionForm";
 import { TarjetaMenu } from "@/components/ui/TarjetaMenu";
-import { IconoUsuarios, IconoSoporte, IconoReportes } from "@/components/ui/Iconos";
+import { IconoUsuarios, IconoSoporte, IconoReportes, IconoWallet } from "@/components/ui/Iconos";
 import { obtenerVariosPreciosCripto } from "@/lib/market/binance";
 import { formatearDinero, formatearPrecio } from "@/lib/format";
 import { obtenerDiccionario, obtenerLocale } from "@/lib/i18n/servidor";
@@ -17,7 +18,7 @@ import {
   obtenerMensajeSimulacionCompleto,
   type ConfigSimulacionAmbosIdiomas,
 } from "@/lib/config-simulacion";
-import type { GananciaConcurso } from "@/lib/types";
+import type { GananciaConcurso, SolicitudRetiro } from "@/lib/types";
 
 export default async function PaginaPerfil() {
   const [usuario, t, locale] = await Promise.all([
@@ -44,6 +45,8 @@ export default async function PaginaPerfil() {
     walletsAdminRaw,
     simulacion,
     depositoSimuladoRaw,
+    { data: solicitudesRetiro },
+    { count: retirosPendientesCount },
   ] = await Promise.all([
     supabase
       .from("saldo_virtual")
@@ -90,6 +93,22 @@ export default async function PaginaPerfil() {
           .select("monto")
           .eq("usuario_id", usuario.id)
           .maybeSingle(),
+    // Al admin no le sirve ver su propio historial de retiros aqui — el
+    // suyo lo ve en /retiros junto con el de todos.
+    usuarioEsAdmin
+      ? Promise.resolve({ data: null as SolicitudRetiro[] | null })
+      : supabase
+          .from("solicitudes_retiro")
+          .select("*")
+          .eq("usuario_id", usuario.id)
+          .order("created_at", { ascending: false })
+          .returns<SolicitudRetiro[]>(),
+    usuarioEsAdmin
+      ? supabase
+          .from("solicitudes_retiro")
+          .select("id", { count: "exact", head: true })
+          .eq("estado", "pendiente")
+      : Promise.resolve({ count: 0 }),
   ]);
   const walletsAdmin = walletsAdminRaw.data ?? [];
   const depositoSimulado = depositoSimuladoRaw.data ?? null;
@@ -101,6 +120,21 @@ export default async function PaginaPerfil() {
   const pendienteGanancias = (ganancias ?? [])
     .filter((g) => !g.pagado)
     .reduce((suma, g) => suma + g.monto, 0);
+
+  const historialRetiros = solicitudesRetiro ?? [];
+  const solicitudRetiroPendiente =
+    historialRetiros.find((s) => s.estado === "pendiente") ?? null;
+  // Lo ya solicitado (pendiente o pagado) sale del fondo de ganancias
+  // pendientes, para no poder pedir dos veces el mismo dinero — la RPC
+  // solicitar_retiro() recalcula esto mismo server-side antes de aceptar
+  // cualquier solicitud nueva, esto es solo para mostrar el numero aqui.
+  const yaSolicitadoRetiro = historialRetiros
+    .filter((s) => s.estado === "pendiente" || s.estado === "pagado")
+    .reduce((suma, s) => suma + s.monto, 0);
+  const disponibleParaRetirar = Math.max(
+    0,
+    pendienteGanancias - yaSolicitadoRetiro
+  );
 
   const simbolosFavoritos = (favoritosGuardados ?? []).map((f) => f.activo);
   const preciosFavoritos = await obtenerVariosPreciosCripto(simbolosFavoritos);
@@ -150,13 +184,22 @@ export default async function PaginaPerfil() {
           simulacionActual={simulacion as ConfigSimulacionAmbosIdiomas}
         />
       ) : (
-        <BotonDepositarSimulado
-          usuarioId={usuario.id}
-          walletsAdmin={walletsAdmin}
-          mensajeSimulacion={simulacion as string}
-          depositoExistente={depositoSimulado}
-          t={t}
-        />
+        <>
+          <BotonDepositarSimulado
+            usuarioId={usuario.id}
+            walletsAdmin={walletsAdmin}
+            mensajeSimulacion={simulacion as string}
+            depositoExistente={depositoSimulado}
+            t={t}
+          />
+          <BotonSolicitarRetiro
+            disponible={disponibleParaRetirar}
+            walletActual={perfilExtra?.wallet_usdt_erc20 ?? null}
+            solicitudPendiente={solicitudRetiroPendiente}
+            historial={historialRetiros}
+            t={t}
+          />
+        </>
       )}
 
       <DatosContactoForm
@@ -211,6 +254,16 @@ export default async function PaginaPerfil() {
           icono={<IconoUsuarios />}
           titulo="Referidos"
           subtitulo="Quién invitó a quién y premios por referido"
+        />
+      )}
+
+      {esAdmin(usuario) && (
+        <TarjetaMenu
+          href="/retiros"
+          icono={<IconoWallet />}
+          titulo="Retiros"
+          subtitulo="Solicitudes de retiro de los usuarios"
+          badge={retirosPendientesCount ?? 0}
         />
       )}
 

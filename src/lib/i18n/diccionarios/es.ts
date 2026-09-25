@@ -155,6 +155,25 @@ export const es = {
     depositarMontoMaximo: "El monto máximo es 100,000,000 USDT.",
     depositarYaHecho: "Ya hiciste tu depósito simulado",
     depositarErrorGuardar: "No se pudo registrar. Intenta de nuevo.",
+    retirar: "Retirar ganancias",
+    retirarModalTitulo: "Solicitar retiro",
+    retirarDisponibleLabel: "Disponible para retirar",
+    retirarWalletLabel: "Se enviará a tu wallet registrada",
+    retirarMontoLabel: "Monto a retirar (USDT)",
+    retirarEnviar: "Solicitar retiro",
+    retirarEntendido: "Entendido",
+    retirarEnviado:
+      "Tu solicitud fue enviada. El admin la revisará y te transferirá el USDT a tu wallet.",
+    retirarSinWallet:
+      "Registra tu wallet USDT (ERC20) arriba antes de solicitar un retiro.",
+    retirarSinDisponible:
+      "Todavía no tienes ganancias pendientes disponibles para retirar.",
+    retirarMontoInvalido: "Ingresa un monto mayor a cero.",
+    retirarMontoExcedeDisponible: "No puedes retirar más de lo que tienes disponible.",
+    retirarYaPendiente: "Ya tienes una solicitud de retiro pendiente.",
+    retirarErrorGuardar: "No se pudo enviar la solicitud. Intenta de nuevo.",
+    retirarRechazado: "Rechazado",
+    retirarHistorialTitulo: "Tus solicitudes",
   },
   tradeDelDia: {
     titulo: "Trade del día",
