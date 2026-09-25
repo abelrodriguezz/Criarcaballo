@@ -29,6 +29,30 @@ export function AdminPickForm() {
 
     setGuardando(true);
 
+    // El regex de arriba solo valida forma (largo/mayúsculas), no que el
+    // par realmente exista en Binance — un typo como "BTCUSD" (sin la
+    // "T") pasaba igual y dejaba a todos sin poder operar hasta que
+    // alguien lo notara al intentar abrir una operación. Se confirma
+    // contra la misma API pública que usa el resto de la app antes de
+    // guardar.
+    try {
+      const resPrecio = await fetch(
+        `https://api.binance.com/api/v3/ticker/price?symbol=${encodeURIComponent(activoNormalizado)}`,
+        { signal: AbortSignal.timeout(8_000) }
+      );
+      if (!resPrecio.ok) {
+        setGuardando(false);
+        setError(
+          `"${activoNormalizado}" no existe en Binance. Revisa que sea el par completo (ej. BTCUSDT, no BTCUSD).`
+        );
+        return;
+      }
+    } catch {
+      setGuardando(false);
+      setError("No se pudo verificar el par contra Binance. Intenta de nuevo.");
+      return;
+    }
+
     const supabase = crearClienteSupabase();
     const { error } = await supabase.from("pick_del_dia").insert({
       activo: activoNormalizado,
