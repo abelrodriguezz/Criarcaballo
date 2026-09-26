@@ -13,6 +13,7 @@ import {
   IconoReto,
   IconoPerfil,
   IconoInfo,
+  IconoCampana,
 } from "@/components/ui/Iconos";
 import type { SesionUsuario } from "@/lib/auth/sesion";
 import type { Diccionario, Locale } from "@/lib/i18n";
@@ -21,10 +22,12 @@ export function NavBar({
   usuario,
   locale,
   t,
+  mensajesSinLeer = 0,
 }: {
   usuario: SesionUsuario | null;
   locale: Locale;
   t: Diccionario;
+  mensajesSinLeer?: number;
 }) {
   const pathname = usePathname();
 
@@ -38,7 +41,7 @@ export function NavBar({
   ];
 
   return (
-    <header className="max-w-[1080px] mx-auto w-full px-4 sm:px-6 py-6 flex items-center justify-between">
+    <header className="max-w-[1080px] mx-auto w-full px-3 sm:px-6 py-5 sm:py-6 flex items-center justify-between gap-2">
       <Link href="/" className="shrink-0">
         <Logo />
       </Link>
@@ -63,19 +66,33 @@ export function NavBar({
         })}
       </nav>
 
-      <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
+      <div className="flex items-center gap-2 sm:gap-3 shrink-0">
         {usuario ? (
-          <Link
-            href="/perfil"
-            aria-label="Perfil"
-            className={`hidden md:flex items-center justify-center w-9 h-9 rounded-full transition-colors ${
-              pathname === "/perfil"
-                ? "bg-brand-primary/15 text-brand-primary"
-                : "bg-surface text-foreground-muted hover:text-foreground"
-            }`}
-          >
-            <IconoPerfil />
-          </Link>
+          <>
+            <Link
+              href="/soporte"
+              aria-label="Mensajes de soporte"
+              className="hidden md:flex relative items-center justify-center w-9 h-9 rounded-full bg-surface text-foreground-muted hover:text-foreground transition-colors"
+            >
+              <IconoCampana />
+              {mensajesSinLeer > 0 && (
+                <span className="absolute -top-1 -right-1 min-w-[16px] h-4 px-1 flex items-center justify-center bg-brand-secondary text-white text-[10px] font-bold rounded-full">
+                  {mensajesSinLeer > 9 ? "9+" : mensajesSinLeer}
+                </span>
+              )}
+            </Link>
+            <Link
+              href="/perfil"
+              aria-label="Perfil"
+              className={`hidden md:flex items-center justify-center w-9 h-9 rounded-full transition-colors ${
+                pathname === "/perfil"
+                  ? "bg-brand-primary/15 text-brand-primary"
+                  : "bg-surface text-foreground-muted hover:text-foreground"
+              }`}
+            >
+              <IconoPerfil />
+            </Link>
+          </>
         ) : (
           // En móvil este botón estaba oculto (hidden md:inline-flex) y la
           // MobileTabBar no tiene entrada de login: quien llegaba a la

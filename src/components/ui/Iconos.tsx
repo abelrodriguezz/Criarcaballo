@@ -81,6 +81,25 @@ export function IconoEstrella({ className = "w-4 h-4" }: IconoProps) {
   );
 }
 
+export function IconoImagen({ className = "w-[18px] h-[18px]" }: IconoProps) {
+  return (
+    <svg {...baseProps} className={className}>
+      <rect x="3" y="3" width="18" height="18" rx="2" />
+      <circle cx="8.5" cy="8.5" r="1.5" />
+      <path d="m21 15-5-5L5 21" />
+    </svg>
+  );
+}
+
+export function IconoCampana({ className = "w-[18px] h-[18px]" }: IconoProps) {
+  return (
+    <svg {...baseProps} className={className}>
+      <path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9" />
+      <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+    </svg>
+  );
+}
+
 export function IconoPerfil({ className = "w-[18px] h-[18px]" }: IconoProps) {
   return (
     <svg {...baseProps} className={className}>
