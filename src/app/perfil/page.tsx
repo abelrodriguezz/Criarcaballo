@@ -9,7 +9,7 @@ import { BotonDepositarSimulado } from "@/components/perfil/BotonDepositarSimula
 import { BotonSolicitarRetiro } from "@/components/perfil/BotonSolicitarRetiro";
 import { AdminSimulacionForm } from "@/components/admin/AdminSimulacionForm";
 import { TarjetaMenu } from "@/components/ui/TarjetaMenu";
-import { IconoUsuarios, IconoSoporte, IconoReportes, IconoWallet } from "@/components/ui/Iconos";
+import { IconoUsuarios, IconoSoporte, IconoReportes, IconoWallet, IconoDeposito } from "@/components/ui/Iconos";
 import { obtenerVariosPreciosCripto } from "@/lib/market/binance";
 import { formatearDinero, formatearPrecio } from "@/lib/format";
 import { obtenerDiccionario, obtenerLocale } from "@/lib/i18n/servidor";
@@ -47,6 +47,7 @@ export default async function PaginaPerfil() {
     depositoSimuladoRaw,
     { data: solicitudesRetiro },
     { count: retirosPendientesCount },
+    { count: depositosSinRevisarCount },
   ] = await Promise.all([
     supabase
       .from("saldo_virtual")
@@ -108,6 +109,12 @@ export default async function PaginaPerfil() {
           .from("solicitudes_retiro")
           .select("id", { count: "exact", head: true })
           .eq("estado", "pendiente")
+      : Promise.resolve({ count: 0 }),
+    usuarioEsAdmin
+      ? supabase
+          .from("depositos_simulados")
+          .select("id", { count: "exact", head: true })
+          .eq("revisado_por_admin", false)
       : Promise.resolve({ count: 0 }),
   ]);
   const walletsAdmin = walletsAdminRaw.data ?? [];
@@ -261,6 +268,16 @@ export default async function PaginaPerfil() {
           icono={<IconoUsuarios />}
           titulo="Referidos"
           subtitulo="Quién invitó a quién y premios por referido"
+        />
+      )}
+
+      {esAdmin(usuario) && (
+        <TarjetaMenu
+          href="/depositos"
+          icono={<IconoDeposito />}
+          titulo="Depósitos"
+          subtitulo="Depósitos simulados registrados por los usuarios"
+          badge={depositosSinRevisarCount ?? 0}
         />
       )}
 

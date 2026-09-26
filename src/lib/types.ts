@@ -97,6 +97,7 @@ export interface DepositoSimulado {
   monto: number;
   wallet_mostrada: string | null;
   created_at: string;
+  revisado_por_admin: boolean;
 }
 
 export interface SolicitudRetiro {

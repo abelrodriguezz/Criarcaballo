@@ -91,6 +91,16 @@ export function IconoImagen({ className = "w-[18px] h-[18px]" }: IconoProps) {
   );
 }
 
+export function IconoDeposito({ className = "w-[18px] h-[18px]" }: IconoProps) {
+  return (
+    <svg {...baseProps} className={className}>
+      <path d="M12 3v12" />
+      <path d="m7 10 5 5 5-5" />
+      <path d="M4 19h16" />
+    </svg>
+  );
+}
+
 export function IconoCampana({ className = "w-[18px] h-[18px]" }: IconoProps) {
   return (
     <svg {...baseProps} className={className}>
