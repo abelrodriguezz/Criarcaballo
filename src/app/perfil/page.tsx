@@ -350,6 +350,7 @@ export default async function PaginaPerfil() {
         />
       )}
 
+      {!usuarioEsAdmin && (
       <div className="border border-[var(--border)] rounded-2xl p-5 mb-4 mt-1">
         <div className="font-medium text-sm mb-3">{t.perfil.ganancias}</div>
         <div
@@ -410,6 +411,7 @@ export default async function PaginaPerfil() {
           </div>
         )}
       </div>
+      )}
 
       <div className="border border-[var(--border)] rounded-2xl p-5 mb-4">
         <div className="font-medium text-sm mb-3">{t.perfil.favoritos}</div>
