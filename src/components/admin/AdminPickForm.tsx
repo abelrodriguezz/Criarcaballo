@@ -48,8 +48,22 @@ export function AdminPickForm() {
         return;
       }
     } catch {
+      // Binance responde el 400 de "Invalid symbol" SIN cabecera CORS, así
+      // que el navegador lo convierte en un error de red y el `!res.ok` de
+      // arriba nunca se ve. Para distinguir "par inexistente" de "no hay
+      // conexión con Binance" se prueba un par que seguro existe.
+      const binanceResponde = await fetch(
+        "https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDT",
+        { signal: AbortSignal.timeout(8_000) }
+      )
+        .then((r) => r.ok)
+        .catch(() => false);
       setGuardando(false);
-      setError("No se pudo verificar el par contra Binance. Intenta de nuevo.");
+      setError(
+        binanceResponde
+          ? `"${activoNormalizado}" no existe en Binance. Revisa que sea el par completo (ej. BTCUSDT, no BTCUSD).`
+          : "No se pudo verificar el par contra Binance. Intenta de nuevo."
+      );
       return;
     }
 

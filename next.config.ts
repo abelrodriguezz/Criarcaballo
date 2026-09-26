@@ -21,7 +21,10 @@ const csp = [
   "default-src 'self'",
   `script-src 'self' 'unsafe-inline' ${esDev ? "'unsafe-eval' " : ""}https://challenges.cloudflare.com`,
   "style-src 'self' 'unsafe-inline'",
-  "img-src 'self' data:",
+  // supabaseOrigin: las imágenes de comprobante del chat de soporte se
+  // muestran con URLs firmadas de Supabase Storage. Sin esto el navegador
+  // las bloqueaba y nunca se veían (encontrado en QA 2026-09-25).
+  `img-src 'self' data: ${supabaseOrigin}`,
   "font-src 'self' data:",
   // challenges.cloudflare.com también en connect-src: el widget de
   // Turnstile hace sus propias peticiones a ese origen, y sin esto el
@@ -51,6 +54,16 @@ const nextConfig: NextConfig = {
   // al usuario y le regala a quien escanee el sitio la pila exacta que
   // está corriendo.
   poweredByHeader: false,
+
+  // Las Server Actions aceptan 1 MB por defecto: una foto de comprobante
+  // de 1-5 MB (lo que sí permiten el bucket y ChatBox) moría con un error
+  // genérico de "No se pudo enviar". 6 MB = 5 MB de imagen + el texto y
+  // el overhead del multipart.
+  experimental: {
+    serverActions: {
+      bodySizeLimit: "6mb",
+    },
+  },
 
   async headers() {
     return [

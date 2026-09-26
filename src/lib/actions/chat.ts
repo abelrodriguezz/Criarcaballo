@@ -24,6 +24,20 @@ const TIPOS_IMAGEN_PERMITIDOS: Record<string, string> = {
 };
 const TAMANO_MAXIMO_IMAGEN = 5 * 1024 * 1024; // 5 MB, igual que el bucket
 
+/** ¿Los primeros bytes del archivo son de verdad un JPG/PNG/WEBP? */
+async function firmaCoincide(archivo: File, tipo: string): Promise<boolean> {
+  const b = new Uint8Array(await archivo.slice(0, 12).arrayBuffer());
+  if (tipo === "image/jpeg") return b[0] === 0xff && b[1] === 0xd8 && b[2] === 0xff;
+  if (tipo === "image/png")
+    return b[0] === 0x89 && b[1] === 0x50 && b[2] === 0x4e && b[3] === 0x47;
+  if (tipo === "image/webp")
+    return (
+      String.fromCharCode(...b.slice(0, 4)) === "RIFF" &&
+      String.fromCharCode(...b.slice(8, 12)) === "WEBP"
+    );
+  return false;
+}
+
 /**
  * Sube el comprobante (si vino uno) a la carpeta de la conversación
  * (usuarioIdConversacion, no quien lo sube — así el admin puede subir
@@ -48,6 +62,16 @@ async function subirComprobante(
   }
   if (archivo.size > TAMANO_MAXIMO_IMAGEN) {
     return { path: null, error: "La imagen no puede pesar más de 5 MB." };
+  }
+  // archivo.type lo pone el navegador según la EXTENSIÓN: un PDF (o
+  // cualquier cosa) renombrado a .png pasaba como image/png, se guardaba
+  // en el bucket y en el chat salía como imagen rota. Se comprueba la
+  // firma real del archivo.
+  if (!(await firmaCoincide(archivo, archivo.type))) {
+    return {
+      path: null,
+      error: "La imagen debe ser JPG, PNG o WEBP.",
+    };
   }
 
   const path = `${usuarioIdConversacion}/${crypto.randomUUID()}.${extension}`;
