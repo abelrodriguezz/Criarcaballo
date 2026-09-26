@@ -25,7 +25,12 @@ export function RegistroForm({ t, locale }: { t: Diccionario; locale: Locale }) 
   const [password, setPassword] = useState("");
   const [confirmar, setConfirmar] = useState("");
   const [nombre, setNombre] = useState("");
-  const [dialPais, setDialPais] = useState(PAIS_POR_DEFECTO.dial);
+  // Se guarda el NOMBRE del país, no el dial: varios países comparten el
+  // mismo código (+1 es República Dominicana, Puerto Rico, EE.UU. y
+  // Canadá a la vez) — un <select> con value=dial no puede distinguir
+  // entre opciones con el mismo value y termina mostrando cualquiera de
+  // ellas como si fuera la seleccionada.
+  const [nombrePais, setNombrePais] = useState(PAIS_POR_DEFECTO.nombre);
   const [telefono, setTelefono] = useState("");
   const [codigoInvitacion, setCodigoInvitacion] = useState(codigoRefUrl ?? "");
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
@@ -53,6 +58,8 @@ export function RegistroForm({ t, locale }: { t: Diccionario; locale: Locale }) 
     }
     // El código de país se antepone aquí, no lo escribe la persona — evita
     // que alguien meta un "+" propio y quede duplicado (ej. "+52 +8091234").
+    const dialPais =
+      PAISES.find((p) => p.nombre === nombrePais)?.dial ?? PAIS_POR_DEFECTO.dial;
     const telefonoConPais = `${dialPais} ${telefonoLimpio}`;
     if (password !== confirmar) {
       setError(t.auth.contrasenasNoCoinciden);
@@ -194,12 +201,12 @@ export function RegistroForm({ t, locale }: { t: Diccionario; locale: Locale }) 
       <div className="flex gap-2 mb-3">
         <select
           aria-label={t.auth.paisLabel}
-          value={dialPais}
-          onChange={(e) => setDialPais(e.target.value)}
+          value={nombrePais}
+          onChange={(e) => setNombrePais(e.target.value)}
           className="shrink-0 w-[92px] px-2 py-2.5 rounded-lg border border-[var(--border)] bg-background text-base md:text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary"
         >
           {PAISES.map((p) => (
-            <option key={p.nombre} value={p.dial}>
+            <option key={p.nombre} value={p.nombre}>
               {p.bandera} {p.dial}
             </option>
           ))}
