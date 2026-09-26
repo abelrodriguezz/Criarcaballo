@@ -152,6 +152,8 @@ export const en: typeof es = {
     depositarMontoInvalido: "Enter an amount greater than zero.",
     depositarMontoMaximo: "The maximum amount is 100,000,000 USDT.",
     depositarYaHecho: "You already made your simulated deposit",
+    depositarEstadoPendiente: "Pending admin confirmation",
+    depositarEstadoAcreditado: "Credited to your investment balance",
     depositarErrorGuardar: "Couldn't save it. Try again.",
     retirar: "Withdraw earnings",
     retirarModalTitulo: "Request withdrawal",

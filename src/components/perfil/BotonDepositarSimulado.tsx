@@ -24,7 +24,7 @@ export function BotonDepositarSimulado({
   usuarioId: string;
   walletsAdmin: string[];
   mensajeSimulacion: string;
-  depositoExistente: { monto: number } | null;
+  depositoExistente: { monto: number; pagado: boolean } | null;
   t: Diccionario;
 }) {
   const router = useRouter();
@@ -85,7 +85,14 @@ export function BotonDepositarSimulado({
     setEnviando(false);
 
     if (dbError) {
-      setError(t.perfil.depositarErrorGuardar);
+      // 23505 = unique(usuario_id): ya existe su depósito (ej. lo registró
+      // desde otra pestaña). "Intenta de nuevo" ahí es engañoso — nunca
+      // va a funcionar.
+      setError(
+        dbError.code === "23505"
+          ? t.perfil.depositarYaHecho
+          : t.perfil.depositarErrorGuardar
+      );
       return;
     }
     setEnviado(true);
@@ -104,6 +111,18 @@ export function BotonDepositarSimulado({
                 numeric no finito como string ("NaN"), y .toFixed sobre un
                 string reventaba la página entera con un TypeError. */}
             ${formatearDinero(Number(depositoExistente.monto))} USDT
+          </div>
+          {/* Desde la migración 049 el saldo solo se acredita cuando el
+              admin confirma el depósito — sin esto el usuario no tenía
+              forma de saber si ya se lo acreditaron o sigue en revisión. */}
+          <div
+            className={`text-[12px] font-semibold mt-0.5 ${
+              depositoExistente.pagado ? "text-gain" : "text-brand-secondary"
+            }`}
+          >
+            {depositoExistente.pagado
+              ? t.perfil.depositarEstadoAcreditado
+              : t.perfil.depositarEstadoPendiente}
           </div>
         </div>
       </div>

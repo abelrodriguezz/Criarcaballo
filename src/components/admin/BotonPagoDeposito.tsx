@@ -28,11 +28,14 @@ export function BotonPagoDeposito({
 
     setGuardando(true);
     const supabase = crearClienteSupabase();
-    // Esta RPC (migración 049) marca el depósito Y ajusta saldo_virtual
+    // Esta RPC (migración 049/050) marca el depósito Y ajusta saldo_virtual
     // en la misma transacción — nunca un UPDATE directo de "pagado" solo,
     // porque el saldo tiene que moverse exactamente junto con el estado.
+    // Se manda el estado DESEADO (no un toggle): si otro admin u otra
+    // pestaña ya lo cambió, la RPC falla en vez de revertirlo.
     const { error } = await supabase.rpc("admin_alternar_pago_deposito", {
       p_deposito_id: depositoId,
+      p_pagado: !pagado,
     });
     setGuardando(false);
 

@@ -36,6 +36,7 @@ export default async function PaginaPerfil() {
   }
 
   const usuarioEsAdmin = esAdmin(usuario);
+  const hoyNY = fechaEnNY();
   const supabase = await crearClienteSupabaseServidor();
   const [
     { data: saldo },
@@ -49,8 +50,7 @@ export default async function PaginaPerfil() {
     { data: solicitudesRetiro },
     { count: retirosPendientesCount },
     { count: depositosSinRevisarCount },
-    { data: todosLosSaldos },
-    { data: gananciasPendientesHoy },
+    { data: totalesAdmin },
   ] = await Promise.all([
     supabase
       .from("saldo_virtual")
@@ -91,10 +91,10 @@ export default async function PaginaPerfil() {
       ? obtenerMensajeSimulacionCompleto()
       : obtenerMensajeSimulacion(locale),
     usuarioEsAdmin
-      ? Promise.resolve({ data: null as { monto: number } | null })
+      ? Promise.resolve({ data: null as { monto: number; pagado: boolean } | null })
       : supabase
           .from("depositos_simulados")
-          .select("monto")
+          .select("monto, pagado")
           .eq("usuario_id", usuario.id)
           .maybeSingle(),
     // Al admin no le sirve ver su propio historial de retiros aqui — el
@@ -120,35 +120,27 @@ export default async function PaginaPerfil() {
           .eq("revisado_por_admin", false)
       : Promise.resolve({ count: 0 }),
     // El admin no opera — su propia fila de saldo_virtual no significa
-    // nada. En su lugar ve la suma de TODAS las cuentas de inversión (lo
-    // que efectivamente se le ha acreditado a la gente vía depósitos).
-    usuarioEsAdmin
-      ? supabase.from("saldo_virtual").select("saldo_usd")
-      : Promise.resolve({ data: null as { saldo_usd: number }[] | null }),
-    // Ganancias de Trade del día de HOY (horario de la bolsa de NY, igual
-    // que Reportes) que todavía no se han pagado — lo que el admin
-    // necesita tener listo para pagar por lo que se ganó hoy.
+    // nada. En su lugar ve la suma de TODAS las cuentas de inversión, y
+    // las ganancias de Trade de HOY (día de la bolsa de NY, igual que
+    // Reportes) que todavía no se han pagado. Se suma en la base
+    // (migración 051): traer las filas y sumar aquí se corta en silencio
+    // a las 1000 filas de PostgREST.
     usuarioEsAdmin
       ? supabase
-          .from("ganancias_concursos")
-          .select("monto")
-          .eq("origen", "trade")
-          .eq("pagado", false)
-          .gte("created_at", inicioDelDiaNY(fechaEnNY()).toISOString())
-          .lt("created_at", finDelDiaNY(fechaEnNY()).toISOString())
-      : Promise.resolve({ data: null as { monto: number }[] | null }),
+          .rpc("admin_totales_dashboard", {
+            p_inicio: inicioDelDiaNY(hoyNY).toISOString(),
+            p_fin: finDelDiaNY(hoyNY).toISOString(),
+          })
+          .single<{ total_cuentas: number; total_a_pagar_hoy: number }>()
+      : Promise.resolve({
+          data: null as { total_cuentas: number; total_a_pagar_hoy: number } | null,
+        }),
   ]);
   const walletsAdmin = walletsAdminRaw.data ?? [];
   const depositoSimulado = depositoSimuladoRaw.data ?? null;
 
-  const totalTodasLasCuentas = (todosLosSaldos ?? []).reduce(
-    (suma, s) => suma + Number(s.saldo_usd),
-    0
-  );
-  const totalAPagarHoy = (gananciasPendientesHoy ?? []).reduce(
-    (suma, g) => suma + Number(g.monto),
-    0
-  );
+  const totalTodasLasCuentas = Number(totalesAdmin?.total_cuentas ?? 0);
+  const totalAPagarHoy = Number(totalesAdmin?.total_a_pagar_hoy ?? 0);
 
   const totalGanancias = (ganancias ?? []).reduce(
     (suma, g) => suma + g.monto,

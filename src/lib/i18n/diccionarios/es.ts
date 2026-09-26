@@ -155,6 +155,8 @@ export const es = {
     depositarMontoInvalido: "Ingresa un monto mayor a cero.",
     depositarMontoMaximo: "El monto máximo es 100,000,000 USDT.",
     depositarYaHecho: "Ya hiciste tu depósito simulado",
+    depositarEstadoPendiente: "Pendiente de confirmación del admin",
+    depositarEstadoAcreditado: "Acreditado a tu saldo de inversión",
     depositarErrorGuardar: "No se pudo registrar. Intenta de nuevo.",
     retirar: "Retirar ganancias",
     retirarModalTitulo: "Solicitar retiro",
