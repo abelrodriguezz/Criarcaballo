@@ -98,6 +98,9 @@ export interface DepositoSimulado {
   wallet_mostrada: string | null;
   created_at: string;
   revisado_por_admin: boolean;
+  pagado: boolean;
+  pagado_en: string | null;
+  pagado_por: string | null;
 }
 
 export interface SolicitudRetiro {
