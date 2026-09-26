@@ -116,6 +116,7 @@ export interface MensajeSoporte {
   usuario_id: string;
   remitente_id: string;
   contenido: string;
+  imagen_path: string | null;
   leido_admin: boolean;
   leido_usuario: boolean;
   created_at: string;

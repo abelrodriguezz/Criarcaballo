@@ -17,6 +17,50 @@ import type { MensajeSoporte } from "@/lib/types";
 const FORMATO_UUID =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
+const TIPOS_IMAGEN_PERMITIDOS: Record<string, string> = {
+  "image/jpeg": "jpg",
+  "image/png": "png",
+  "image/webp": "webp",
+};
+const TAMANO_MAXIMO_IMAGEN = 5 * 1024 * 1024; // 5 MB, igual que el bucket
+
+/**
+ * Sube el comprobante (si vino uno) a la carpeta de la conversación
+ * (usuarioIdConversacion, no quien lo sube — así el admin puede subir
+ * dentro del chat de un usuario). Devuelve el path guardado, o null si no
+ * se adjuntó nada. Las políticas de storage.objects (migración 045) son
+ * las que de verdad deciden quién puede escribir ahí — esto solo valida
+ * tipo/tamaño para dar un mensaje de error claro antes de intentarlo.
+ */
+async function subirComprobante(
+  supabase: SupabaseClient,
+  usuarioIdConversacion: string,
+  archivo: File
+): Promise<{ path: string | null; error: string | null }> {
+  if (archivo.size === 0) return { path: null, error: null };
+
+  const extension = TIPOS_IMAGEN_PERMITIDOS[archivo.type];
+  if (!extension) {
+    return {
+      path: null,
+      error: "La imagen debe ser JPG, PNG o WEBP.",
+    };
+  }
+  if (archivo.size > TAMANO_MAXIMO_IMAGEN) {
+    return { path: null, error: "La imagen no puede pesar más de 5 MB." };
+  }
+
+  const path = `${usuarioIdConversacion}/${crypto.randomUUID()}.${extension}`;
+  const { error } = await supabase.storage
+    .from("comprobantes-soporte")
+    .upload(path, archivo, { contentType: archivo.type });
+
+  if (error) {
+    return { path: null, error: "No se pudo subir la imagen. Intenta de nuevo." };
+  }
+  return { path, error: null };
+}
+
 async function esAdminActivo(
   supabase: SupabaseClient,
   userId: string
@@ -61,10 +105,21 @@ export async function enviarMensajeUsuario(
   }
 
   const contenido = String(formData.get("contenido") ?? "").trim();
-  if (!contenido) return exito(null);
   if (contenido.length > 2000) {
     return fallo("El mensaje es demasiado largo (máximo 2000 caracteres).");
   }
+
+  const archivo = formData.get("imagen");
+  let imagenPath: string | null = null;
+  if (archivo instanceof File && archivo.size > 0) {
+    const resultado = await subirComprobante(supabase, user.id, archivo);
+    if (resultado.error) return fallo(resultado.error);
+    imagenPath = resultado.path;
+  }
+
+  // Un mensaje sin texto NI imagen no tiene nada que guardar — pero uno
+  // con solo imagen sí es válido (comprobante sin comentario).
+  if (!contenido && !imagenPath) return exito(null);
 
   // .select().single(): la fila insertada vuelve al cliente para pintarla
   // de inmediato. Antes el chat dependía SOLO del evento de Realtime para
@@ -77,6 +132,7 @@ export async function enviarMensajeUsuario(
       usuario_id: user.id,
       remitente_id: user.id,
       contenido,
+      imagen_path: imagenPath,
       leido_admin: false,
       leido_usuario: true, // el propio autor ya lo "leyó"
     })
@@ -107,10 +163,19 @@ export async function enviarMensajeAdmin(
   if (!FORMATO_UUID.test(usuarioId)) {
     return fallo("Conversación inválida.");
   }
-  if (!contenido) return exito(null);
   if (contenido.length > 2000) {
     return fallo("El mensaje es demasiado largo (máximo 2000 caracteres).");
   }
+
+  const archivo = formData.get("imagen");
+  let imagenPath: string | null = null;
+  if (archivo instanceof File && archivo.size > 0) {
+    const resultado = await subirComprobante(supabase, usuarioId, archivo);
+    if (resultado.error) return fallo(resultado.error);
+    imagenPath = resultado.path;
+  }
+
+  if (!contenido && !imagenPath) return exito(null);
 
   const { data, error } = await supabase
     .from("mensajes_soporte")
@@ -118,6 +183,7 @@ export async function enviarMensajeAdmin(
       usuario_id: usuarioId,
       remitente_id: user.id,
       contenido,
+      imagen_path: imagenPath,
       leido_admin: true, // el propio admin ya lo "leyó"
       leido_usuario: false,
     })
