@@ -17,45 +17,27 @@ export function BotonPagoDeposito({
   const deshabilitado = guardando || refrescando;
 
   async function alternarPago() {
-    if (
-      !pagado &&
-      !window.confirm(
-        "¿Confirmas que ya le asignaste el saldo de inversión a este usuario en Gestión de usuarios?"
-      )
-    ) {
-      return;
-    }
+    const confirmacion = pagado
+      ? window.confirm(
+          "¿Revertir a pendiente? Esto le RESTA el monto de este depósito al saldo de inversión del usuario."
+        )
+      : window.confirm(
+          "¿Confirmas que el dinero llegó de verdad? Esto le SUMA el monto de este depósito al saldo de inversión del usuario."
+        );
+    if (!confirmacion) return;
 
     setGuardando(true);
     const supabase = crearClienteSupabase();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    // .eq("pagado", pagado) además del id: mismo motivo que
-    // BotonPagoGanancia.tsx — evita pisar el pagado_en/pagado_por de otro
-    // admin si dos personas tocan el mismo depósito casi a la vez.
-    const { data, error } = await supabase
-      .from("depositos_simulados")
-      .update({
-        pagado: !pagado,
-        pagado_en: !pagado ? new Date().toISOString() : null,
-        pagado_por: !pagado ? (user?.id ?? null) : null,
-      })
-      .eq("id", depositoId)
-      .eq("pagado", pagado)
-      .select("id")
-      .maybeSingle();
-
+    // Esta RPC (migración 049) marca el depósito Y ajusta saldo_virtual
+    // en la misma transacción — nunca un UPDATE directo de "pagado" solo,
+    // porque el saldo tiene que moverse exactamente junto con el estado.
+    const { error } = await supabase.rpc("admin_alternar_pago_deposito", {
+      p_deposito_id: depositoId,
+    });
     setGuardando(false);
 
     if (error) {
-      alert("No se pudo actualizar. Verifica tu permiso de admin.");
-      return;
-    }
-
-    if (!data) {
-      alert("Este depósito ya fue actualizado por otro admin, se refrescará la página.");
+      alert(error.message || "No se pudo actualizar. Verifica tu permiso de admin.");
       startTransition(() => router.refresh());
       return;
     }

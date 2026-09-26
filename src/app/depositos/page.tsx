@@ -88,10 +88,10 @@ export default async function PaginaDepositos() {
 
       <h1 className="font-display font-semibold text-[26px] mb-1.5">Depósitos</h1>
       <p className="text-foreground-muted text-[15px] mb-7">
-        Depósitos simulados que cada usuario registró — no acreditan saldo
-        de inversión solos, hay que asignarlo a mano en Gestión de
-        usuarios. Márcalo como pagado aquí una vez que ya le hayas
-        asignado el saldo.
+        Depósitos simulados que cada usuario registró (cada usuario solo
+        puede hacer uno en toda su existencia). Confirma primero que el
+        dinero llegó de verdad a la wallet — al marcarlo como pagado, ese
+        monto exacto se le suma automáticamente a su saldo de inversión.
         {sinRevisar.length > 0 &&
           ` ${sinRevisar.length} nuevo${sinRevisar.length === 1 ? "" : "s"} desde tu última visita.`}
       </p>
