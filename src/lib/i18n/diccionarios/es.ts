@@ -87,7 +87,8 @@ export const es = {
     nombrePlaceholder: "Tu nombre completo",
     nombreRequerido: "Ingresa tu nombre.",
     telefonoLabel: "Teléfono",
-    telefonoPlaceholder: "+1 809 555 1234",
+    paisLabel: "País",
+    telefonoPlaceholder: "809 555 1234",
     telefonoRequerido: "Ingresa tu teléfono.",
     codigoInvitacionLabel: "Código de invitación (opcional)",
     codigoInvitacionPlaceholder: "Si alguien te invitó, ponlo aquí",
@@ -205,6 +206,8 @@ export const es = {
     mercadoCerradoAdmin: "El mercado está cerrado — como admin puedes operar igual.",
     mercadoCerrado:
       "El mercado está cerrado. Se puede operar de lunes a viernes, 9:30am a 4:00pm hora de Nueva York.",
+    sinSaldo:
+      "Todavía no tienes saldo de inversión. Contacta a soporte o al admin para que te asignen saldo de práctica.",
     abriendo: "Abriendo...",
     abrirOperacion: "Abrir operación",
     errorGenerico: "No se pudo abrir la operación en este momento. Inténtalo de nuevo.",

@@ -96,6 +96,12 @@ export function AbrirOperacionForm({
         </p>
       )}
 
+      {saldoDisponible <= 0 && (
+        <p className="text-[12px] text-brand-secondary bg-brand-secondary/10 rounded-lg px-3 py-2">
+          {t.abrirOperacion.sinSaldo}
+        </p>
+      )}
+
       {error && <p className="text-loss text-[13px]">{error}</p>}
 
       <button

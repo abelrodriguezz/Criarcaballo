@@ -100,15 +100,21 @@ export default async function PaginaInicio() {
             {hero.subtitulo}
           </p>
           <div className="flex flex-col sm:flex-row gap-3 mb-9">
-            <Link
-              href="/registro"
-              className="bg-brand-primary hover:bg-brand-primary-hover text-white font-semibold text-[15px] px-6 py-3.5 rounded-xl transition-colors text-center"
-            >
-              {t.home.ctaCrearCuenta}
-            </Link>
+            {!usuario && (
+              <Link
+                href="/registro"
+                className="bg-brand-primary hover:bg-brand-primary-hover text-white font-semibold text-[15px] px-6 py-3.5 rounded-xl transition-colors text-center"
+              >
+                {t.home.ctaCrearCuenta}
+              </Link>
+            )}
             <Link
               href="/trade-del-dia"
-              className="border-2 border-brand-primary text-brand-primary bg-brand-primary/10 font-semibold text-[15px] px-6 py-3.5 rounded-xl hover:bg-brand-primary/20 transition-colors text-center"
+              className={
+                usuario
+                  ? "bg-brand-primary hover:bg-brand-primary-hover text-white font-semibold text-[15px] px-6 py-3.5 rounded-xl transition-colors text-center"
+                  : "border-2 border-brand-primary text-brand-primary bg-brand-primary/10 font-semibold text-[15px] px-6 py-3.5 rounded-xl hover:bg-brand-primary/20 transition-colors text-center"
+              }
             >
               {t.home.ctaTradeDelDia}
             </Link>

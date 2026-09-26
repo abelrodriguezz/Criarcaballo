@@ -87,7 +87,8 @@ export const en: typeof es = {
     nombrePlaceholder: "Your full name",
     nombreRequerido: "Enter your name.",
     telefonoLabel: "Phone",
-    telefonoPlaceholder: "+1 809 555 1234",
+    paisLabel: "Country",
+    telefonoPlaceholder: "809 555 1234",
     telefonoRequerido: "Enter your phone number.",
     codigoInvitacionLabel: "Invitation code (optional)",
     codigoInvitacionPlaceholder: "If someone invited you, enter it here",
@@ -200,6 +201,8 @@ export const en: typeof es = {
     mercadoCerradoAdmin: "The market is closed — as admin you can still trade.",
     mercadoCerrado:
       "The market is closed. Trading is available Monday to Friday, 9:30am to 4:00pm New York time.",
+    sinSaldo:
+      "You don't have any investment balance yet. Contact support or the admin to get practice balance assigned.",
     abriendo: "Opening...",
     abrirOperacion: "Open position",
     errorGenerico: "Couldn't open the position right now. Try again.",
