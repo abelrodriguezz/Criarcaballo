@@ -13,6 +13,7 @@ import { IconoUsuarios, IconoSoporte, IconoReportes, IconoWallet, IconoDeposito 
 import { obtenerVariosPreciosCripto } from "@/lib/market/binance";
 import { formatearDinero, formatearPrecio } from "@/lib/format";
 import { obtenerDiccionario, obtenerLocale } from "@/lib/i18n/servidor";
+import { inicioDelDiaNY, finDelDiaNY, fechaEnNY } from "@/lib/horarioMercado";
 import {
   obtenerMensajeSimulacion,
   obtenerMensajeSimulacionCompleto,
@@ -48,6 +49,8 @@ export default async function PaginaPerfil() {
     { data: solicitudesRetiro },
     { count: retirosPendientesCount },
     { count: depositosSinRevisarCount },
+    { data: todosLosSaldos },
+    { data: gananciasPendientesHoy },
   ] = await Promise.all([
     supabase
       .from("saldo_virtual")
@@ -116,9 +119,36 @@ export default async function PaginaPerfil() {
           .select("id", { count: "exact", head: true })
           .eq("revisado_por_admin", false)
       : Promise.resolve({ count: 0 }),
+    // El admin no opera — su propia fila de saldo_virtual no significa
+    // nada. En su lugar ve la suma de TODAS las cuentas de inversión (lo
+    // que efectivamente se le ha acreditado a la gente vía depósitos).
+    usuarioEsAdmin
+      ? supabase.from("saldo_virtual").select("saldo_usd")
+      : Promise.resolve({ data: null as { saldo_usd: number }[] | null }),
+    // Ganancias de Trade del día de HOY (horario de la bolsa de NY, igual
+    // que Reportes) que todavía no se han pagado — lo que el admin
+    // necesita tener listo para pagar por lo que se ganó hoy.
+    usuarioEsAdmin
+      ? supabase
+          .from("ganancias_concursos")
+          .select("monto")
+          .eq("origen", "trade")
+          .eq("pagado", false)
+          .gte("created_at", inicioDelDiaNY(fechaEnNY()).toISOString())
+          .lt("created_at", finDelDiaNY(fechaEnNY()).toISOString())
+      : Promise.resolve({ data: null as { monto: number }[] | null }),
   ]);
   const walletsAdmin = walletsAdminRaw.data ?? [];
   const depositoSimulado = depositoSimuladoRaw.data ?? null;
+
+  const totalTodasLasCuentas = (todosLosSaldos ?? []).reduce(
+    (suma, s) => suma + Number(s.saldo_usd),
+    0
+  );
+  const totalAPagarHoy = (gananciasPendientesHoy ?? []).reduce(
+    (suma, g) => suma + Number(g.monto),
+    0
+  );
 
   const totalGanancias = (ganancias ?? []).reduce(
     (suma, g) => suma + g.monto,
@@ -179,16 +209,45 @@ export default async function PaginaPerfil() {
           )}
         </div>
 
-        <div className="border-t border-[var(--border)] pt-4">
-          <div className="text-[13px] text-foreground-muted mb-1">
-            {t.perfil.saldoDeInversion}
+        {usuarioEsAdmin ? (
+          <>
+            {/* El admin no opera, así que su propio saldo_virtual no dice
+                nada — en su lugar ve el total acreditado entre todos los
+                usuarios (lo que efectivamente salió de depósitos pagados)
+                y cuánto hay pendiente de pagar por lo que se ganó HOY. */}
+            <div className="border-t border-[var(--border)] pt-4 mb-4">
+              <div className="text-[13px] text-foreground-muted mb-1">
+                Total en cuentas de inversión (todos los usuarios)
+              </div>
+              <div className="font-display font-bold text-2xl tabular">
+                ${formatearDinero(totalTodasLasCuentas)}
+              </div>
+            </div>
+            <div className="border-t border-[var(--border)] pt-4">
+              <div className="text-[13px] text-foreground-muted mb-1">
+                Total a pagar hoy (ganancias de hoy sin pagar)
+              </div>
+              <div
+                className={`font-display font-bold text-2xl tabular ${
+                  totalAPagarHoy > 0 ? "text-brand-secondary" : ""
+                }`}
+              >
+                ${formatearDinero(totalAPagarHoy)}
+              </div>
+            </div>
+          </>
+        ) : (
+          <div className="border-t border-[var(--border)] pt-4">
+            <div className="text-[13px] text-foreground-muted mb-1">
+              {t.perfil.saldoDeInversion}
+            </div>
+            {/* Si por lo que sea no hay fila de saldo, mostrar $0.00 — antes
+                caía a "10,000.00" fijo, un saldo que el usuario no tiene. */}
+            <div className="font-display font-bold text-2xl tabular">
+              ${formatearDinero(saldo?.saldo_usd ?? 0)}
+            </div>
           </div>
-          {/* Si por lo que sea no hay fila de saldo, mostrar $0.00 — antes
-              caía a "10,000.00" fijo, un saldo que el usuario no tiene. */}
-          <div className="font-display font-bold text-2xl tabular">
-            ${formatearDinero(saldo?.saldo_usd ?? 0)}
-          </div>
-        </div>
+        )}
       </div>
 
       {/* Grupo de accesos tipo menú — estilo distinto de las tarjetas de
