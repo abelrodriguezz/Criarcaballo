@@ -46,21 +46,28 @@ export function NavBar({
         <Logo />
       </Link>
 
-      <nav className="hidden md:flex items-center gap-1">
+      {/* Entre md (768) y xl (1280) no caben las 6 etiquetas + campana,
+          perfil, idioma y tema: el header (fixed, ancho del viewport)
+          cortaba Perfil/ES-EN/tema fuera de la pantalla, sin forma de
+          llegar a ellos (la barra de abajo solo existe por debajo de md).
+          En ese rango se muestran solo los íconos. */}
+      <nav className="hidden md:flex items-center gap-1 min-w-0">
         {ENLACES.map(({ href, label, Icono }) => {
           const activo = pathname === href;
           return (
             <Link
               key={href}
               href={href}
-              className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-sm font-semibold transition-colors ${
+              aria-label={label}
+              title={label}
+              className={`flex items-center gap-1.5 px-2.5 xl:px-3.5 py-2 rounded-xl text-sm font-semibold whitespace-nowrap transition-colors ${
                 activo
                   ? "bg-brand-primary/10 text-brand-primary"
                   : "text-foreground-muted hover:text-foreground hover:bg-surface-hover"
               }`}
             >
-              <Icono className="w-[18px] h-[18px]" />
-              {label}
+              <Icono className="w-[18px] h-[18px] shrink-0" />
+              <span className="hidden xl:inline">{label}</span>
             </Link>
           );
         })}

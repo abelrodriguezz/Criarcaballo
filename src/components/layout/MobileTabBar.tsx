@@ -38,9 +38,12 @@ export function MobileTabBar({
     { href: "/nosotros", label: t.nav.nosotrosCorto, Icono: IconoInfo },
   ];
 
+  // Por debajo de 360px (iPhone SE, 320px) la barra flotante con margen
+  // left-3/right-3 dejaba cada tab en 42px y "Mercado" salía cortado
+  // ("Merc..."): ahí se achica el margen, el padding y el tracking.
   return (
     <nav
-      className="md:hidden fixed left-3 right-3 z-20 bg-surface/90 backdrop-blur-md border border-[var(--border)] rounded-2xl shadow-[0_8px_24px_rgba(0,0,0,0.35)] flex items-stretch py-1.5"
+      className="md:hidden fixed left-2 right-2 min-[360px]:left-3 min-[360px]:right-3 z-20 bg-surface/90 backdrop-blur-md border border-[var(--border)] rounded-2xl shadow-[0_8px_24px_rgba(0,0,0,0.35)] flex items-stretch py-1.5"
       style={{ bottom: "calc(0.75rem + env(safe-area-inset-bottom))" }}
     >
       {ENLACES.map(({ href, label, Icono }) => {
@@ -49,7 +52,7 @@ export function MobileTabBar({
           <Link
             key={href}
             href={href}
-            className={`relative flex-1 min-w-0 flex flex-col items-center gap-0.5 px-0.5 py-1 rounded-xl text-[10px] font-medium transition-colors ${
+            className={`relative flex-1 min-w-0 flex flex-col items-center gap-0.5 px-0 min-[360px]:px-0.5 py-1 rounded-xl text-[10px] font-medium transition-colors ${
               activo ? "text-brand-primary bg-brand-primary/10" : "text-foreground-muted"
             }`}
           >
@@ -59,7 +62,7 @@ export function MobileTabBar({
                 <span className="absolute -top-1 -right-1.5 w-2.5 h-2.5 rounded-full bg-brand-secondary border-2 border-[var(--surface)]" />
               )}
             </span>
-            <span className="truncate max-w-full">{label}</span>
+            <span className="truncate max-w-full max-[359px]:tracking-tight">{label}</span>
           </Link>
         );
       })}
