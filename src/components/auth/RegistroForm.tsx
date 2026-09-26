@@ -6,6 +6,7 @@ import { useSearchParams } from "next/navigation";
 import { crearClienteSupabase } from "@/lib/supabase/client";
 import { mensajeErrorAuth } from "@/lib/auth/mensajesError";
 import { Turnstile } from "@/components/auth/Turnstile";
+import { PAISES, PAIS_POR_DEFECTO } from "@/lib/paises";
 import type { Diccionario, Locale } from "@/lib/i18n";
 
 // Ver nota en LoginForm.tsx: sin site key configurada, el captcha se omite
@@ -24,6 +25,7 @@ export function RegistroForm({ t, locale }: { t: Diccionario; locale: Locale }) 
   const [password, setPassword] = useState("");
   const [confirmar, setConfirmar] = useState("");
   const [nombre, setNombre] = useState("");
+  const [dialPais, setDialPais] = useState(PAIS_POR_DEFECTO.dial);
   const [telefono, setTelefono] = useState("");
   const [codigoInvitacion, setCodigoInvitacion] = useState(codigoRefUrl ?? "");
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
@@ -49,6 +51,9 @@ export function RegistroForm({ t, locale }: { t: Diccionario; locale: Locale }) 
       setError(t.datosContacto.formatoInvalido);
       return;
     }
+    // El código de país se antepone aquí, no lo escribe la persona — evita
+    // que alguien meta un "+" propio y quede duplicado (ej. "+52 +8091234").
+    const telefonoConPais = `${dialPais} ${telefonoLimpio}`;
     if (password !== confirmar) {
       setError(t.auth.contrasenasNoCoinciden);
       return;
@@ -98,7 +103,7 @@ export function RegistroForm({ t, locale }: { t: Diccionario; locale: Locale }) 
         data: {
           ...(codigoLimpio ? { ref: codigoLimpio } : {}),
           nombre: nombreLimpio,
-          telefono: telefonoLimpio,
+          telefono: telefonoConPais,
         },
       },
     });
@@ -186,17 +191,31 @@ export function RegistroForm({ t, locale }: { t: Diccionario; locale: Locale }) 
       <label htmlFor="registro-telefono" className="block text-[13px] font-medium mb-1.5">
         {t.auth.telefonoLabel}
       </label>
-      <input
-        id="registro-telefono"
-        type="tel"
-        inputMode="tel"
-        required
-        value={telefono}
-        onChange={(e) => setTelefono(e.target.value)}
-        maxLength={30}
-        className="w-full px-3.5 py-2.5 mb-3 rounded-lg border border-[var(--border)] bg-background text-base md:text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary"
-        placeholder={t.auth.telefonoPlaceholder}
-      />
+      <div className="flex gap-2 mb-3">
+        <select
+          aria-label={t.auth.paisLabel}
+          value={dialPais}
+          onChange={(e) => setDialPais(e.target.value)}
+          className="shrink-0 w-[92px] px-2 py-2.5 rounded-lg border border-[var(--border)] bg-background text-base md:text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary"
+        >
+          {PAISES.map((p) => (
+            <option key={p.nombre} value={p.dial}>
+              {p.bandera} {p.dial}
+            </option>
+          ))}
+        </select>
+        <input
+          id="registro-telefono"
+          type="tel"
+          inputMode="tel"
+          required
+          value={telefono}
+          onChange={(e) => setTelefono(e.target.value)}
+          maxLength={20}
+          className="flex-1 min-w-0 px-3.5 py-2.5 rounded-lg border border-[var(--border)] bg-background text-base md:text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary"
+          placeholder={t.auth.telefonoPlaceholder}
+        />
+      </div>
 
       <label htmlFor="registro-password" className="block text-[13px] font-medium mb-1.5">
         {t.auth.contrasena}
