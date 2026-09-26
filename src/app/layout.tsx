@@ -87,7 +87,11 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
       </head>
       <body className="min-h-full flex flex-col bg-background text-foreground overflow-x-hidden">
         <NavBar usuario={usuario} locale={locale} t={t} mensajesSinLeer={mensajesSinLeer} />
-        <main className="flex-1 max-w-[1080px] mx-auto w-full px-6 pb-24 md:pb-16">
+        {/* NavBar es fixed/flotante (ya no ocupa espacio en el flujo normal),
+            así que este padding-top es lo que evita que el contenido quede
+            tapado debajo — mismo motivo que el pb-24 de abajo para la
+            barra flotante de mobile. */}
+        <main className="flex-1 max-w-[1080px] mx-auto w-full px-6 pt-24 sm:pt-28 pb-24 md:pb-16">
           <BarridoTransition>{children}</BarridoTransition>
         </main>
         <MobileTabBar t={t} mensajesSinLeer={mensajesSinLeer} />

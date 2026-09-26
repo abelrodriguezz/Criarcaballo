@@ -41,22 +41,22 @@ export function NavBar({
   ];
 
   return (
-    <header className="max-w-[1080px] mx-auto w-full px-3 sm:px-6 py-5 sm:py-6 flex items-center justify-between gap-2">
+    <header className="fixed top-3 inset-x-3 sm:inset-x-4 z-30 max-w-[1080px] mx-auto bg-surface/90 backdrop-blur-md border border-[var(--border)] rounded-2xl shadow-[0_8px_24px_rgba(0,0,0,0.25)] px-3 sm:px-6 py-3 sm:py-4 flex items-center justify-between gap-2">
       <Link href="/" className="shrink-0">
         <Logo />
       </Link>
 
-      <nav className="hidden md:flex items-center gap-1.5 bg-surface rounded-2xl p-1.5">
+      <nav className="hidden md:flex items-center gap-1">
         {ENLACES.map(({ href, label, Icono }) => {
           const activo = pathname === href;
           return (
             <Link
               key={href}
               href={href}
-              className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold transition-colors ${
+              className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-sm font-semibold transition-colors ${
                 activo
-                  ? "bg-background text-brand-primary shadow-[0_1px_0_var(--border)]"
-                  : "text-foreground-muted hover:text-foreground"
+                  ? "bg-brand-primary/10 text-brand-primary"
+                  : "text-foreground-muted hover:text-foreground hover:bg-surface-hover"
               }`}
             >
               <Icono className="w-[18px] h-[18px]" />
@@ -72,7 +72,7 @@ export function NavBar({
             <Link
               href="/soporte"
               aria-label="Mensajes de soporte"
-              className="hidden md:flex relative items-center justify-center w-9 h-9 rounded-full bg-surface text-foreground-muted hover:text-foreground transition-colors"
+              className="hidden md:flex relative items-center justify-center w-9 h-9 rounded-full border border-[var(--border)] text-foreground-muted hover:text-foreground hover:bg-surface-hover transition-colors"
             >
               <IconoCampana />
               {mensajesSinLeer > 0 && (
@@ -84,10 +84,10 @@ export function NavBar({
             <Link
               href="/perfil"
               aria-label="Perfil"
-              className={`hidden md:flex items-center justify-center w-9 h-9 rounded-full transition-colors ${
+              className={`hidden md:flex items-center justify-center w-9 h-9 rounded-full border transition-colors ${
                 pathname === "/perfil"
-                  ? "bg-brand-primary/15 text-brand-primary"
-                  : "bg-surface text-foreground-muted hover:text-foreground"
+                  ? "border-brand-primary/40 bg-brand-primary/15 text-brand-primary"
+                  : "border-[var(--border)] text-foreground-muted hover:text-foreground hover:bg-surface-hover"
               }`}
             >
               <IconoPerfil />
