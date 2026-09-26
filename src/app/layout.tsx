@@ -5,7 +5,8 @@ import "./globals.css";
 import { NavBar } from "@/components/layout/NavBar";
 import { MobileTabBar } from "@/components/layout/MobileTabBar";
 import { BarridoTransition } from "@/components/layout/BarridoTransition";
-import { obtenerUsuarioActual } from "@/lib/auth/sesion";
+import { esAdmin, obtenerUsuarioActual } from "@/lib/auth/sesion";
+import { crearClienteSupabaseServidor } from "@/lib/supabase/server";
 import { obtenerLocale, obtenerDiccionario } from "@/lib/i18n/servidor";
 
 const inter = Inter({
@@ -53,6 +54,26 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
     obtenerDiccionario(),
   ]);
 
+  // Contador de mensajes de soporte sin leer, para la campanita del nav —
+  // mismo query que ya usaba /perfil para el badge de "Bandeja de soporte".
+  // Se recalcula en cada navegación de página completa (no en vivo sin
+  // recargar), igual que el resto de la app.
+  let mensajesSinLeer = 0;
+  if (usuario) {
+    const supabase = await crearClienteSupabaseServidor();
+    const { count } = esAdmin(usuario)
+      ? await supabase
+          .from("mensajes_soporte")
+          .select("id", { count: "exact", head: true })
+          .eq("leido_admin", false)
+      : await supabase
+          .from("mensajes_soporte")
+          .select("id", { count: "exact", head: true })
+          .eq("usuario_id", usuario.id)
+          .eq("leido_usuario", false);
+    mensajesSinLeer = count ?? 0;
+  }
+
   return (
     <html
       lang={locale}
@@ -65,11 +86,11 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
         </Script>
       </head>
       <body className="min-h-full flex flex-col bg-background text-foreground overflow-x-hidden">
-        <NavBar usuario={usuario} locale={locale} t={t} />
+        <NavBar usuario={usuario} locale={locale} t={t} mensajesSinLeer={mensajesSinLeer} />
         <main className="flex-1 max-w-[1080px] mx-auto w-full px-6 pb-24 md:pb-16">
           <BarridoTransition>{children}</BarridoTransition>
         </main>
-        <MobileTabBar t={t} />
+        <MobileTabBar t={t} mensajesSinLeer={mensajesSinLeer} />
       </body>
     </html>
   );
