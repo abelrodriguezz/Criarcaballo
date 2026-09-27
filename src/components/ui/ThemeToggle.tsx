@@ -13,7 +13,17 @@ export function ThemeToggle() {
     // estándar para evitar un hydration mismatch entre servidor y cliente.
     // Debe coincidir exactamente con la lógica del script inline de
     // layout.tsx: oscuro por defecto salvo que ya se haya elegido claro.
-    const guardado = localStorage.getItem("trade4u-theme");
+    // Si localStorage no está disponible (modo incógnito estricto, storage
+    // bloqueado, etc.) esto lanzaría sin capturar y tumbaría toda la app a
+    // la pantalla de error de Next para CUALQUIER visitante (el botón de
+    // tema está en el NavBar de todas las páginas) — igual que ya se cuida
+    // en el script inline de layout.tsx.
+    let guardado: string | null = null;
+    try {
+      guardado = localStorage.getItem("trade4u-theme");
+    } catch {
+      // sin storage, seguimos con el valor por defecto (oscuro).
+    }
     const prefiereOscuro = guardado ? guardado === "dark" : true;
 
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -27,7 +37,12 @@ export function ThemeToggle() {
       "data-theme",
       nuevoValor ? "dark" : "light"
     );
-    localStorage.setItem("trade4u-theme", nuevoValor ? "dark" : "light");
+    try {
+      localStorage.setItem("trade4u-theme", nuevoValor ? "dark" : "light");
+    } catch {
+      // sin storage, el tema no persiste entre visitas pero el toggle
+      // igual funciona en la sesión actual.
+    }
   }
 
   return (
