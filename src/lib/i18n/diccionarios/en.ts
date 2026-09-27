@@ -80,6 +80,8 @@ export const en: typeof es = {
     correoIncorrecto: "Incorrect email or password.",
     cuentaDesactivadaLogin:
       "This account has been deactivated. Contact the support team.",
+    sesionCerradaPorInactividad:
+      "Your session was closed due to inactivity. Please sign in again.",
     errorRegistroGenerico: "Couldn't create the account. Try again.",
     errorRecuperarGenerico: "Couldn't process the request. Try again.",
     errorRestablecerGenerico: "Couldn't update the password. Try again.",

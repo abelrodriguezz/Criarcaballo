@@ -79,6 +79,8 @@ export const es = {
     correoIncorrecto: "Correo o contraseña incorrectos.",
     cuentaDesactivadaLogin:
       "Esta cuenta fue desactivada. Contacta al equipo de soporte.",
+    sesionCerradaPorInactividad:
+      "Tu sesión se cerró por inactividad. Inicia sesión de nuevo.",
     errorRegistroGenerico: "No se pudo crear la cuenta. Intenta de nuevo.",
     errorRecuperarGenerico: "No se pudo procesar la solicitud. Intenta de nuevo.",
     errorRestablecerGenerico:

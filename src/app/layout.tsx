@@ -5,6 +5,7 @@ import "./globals.css";
 import { NavBar } from "@/components/layout/NavBar";
 import { MobileTabBar } from "@/components/layout/MobileTabBar";
 import { BarridoTransition } from "@/components/layout/BarridoTransition";
+import { CierreInactividad } from "@/components/auth/CierreInactividad";
 import { esAdmin, obtenerUsuarioActual } from "@/lib/auth/sesion";
 import { crearClienteSupabaseServidor } from "@/lib/supabase/server";
 import { obtenerLocale, obtenerDiccionario } from "@/lib/i18n/servidor";
@@ -86,6 +87,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
         </Script>
       </head>
       <body className="min-h-full flex flex-col bg-background text-foreground overflow-x-hidden">
+        {usuario && <CierreInactividad />}
         <NavBar usuario={usuario} locale={locale} t={t} mensajesSinLeer={mensajesSinLeer} />
         {/* NavBar es fixed/flotante (ya no ocupa espacio en el flujo normal),
             así que este padding-top es lo que evita que el contenido quede

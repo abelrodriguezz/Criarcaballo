@@ -16,12 +16,21 @@ const TURNSTILE_CONFIGURADO = !!process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
 // `locale` no se usa en este formulario en particular (no pasa por
 // mensajeErrorAuth), pero se recibe para que las 4 páginas de auth tengan
 // la misma firma y no haya que recordar cuál sí la necesita.
-export function LoginForm({ t }: { t: Diccionario; locale: Locale }) {
+export function LoginForm({
+  t,
+  cerradaPorInactividad,
+}: {
+  t: Diccionario;
+  locale: Locale;
+  cerradaPorInactividad?: boolean;
+}) {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(
+    cerradaPorInactividad ? t.auth.sesionCerradaPorInactividad : null
+  );
   const [cargando, setCargando] = useState(false);
 
   async function manejarEnvio(e: FormEvent) {
