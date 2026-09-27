@@ -5,13 +5,26 @@ import { crearClienteSupabaseServidor } from "@/lib/supabase/server";
 import { obtenerUsuarioActual, esAdmin } from "@/lib/auth/sesion";
 import { exito, fallo, type Resultado } from "@/lib/actions/resultado";
 
+/** Lo que el admin escribe una vez por símbolo para cerrar en bloque. */
+export interface DatosCierreSimbolo {
+  precioEntrada: number;
+  precioSalida: number;
+  /** ISO 8601. Si no se manda, la operación conserva su hora de apertura real. */
+  horaEntrada?: string;
+  /** ISO 8601. Si no se manda, se usa el momento en que se ejecuta el cierre. */
+  horaCierre?: string;
+}
+
 /**
  * Cierra TODAS las operaciones abiertas de TODOS los usuarios, usando un
- * precio de salida que el propio admin escribe por cada símbolo (no se
- * consulta Binance) — así el admin controla exactamente a qué precio se
- * liquida la sesión. Cada operación usa su propio precio de entrada
- * (guardado desde que se abrió) contra este precio de salida para
- * calcular la ganancia/pérdida de cada usuario.
+ * precio de ENTRADA y uno de SALIDA que el propio admin escribe por cada
+ * símbolo (no se consulta Binance para ninguno de los dos) — así el admin
+ * controla exactamente a qué precios se liquida la sesión, sin depender de
+ * que el precio capturado en vivo al abrir haya sido correcto (símbolo mal
+ * escrito, par no disponible, bloqueo geográfico, etc. — migración 056).
+ * Cada operación conserva su propio monto_usado (lo que ESE usuario
+ * invirtió), así que el mismo precio en bloque produce una ganancia/pérdida
+ * distinta en dólares por usuario.
  */
 export interface ResultadoCierreMasivo {
   cerradas: number;
@@ -31,7 +44,7 @@ export interface ResultadoCierreMasivo {
 }
 
 export async function adminCerrarTodasLasOperaciones(
-  preciosPorSimbolo: Record<string, number>
+  datosPorSimbolo: Record<string, DatosCierreSimbolo>
 ): Promise<Resultado<ResultadoCierreMasivo>> {
   const usuario = await obtenerUsuarioActual();
   if (!usuario || !esAdmin(usuario)) {
@@ -63,15 +76,22 @@ export async function adminCerrarTodasLasOperaciones(
   const sinPrecio = new Set<string>();
 
   for (const op of abiertas) {
-    const precio = preciosPorSimbolo[op.activo];
-    if (typeof precio !== "number" || !Number.isFinite(precio) || precio <= 0) {
+    const datos = datosPorSimbolo[op.activo];
+    const entradaValida =
+      datos && Number.isFinite(datos.precioEntrada) && datos.precioEntrada > 0;
+    const salidaValida =
+      datos && Number.isFinite(datos.precioSalida) && datos.precioSalida > 0;
+    if (!entradaValida || !salidaValida) {
       sinPrecio.add(op.activo);
       continue;
     }
 
     const { error } = await supabase.rpc("admin_cerrar_operacion", {
       p_operacion_id: op.id,
-      p_precio_salida: precio,
+      p_precio_entrada: datos.precioEntrada,
+      p_precio_salida: datos.precioSalida,
+      p_hora_entrada: datos.horaEntrada ?? null,
+      p_hora_cierre: datos.horaCierre ?? null,
     });
 
     if (error) {

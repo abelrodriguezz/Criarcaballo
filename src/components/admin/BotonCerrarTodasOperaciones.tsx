@@ -2,8 +2,32 @@
 
 import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
-import { adminCerrarTodasLasOperaciones } from "@/lib/actions/adminTrading";
+import {
+  adminCerrarTodasLasOperaciones,
+  type DatosCierreSimbolo,
+} from "@/lib/actions/adminTrading";
 import { parsearNumero } from "@/lib/format";
+
+interface CamposSimbolo {
+  precioEntrada: string;
+  precioSalida: string;
+  horaEntrada: string;
+  horaCierre: string;
+}
+
+const CAMPOS_VACIOS: CamposSimbolo = {
+  precioEntrada: "",
+  precioSalida: "",
+  horaEntrada: "",
+  horaCierre: "",
+};
+
+/** input[type=datetime-local] ("2026-09-27T14:30") a ISO en UTC, o undefined si está vacío. */
+function horaAIso(valor: string): string | undefined {
+  if (!valor) return undefined;
+  const fecha = new Date(valor);
+  return Number.isNaN(fecha.getTime()) ? undefined : fecha.toISOString();
+}
 
 export function BotonCerrarTodasOperaciones({
   simbolos,
@@ -12,27 +36,49 @@ export function BotonCerrarTodasOperaciones({
 }) {
   const router = useRouter();
   const [abierto, setAbierto] = useState(false);
-  const [precios, setPrecios] = useState<Record<string, string>>({});
+  const [campos, setCampos] = useState<Record<string, CamposSimbolo>>({});
   const [cerrando, setCerrando] = useState(false);
   const [mensaje, setMensaje] = useState<string | null>(null);
+
+  function actualizarCampo(
+    simbolo: string,
+    campo: keyof CamposSimbolo,
+    valor: string
+  ) {
+    setCampos((c) => ({
+      ...c,
+      [simbolo]: { ...(c[simbolo] ?? CAMPOS_VACIOS), [campo]: valor },
+    }));
+  }
 
   async function manejarEnvio(e: FormEvent) {
     e.preventDefault();
     setMensaje(null);
 
-    const preciosNum: Record<string, number> = {};
+    const datosPorSimbolo: Record<string, DatosCierreSimbolo> = {};
     for (const simbolo of simbolos) {
-      const num = parsearNumero(precios[simbolo] ?? "");
-      if (!Number.isFinite(num) || num <= 0) {
+      const c = campos[simbolo] ?? CAMPOS_VACIOS;
+      const precioEntrada = parsearNumero(c.precioEntrada);
+      const precioSalida = parsearNumero(c.precioSalida);
+      if (!Number.isFinite(precioEntrada) || precioEntrada <= 0) {
+        setMensaje(`Falta un precio de entrada válido para ${simbolo}.`);
+        return;
+      }
+      if (!Number.isFinite(precioSalida) || precioSalida <= 0) {
         setMensaje(`Falta un precio de salida válido para ${simbolo}.`);
         return;
       }
-      preciosNum[simbolo] = num;
+      datosPorSimbolo[simbolo] = {
+        precioEntrada,
+        precioSalida,
+        horaEntrada: horaAIso(c.horaEntrada),
+        horaCierre: horaAIso(c.horaCierre),
+      };
     }
 
     if (
       !window.confirm(
-        "¿Cerrar TODAS las operaciones abiertas con estos precios de salida? Esta acción no se puede deshacer."
+        "¿Cerrar TODAS las operaciones abiertas con estos precios? Esto reemplaza el precio de entrada capturado al abrir y recalcula la ganancia/pérdida de cada usuario. Esta acción no se puede deshacer."
       )
     ) {
       return;
@@ -43,7 +89,7 @@ export function BotonCerrarTodasOperaciones({
       // Fallo esperado = valor de retorno, no excepción: en producción
       // Next.js borra el mensaje de un Error que escape de una server
       // action (ver src/lib/actions/resultado.ts).
-      const resultado = await adminCerrarTodasLasOperaciones(preciosNum);
+      const resultado = await adminCerrarTodasLasOperaciones(datosPorSimbolo);
       if (!resultado.ok) {
         setMensaje(resultado.error);
         return;
@@ -75,7 +121,7 @@ export function BotonCerrarTodasOperaciones({
 
       setMensaje(partes.join(" "));
       setAbierto(false);
-      setPrecios({});
+      setCampos({});
       router.refresh();
     } catch {
       setMensaje(
@@ -128,23 +174,61 @@ export function BotonCerrarTodasOperaciones({
       className="mb-6 border border-loss/40 rounded-2xl p-4 flex flex-col gap-3"
     >
       <p className="text-sm font-semibold">
-        Precio de salida por activo — se aplica al precio de entrada de
-        cada usuario para calcular su ganancia/pérdida
+        Precio de entrada y salida por activo — reemplazan el precio
+        capturado al abrir y se aplican al monto invertido de cada usuario
+        para calcular su ganancia/pérdida. Las horas son opcionales.
       </p>
-      {simbolos.map((simbolo) => (
-        <div key={simbolo} className="flex items-center gap-2">
-          <label className="text-sm font-mono w-28 shrink-0">{simbolo}</label>
-          <input
-            value={precios[simbolo] ?? ""}
-            onChange={(e) =>
-              setPrecios((p) => ({ ...p, [simbolo]: e.target.value }))
-            }
-            placeholder="Precio de salida"
-            inputMode="decimal"
-            className="flex-1 min-w-0 px-3 py-2 rounded-lg border border-[var(--border)] bg-background text-sm"
-          />
-        </div>
-      ))}
+      {simbolos.map((simbolo) => {
+        const c = campos[simbolo] ?? CAMPOS_VACIOS;
+        return (
+          <div
+            key={simbolo}
+            className="border border-[var(--border)] rounded-xl p-3 flex flex-col gap-2"
+          >
+            <label className="text-sm font-mono font-semibold">{simbolo}</label>
+            <div className="flex gap-2">
+              <input
+                value={c.precioEntrada}
+                onChange={(e) => actualizarCampo(simbolo, "precioEntrada", e.target.value)}
+                placeholder="Precio de entrada"
+                inputMode="decimal"
+                className="flex-1 min-w-0 px-3 py-2 rounded-lg border border-[var(--border)] bg-background text-sm"
+              />
+              <input
+                value={c.precioSalida}
+                onChange={(e) => actualizarCampo(simbolo, "precioSalida", e.target.value)}
+                placeholder="Precio de salida"
+                inputMode="decimal"
+                className="flex-1 min-w-0 px-3 py-2 rounded-lg border border-[var(--border)] bg-background text-sm"
+              />
+            </div>
+            <div className="flex gap-2">
+              <div className="flex-1 min-w-0">
+                <label className="block text-[11px] text-foreground-muted mb-1">
+                  Hora de entrada (opcional)
+                </label>
+                <input
+                  type="datetime-local"
+                  value={c.horaEntrada}
+                  onChange={(e) => actualizarCampo(simbolo, "horaEntrada", e.target.value)}
+                  className="w-full px-3 py-2 rounded-lg border border-[var(--border)] bg-background text-sm"
+                />
+              </div>
+              <div className="flex-1 min-w-0">
+                <label className="block text-[11px] text-foreground-muted mb-1">
+                  Hora de cierre (opcional)
+                </label>
+                <input
+                  type="datetime-local"
+                  value={c.horaCierre}
+                  onChange={(e) => actualizarCampo(simbolo, "horaCierre", e.target.value)}
+                  className="w-full px-3 py-2 rounded-lg border border-[var(--border)] bg-background text-sm"
+                />
+              </div>
+            </div>
+          </div>
+        );
+      })}
 
       {mensaje && <p className="text-loss text-[12px]">{mensaje}</p>}
 
