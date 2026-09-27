@@ -79,6 +79,12 @@ export async function registrarDepositoSimulado(
     .single<DepositoSimulado>();
 
   if (error) {
+    // El insert falló (ej. 23505 = unique(usuario_id), otra pestaña ya
+    // registró el depósito) pero la imagen ya se subió al bucket: sin esto
+    // quedaría huérfana para siempre, porque el cron de limpieza de 5 días
+    // solo mira mensajes que referencien la imagen, nunca el bucket
+    // directo. La RPC solo borra si de verdad quedó sin depósito.
+    await supabase.rpc("limpiar_comprobante_huerfano", { p_path: comprobantePath });
     // 23505 = unique(usuario_id): ya existe su depósito (ej. lo registró
     // desde otra pestaña). "Intenta de nuevo" ahí es engañoso.
     return fallo(
