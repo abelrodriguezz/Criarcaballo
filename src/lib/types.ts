@@ -101,6 +101,7 @@ export interface DepositoSimulado {
   pagado: boolean;
   pagado_en: string | null;
   pagado_por: string | null;
+  comprobante_path: string | null;
 }
 
 export interface SolicitudRetiro {

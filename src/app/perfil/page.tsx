@@ -251,7 +251,6 @@ export default async function PaginaPerfil() {
       ) : (
         <>
           <BotonDepositarSimulado
-            usuarioId={usuario.id}
             walletsAdmin={walletsAdmin}
             mensajeSimulacion={simulacion as string}
             depositoExistente={depositoSimulado}

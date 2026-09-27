@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { crearClienteSupabase } from "@/lib/supabase/client";
+import Link from "next/link";
+import { registrarDepositoSimulado } from "@/lib/actions/depositos";
 import { CopiarBoton } from "@/components/ui/CopiarBoton";
-import { IconoWallet } from "@/components/ui/Iconos";
+import { IconoWallet, IconoImagen } from "@/components/ui/Iconos";
 import { formatearDinero, parsearMontoUsuario } from "@/lib/format";
 import type { Diccionario } from "@/lib/i18n";
 
@@ -13,15 +14,15 @@ import type { Diccionario } from "@/lib/i18n";
 // claro en vez de llegar a la base y volver como un error de guardado
 // genérico.
 const MONTO_MAXIMO = 100_000_000;
+const TIPOS_IMAGEN_ACEPTADOS = "image/jpeg,image/png,image/webp";
+const TAMANO_MAXIMO_IMAGEN = 5 * 1024 * 1024; // 5 MB, igual que el bucket/servidor
 
 export function BotonDepositarSimulado({
-  usuarioId,
   walletsAdmin,
   mensajeSimulacion,
   depositoExistente,
   t,
 }: {
-  usuarioId: string;
   walletsAdmin: string[];
   mensajeSimulacion: string;
   depositoExistente: { monto: number; pagado: boolean } | null;
@@ -31,9 +32,11 @@ export function BotonDepositarSimulado({
   const [abierto, setAbierto] = useState(false);
   const [walletElegida, setWalletElegida] = useState<string | null>(null);
   const [monto, setMonto] = useState("");
+  const [comprobante, setComprobante] = useState<File | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [enviado, setEnviado] = useState(false);
   const [enviando, setEnviando] = useState(false);
+  const inputArchivoRef = useRef<HTMLInputElement>(null);
 
   function abrir() {
     // Al azar cada vez que se abre, no solo una vez por carga de página.
@@ -43,9 +46,24 @@ export function BotonDepositarSimulado({
         : null;
     setWalletElegida(elegida);
     setMonto("");
+    setComprobante(null);
     setError(null);
     setEnviado(false);
     setAbierto(true);
+  }
+
+  function elegirComprobante(archivo: File | undefined) {
+    if (!archivo) return;
+    if (!["image/jpeg", "image/png", "image/webp"].includes(archivo.type)) {
+      setError(t.perfil.depositarComprobanteTipoInvalido);
+      return;
+    }
+    if (archivo.size > TAMANO_MAXIMO_IMAGEN) {
+      setError(t.perfil.depositarComprobanteMuyPesada);
+      return;
+    }
+    setError(null);
+    setComprobante(archivo);
   }
 
   function cerrar() {
@@ -70,35 +88,41 @@ export function BotonDepositarSimulado({
       setError(t.perfil.depositarMontoMaximo);
       return;
     }
+    if (!comprobante) {
+      setError(t.perfil.depositarComprobanteObligatorio);
+      return;
+    }
     setError(null);
     setEnviando(true);
-    // Sigue siendo una simulación (no se mueve dinero real ni se llama a
-    // ninguna wallet) — pero ahora sí queda registrado el monto para que
-    // el admin lo vea en Gestión de usuarios. El unique(usuario_id) en la
-    // tabla es lo que impone "una sola vez" a nivel de base de datos.
-    const supabase = crearClienteSupabase();
-    const { error: dbError } = await supabase.from("depositos_simulados").insert({
-      usuario_id: usuarioId,
-      monto: redondeado,
-      wallet_mostrada: walletElegida,
-    });
+
+    const formData = new FormData();
+    formData.set("monto", String(redondeado));
+    if (walletElegida) formData.set("walletMostrada", walletElegida);
+    formData.set("comprobante", comprobante);
+
+    const resultado = await registrarDepositoSimulado(formData);
     setEnviando(false);
 
-    if (dbError) {
-      // 23505 = unique(usuario_id): ya existe su depósito (ej. lo registró
-      // desde otra pestaña). "Intenta de nuevo" ahí es engañoso — nunca
-      // va a funcionar.
-      setError(
-        dbError.code === "23505"
-          ? t.perfil.depositarYaHecho
-          : t.perfil.depositarErrorGuardar
-      );
+    if (!resultado.ok) {
+      setError(resultado.error);
       return;
     }
     setEnviado(true);
   }
 
-  if (depositoExistente) {
+  // registrarDepositoSimulado hace revalidatePath("/perfil"): Next.js
+  // refresca este Server Component padre automáticamente apenas la Server
+  // Action resuelve, ANTES de que el usuario alcance a ver la pantalla de
+  // éxito de abajo. Sin este blindaje, `depositoExistente` llega no-nulo a
+  // mitad del modal abierto y esta rama "ya hiciste tu depósito" se
+  // adelantaba a tapar por completo el "Entendido"/"Ir al chat" (reproducido
+  // consistentemente contra `next build && next start`, aunque no siempre
+  // contra `next dev`). Mientras el modal siga abierto mostrando el éxito,
+  // se ignora el prop recién refrescado; al cerrarlo (botón "Entendido"),
+  // esta rama ya vuelve a aplicar normalmente.
+  const mostrandoExito = abierto && enviado;
+
+  if (depositoExistente && !mostrandoExito) {
     return (
       <div className="w-full border border-[var(--border)] rounded-2xl p-4 mb-3 flex items-center gap-3.5">
         <div className="shrink-0 w-10 h-10 rounded-[4px] bg-gain/10 text-gain flex items-center justify-center">
@@ -179,12 +203,21 @@ export function BotonDepositarSimulado({
             {enviado ? (
               <>
                 <p className="text-sm mb-4">{mensajeSimulacion}</p>
-                <button
-                  onClick={cerrar}
-                  className="w-full bg-brand-primary hover:bg-brand-primary-hover text-white font-semibold text-sm py-3 rounded-xl transition-colors"
-                >
-                  {t.perfil.depositarEntendido}
-                </button>
+                <div className="flex gap-2">
+                  <button
+                    onClick={cerrar}
+                    className="flex-1 bg-surface-hover hover:bg-surface border border-[var(--border)] text-foreground font-semibold text-sm py-3 rounded-xl transition-colors"
+                  >
+                    {t.perfil.depositarEntendido}
+                  </button>
+                  <Link
+                    href="/soporte"
+                    onClick={cerrar}
+                    className="flex-1 text-center bg-brand-primary hover:bg-brand-primary-hover text-white font-semibold text-sm py-3 rounded-xl transition-colors"
+                  >
+                    {t.perfil.depositarIrAlChat}
+                  </Link>
+                </div>
               </>
             ) : walletElegida ? (
               <>
@@ -211,11 +244,33 @@ export function BotonDepositarSimulado({
                   className="w-full px-3.5 py-2.5 mb-3 rounded-lg border border-[var(--border)] bg-background text-sm font-mono"
                 />
 
+                <label className="block text-[12px] font-medium text-foreground-muted mb-1.5">
+                  {t.perfil.depositarComprobanteLabel}
+                </label>
+                <input
+                  ref={inputArchivoRef}
+                  type="file"
+                  accept={TIPOS_IMAGEN_ACEPTADOS}
+                  onChange={(e) => elegirComprobante(e.target.files?.[0])}
+                  className="hidden"
+                  aria-label={t.perfil.depositarComprobanteLabel}
+                />
+                <button
+                  type="button"
+                  onClick={() => inputArchivoRef.current?.click()}
+                  className="w-full flex items-center gap-2 px-3.5 py-2.5 mb-3 rounded-lg border border-dashed border-[var(--border)] text-[13px] text-foreground-muted hover:text-foreground hover:bg-surface-hover transition-colors"
+                >
+                  <IconoImagen className="w-4 h-4 shrink-0" />
+                  <span className="flex-1 min-w-0 truncate text-left">
+                    {comprobante ? comprobante.name : t.perfil.depositarComprobanteAdjuntar}
+                  </span>
+                </button>
+
                 {error && <p className="text-loss text-[13px] mb-3">{error}</p>}
 
                 <button
                   onClick={manejarEnviar}
-                  disabled={enviando}
+                  disabled={enviando || !comprobante}
                   className="w-full bg-brand-primary hover:bg-brand-primary-hover disabled:opacity-60 text-white font-semibold text-sm py-3 rounded-xl transition-colors"
                 >
                   {t.perfil.depositarEnviar}

@@ -26,6 +26,22 @@ export default async function PaginaDepositos() {
     .returns<DepositoConUsuario[]>();
 
   const depositos = depositosRaw ?? [];
+
+  // URL firmada por depósito (bucket privado, igual que en el chat de
+  // soporte) — se resuelve aquí en el servidor porque esta pantalla ya es
+  // solo-admin y las políticas de storage.objects dejan al admin ver
+  // cualquier comprobante.
+  const urlsComprobante: Record<string, string> = {};
+  await Promise.all(
+    depositos
+      .filter((d) => d.comprobante_path)
+      .map(async (d) => {
+        const { data } = await supabase.storage
+          .from("comprobantes-soporte")
+          .createSignedUrl(d.comprobante_path!, 3600);
+        if (data?.signedUrl) urlsComprobante[d.id] = data.signedUrl;
+      })
+  );
   const sinRevisar = depositos.filter((d) => !d.revisado_por_admin);
   const pendientes = depositos.filter((d) => !d.pagado);
   const pagados = depositos.filter((d) => d.pagado);
@@ -70,6 +86,16 @@ export default async function PaginaDepositos() {
             <div className="text-[12px] text-foreground-muted font-mono truncate">
               {d.wallet_mostrada}
             </div>
+          )}
+          {urlsComprobante[d.id] && (
+            <a
+              href={urlsComprobante[d.id]}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-[12px] text-brand-primary font-semibold hover:underline"
+            >
+              Ver comprobante
+            </a>
           )}
         </div>
         <BotonPagoDeposito depositoId={d.id} pagado={d.pagado} />
