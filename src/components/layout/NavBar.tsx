@@ -59,7 +59,14 @@ export function NavBar({
           más no lo da ningún tamaño de ventana: con las etiquetas de texto
           visibles (xl+), "Nosotros" quedaba tapado por "Iniciar sesión" en
           CUALQUIER resolución de escritorio (reproducido de 1280px a
-          1920px). Sin sesión, el menú se queda siempre en solo íconos. */}
+          1920px). Sin sesión, el menú se queda siempre en solo íconos.
+
+          Con sesión tampoco cabía del todo: con xl:px-3.5 en cada link, la
+          píldora de "Nosotros" se metía 16px debajo de la campana (ES; 6px
+          en EN) en todo ancho >= 1280 — el nav tiene min-w-0 y los links
+          whitespace-nowrap, así que el contenido desborda en silencio en vez
+          de empujar. Con px-2.5 fijo sobran ~12px en ES (~17px en EN). Si se agrega otro link o
+          una etiqueta más larga, volver a medir Nosotros contra la campana. */}
       <nav className="hidden md:flex items-center gap-1 min-w-0">
         {ENLACES.map(({ href, label, Icono }) => {
           const activo = pathname === href;
@@ -69,7 +76,7 @@ export function NavBar({
               href={href}
               aria-label={label}
               title={label}
-              className={`flex items-center gap-1.5 px-2.5 xl:px-3.5 py-2 rounded-xl text-sm font-semibold whitespace-nowrap transition-colors ${
+              className={`flex items-center gap-1.5 px-2.5 py-2 rounded-xl text-sm font-semibold whitespace-nowrap transition-colors ${
                 activo
                   ? "bg-brand-primary/10 text-brand-primary"
                   : "text-foreground-muted hover:text-foreground hover:bg-surface-hover"
