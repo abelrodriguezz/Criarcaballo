@@ -66,7 +66,13 @@ export function NavBar({
           en EN) en todo ancho >= 1280 — el nav tiene min-w-0 y los links
           whitespace-nowrap, así que el contenido desborda en silencio en vez
           de empujar. Con px-2.5 fijo sobran ~12px en ES (~17px en EN). Si se agrega otro link o
-          una etiqueta más larga, volver a medir Nosotros contra la campana. */}
+          una etiqueta más larga, volver a medir Nosotros contra la campana.
+
+          Sin sesión el texto SÍ debe verse (pedido explícito del usuario:
+          "ponle los nombres aunque sea más pequeño para que cuadre bien") —
+          en vez de ocultarlo, se achica (text-[11px], gap y padding más
+          justos) solo para el estado sin sesión, que es el que tiene menos
+          margen por el botón "Iniciar sesión" más ancho que campana+perfil. */}
       <nav className="hidden md:flex items-center gap-1 min-w-0">
         {ENLACES.map(({ href, label, Icono }) => {
           const activo = pathname === href;
@@ -76,14 +82,16 @@ export function NavBar({
               href={href}
               aria-label={label}
               title={label}
-              className={`flex items-center gap-1.5 px-2.5 py-2 rounded-xl text-sm font-semibold whitespace-nowrap transition-colors ${
+              className={`flex items-center rounded-xl font-semibold whitespace-nowrap transition-colors ${
+                usuario ? "gap-1.5 px-2.5 py-2 text-sm" : "gap-1 px-2 py-2 text-[11px]"
+              } ${
                 activo
                   ? "bg-brand-primary/10 text-brand-primary"
                   : "text-foreground-muted hover:text-foreground hover:bg-surface-hover"
               }`}
             >
               <Icono className="w-[18px] h-[18px] shrink-0" />
-              <span className={usuario ? "hidden xl:inline" : "hidden"}>{label}</span>
+              <span className="hidden xl:inline">{label}</span>
             </Link>
           );
         })}
