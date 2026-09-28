@@ -2,7 +2,15 @@
 
 import { useEffect, useState } from "react";
 
-export function ThemeToggle() {
+// Las etiquetas vienen del diccionario (NavBar): antes estaban fijas en
+// español y un lector de pantalla las leía así con la app en inglés.
+export function ThemeToggle({
+  etiquetaClaro,
+  etiquetaOscuro,
+}: {
+  etiquetaClaro: string;
+  etiquetaOscuro: string;
+}) {
   const [esOscuro, setEsOscuro] = useState(true);
 
   useEffect(() => {
@@ -48,7 +56,7 @@ export function ThemeToggle() {
   return (
     <button
       onClick={alternar}
-      aria-label={esOscuro ? "Cambiar a modo claro" : "Cambiar a modo oscuro"}
+      aria-label={esOscuro ? etiquetaClaro : etiquetaOscuro}
       className="w-9 h-9 flex items-center justify-center rounded-full border border-[var(--border)] hover:bg-[var(--surface-hover)] transition-colors"
     >
       {esOscuro ? "☀️" : "🌙"}

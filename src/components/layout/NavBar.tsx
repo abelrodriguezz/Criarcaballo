@@ -42,7 +42,9 @@ export function NavBar({
 
   return (
     <header className="fixed top-3 inset-x-3 sm:inset-x-4 z-30 max-w-[1080px] mx-auto bg-surface/90 backdrop-blur-md border border-[var(--border)] rounded-2xl shadow-[0_8px_24px_rgba(0,0,0,0.25)] px-3 sm:px-6 py-3 sm:py-4 flex items-center justify-between gap-2">
-      <Link href="/" className="shrink-0">
+      {/* Por debajo de 380px el wordmark se oculta y el SVG es aria-hidden:
+          sin este aria-label el link a Inicio quedaba sin nombre accesible. */}
+      <Link href="/" aria-label="Trade4U" className="shrink-0">
         <Logo />
       </Link>
 
@@ -102,7 +104,7 @@ export function NavBar({
           <>
             <Link
               href="/soporte"
-              aria-label="Mensajes de soporte"
+              aria-label={t.nav.mensajesSoporte}
               className="hidden md:flex relative items-center justify-center w-9 h-9 rounded-full border border-[var(--border)] text-foreground-muted hover:text-foreground hover:bg-surface-hover transition-colors"
             >
               <IconoCampana />
@@ -114,7 +116,7 @@ export function NavBar({
             </Link>
             <Link
               href="/perfil"
-              aria-label="Perfil"
+              aria-label={t.nav.perfil}
               className={`hidden md:flex items-center justify-center w-9 h-9 rounded-full border transition-colors ${
                 pathname === "/perfil"
                   ? "border-brand-primary/40 bg-brand-primary/15 text-brand-primary"
@@ -138,7 +140,10 @@ export function NavBar({
           </Link>
         )}
         <LanguageToggle locale={locale} />
-        <ThemeToggle />
+        <ThemeToggle
+          etiquetaClaro={t.nav.cambiarAModoClaro}
+          etiquetaOscuro={t.nav.cambiarAModoOscuro}
+        />
       </div>
     </header>
   );

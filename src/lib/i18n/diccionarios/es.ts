@@ -15,6 +15,9 @@ export const es = {
     nosotros: "Nosotros",
     nosotrosCorto: "Info",
     iniciarSesion: "Iniciar sesión",
+    mensajesSoporte: "Mensajes de soporte",
+    cambiarAModoClaro: "Cambiar a modo claro",
+    cambiarAModoOscuro: "Cambiar a modo oscuro",
   },
   home: {
     ctaCrearCuenta: "Crear cuenta gratis",

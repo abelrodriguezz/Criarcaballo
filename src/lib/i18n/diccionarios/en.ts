@@ -17,6 +17,9 @@ export const en: typeof es = {
     nosotros: "About",
     nosotrosCorto: "About",
     iniciarSesion: "Log in",
+    mensajesSoporte: "Support messages",
+    cambiarAModoClaro: "Switch to light mode",
+    cambiarAModoOscuro: "Switch to dark mode",
   },
   home: {
     ctaCrearCuenta: "Create free account",
