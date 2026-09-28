@@ -6,12 +6,9 @@
  * Por qué existe: el navegador tiene la anon key de Supabase (viaja en el
  * bundle, es pública por diseño), así que cualquier usuario logueado puede
  * llamar un RPC directo desde la consola, saltándose los server actions de
- * Next.js. Eso hacía inútil que el server action consultara el precio real
- * en Binance: bastaba con llamar `abrir_operacion` a mano con el precio de
- * entrada que uno quisiera. Este valor solo existe en el entorno del
- * servidor (sin prefijo NEXT_PUBLIC_), así que es lo único que la base de
- * datos puede usar para distinguir "me llamó la app" de "me llamó alguien
- * con la anon key".
+ * Next.js. Este valor solo existe en el entorno del servidor (sin prefijo
+ * NEXT_PUBLIC_), así que es lo único que la base de datos puede usar para
+ * distinguir "me llamó la app" de "me llamó alguien con la anon key".
  *
  * IMPORTANTE: este módulo solo se puede importar desde Server Components o
  * Server Actions. Si se importara desde un componente "use client", el

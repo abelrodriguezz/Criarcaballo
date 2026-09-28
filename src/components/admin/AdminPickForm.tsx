@@ -5,8 +5,6 @@ import { useRouter } from "next/navigation";
 import { crearClienteSupabase } from "@/lib/supabase/client";
 import { fechaEnNY } from "@/lib/horarioMercado";
 
-const FORMATO_PAR = /^[A-Z0-9]{5,20}$/;
-
 export function AdminPickForm() {
   const router = useRouter();
   const [activo, setActivo] = useState("");
@@ -19,53 +17,18 @@ export function AdminPickForm() {
     e.preventDefault();
     setError(null);
 
+    // Campo de texto libre a propósito: el pick ya no es necesariamente un
+    // par de Binance (acciones, forex, materias primas, etc. no existen
+    // ahí), y desde que el admin fija precio de entrada/salida a mano al
+    // cerrar (migración 056), tampoco depende de que Binance reconozca el
+    // símbolo para nada — así que no se valida contra ninguna API externa.
     const activoNormalizado = activo.trim().toUpperCase();
-    if (!FORMATO_PAR.test(activoNormalizado)) {
-      setError(
-        "Debe ser el par completo de Binance (moneda + moneda de cotización), ej. BTCUSDT — no solo BTC."
-      );
+    if (!activoNormalizado) {
+      setError("Ingresa el nombre del activo.");
       return;
     }
 
     setGuardando(true);
-
-    // El regex de arriba solo valida forma (largo/mayúsculas), no que el
-    // par realmente exista en Binance — un typo como "BTCUSD" (sin la
-    // "T") pasaba igual y dejaba a todos sin poder operar hasta que
-    // alguien lo notara al intentar abrir una operación. Se confirma
-    // contra la misma API pública que usa el resto de la app antes de
-    // guardar.
-    try {
-      const resPrecio = await fetch(
-        `https://api.binance.com/api/v3/ticker/price?symbol=${encodeURIComponent(activoNormalizado)}`,
-        { signal: AbortSignal.timeout(8_000) }
-      );
-      if (!resPrecio.ok) {
-        setGuardando(false);
-        setError(
-          `"${activoNormalizado}" no existe en Binance. Revisa que sea el par completo (ej. BTCUSDT, no BTCUSD).`
-        );
-        return;
-      }
-    } catch {
-      // Binance responde el 400 de "Invalid symbol" SIN cabecera CORS, así
-      // que el navegador lo convierte en un error de red y el `!res.ok` de
-      // arriba nunca se ve. Para distinguir "par inexistente" de "no hay
-      // conexión con Binance" se prueba un par que seguro existe.
-      const binanceResponde = await fetch(
-        "https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDT",
-        { signal: AbortSignal.timeout(8_000) }
-      )
-        .then((r) => r.ok)
-        .catch(() => false);
-      setGuardando(false);
-      setError(
-        binanceResponde
-          ? `"${activoNormalizado}" no existe en Binance. Revisa que sea el par completo (ej. BTCUSDT, no BTCUSD).`
-          : "No se pudo verificar el par contra Binance. Intenta de nuevo."
-      );
-      return;
-    }
 
     const supabase = crearClienteSupabase();
     const { error } = await supabase.from("pick_del_dia").insert({
@@ -124,7 +87,8 @@ export function AdminPickForm() {
         required
         value={activo}
         onChange={(e) => setActivo(e.target.value)}
-        aria-label="Par de Binance" placeholder="Par completo de Binance (ej. BTCUSDT, no solo BTC)"
+        aria-label="Nombre del activo"
+        placeholder="Nombre del activo (ej. BTCUSDT, GOLDUSD, AAPL)"
         className="w-full px-3 py-2 mb-2.5 rounded-lg border border-[var(--border)] bg-background text-sm"
       />
       <textarea

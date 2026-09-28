@@ -190,7 +190,13 @@ export default async function PaginaTradeDelDia() {
                     {op.tipo === "compra" ? t.tradeDelDia.compra : t.tradeDelDia.venta}
                   </div>
                   <div className="text-[12px] text-foreground-muted">
-                    {t.tradeDelDia.entrada} ${formatearPrecio(op.precio_entrada)} →{" "}
+                    {/* Esta lista solo trae operaciones "cerradas" (query de
+                        arriba), así que precio_entrada siempre debería venir
+                        seteado — pero el tipo quedó nullable desde que
+                        abrir_operacion ya no captura ningún precio al abrir
+                        (migración 060), así que se cubre igual el caso. */}
+                    {t.tradeDelDia.entrada} $
+                    {op.precio_entrada != null ? formatearPrecio(op.precio_entrada) : "—"} →{" "}
                     {t.tradeDelDia.salida} $
                     {op.precio_salida != null ? formatearPrecio(op.precio_salida) : "—"}
                   </div>

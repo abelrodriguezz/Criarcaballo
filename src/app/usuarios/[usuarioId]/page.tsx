@@ -207,7 +207,13 @@ export default async function PaginaDetalleUsuario({
                   )}
                 </div>
                 <div className="text-[12px] text-foreground-muted">
-                  Entrada ${formatearPrecio(op.precio_entrada)}
+                  {/* precio_entrada queda null hasta que el admin cierra
+                      (migración 060): ya no se captura ningún precio al
+                      abrir, así que una operación abierta todavía no tiene
+                      uno que mostrar. */}
+                  {op.precio_entrada != null
+                    ? `Entrada $${formatearPrecio(op.precio_entrada)}`
+                    : "Entrada pendiente"}
                   {op.precio_salida != null &&
                     ` → Salida $${formatearPrecio(op.precio_salida)}`}{" "}
                   · {new Date(op.created_at).toLocaleString("es-DO", {

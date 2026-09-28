@@ -3,13 +3,10 @@
 import { revalidatePath } from "next/cache";
 import { crearClienteSupabaseServidor } from "@/lib/supabase/server";
 import { esAdmin } from "@/lib/auth/sesion";
-import { obtenerPrecioCripto } from "@/lib/market/binance";
 import { estaAbiertaBolsaNY } from "@/lib/horarioMercado";
 import { obtenerSecretoServidor } from "@/lib/supabase/secretoServidor";
 import { parsearNumero } from "@/lib/format";
 import { exito, fallo, type Resultado } from "@/lib/actions/resultado";
-
-const FORMATO_SIMBOLO = /^[A-Z0-9]{5,20}$/;
 
 /**
  * Los fallos esperados se DEVUELVEN, no se lanzan: en producción Next.js
@@ -52,13 +49,18 @@ export async function abrirOperacion(
     );
   }
 
-  const activo = String(formData.get("activo")).toUpperCase();
+  const activo = String(formData.get("activo")).toUpperCase().trim();
   const tipo = String(formData.get("tipo"));
   // parsearNumero (no parseFloat) por si el navegador/autocompletado manda
   // el monto con comas de miles: parseFloat("10,000") devuelve 10.
   const montoUsado = parsearNumero(String(formData.get("monto")));
 
-  if (!FORMATO_SIMBOLO.test(activo)) {
+  // Sin formato de "par de Binance": el pick ya puede ser cualquier activo
+  // (acciones, forex, materias primas), así que solo se valida que no
+  // venga vacío ni absurdamente largo. La verificación real de seguridad
+  // es la que sigue abajo (coincide con el pick vigente), no la forma del
+  // texto.
+  if (!activo || activo.length > 30) {
     return fallo("Símbolo de activo inválido.");
   }
   if (tipo !== "compra" && tipo !== "venta") {
@@ -82,39 +84,23 @@ export async function abrirOperacion(
     return fallo("Ese activo ya no es el pick del día vigente.");
   }
 
-  // El precio SIEMPRE se obtiene aquí, en el servidor — nunca confiar en un
-  // precio que venga del formulario/navegador, para que no se pueda manipular.
+  // Ya no se busca ningún precio en vivo (ni Binance ni ninguna otra
+  // fuente) al abrir: desde la migración 056, el precio de entrada que
+  // cuenta de verdad es el que el admin fija a mano al cerrar la operación
+  // en bloque — el que se capturara aquí al abrir nunca se usaba para el
+  // cálculo final. Abrir una operación queda igual para el usuario, solo
+  // que ya no depende de ninguna API externa para funcionar.
   //
-  // Si Binance falla, responde con un cuerpo raro o tarda demasiado, hay
-  // que abortar con un mensaje entendible: guardar una operación con
-  // precio_entrada 0 o NaN dividiría por cero al calcular la cantidad, o
-  // daría una ganancia absurda al liquidarla.
-  let precio: number;
-  try {
-    ({ precio } = await obtenerPrecioCripto(activo));
-  } catch {
-    return fallo(
-      `No se pudo obtener el precio de ${activo} en este momento. Inténtalo de nuevo en unos segundos.`
-    );
-  }
-
-  if (!Number.isFinite(precio) || precio <= 0) {
-    return fallo(
-      `No se pudo obtener un precio válido de ${activo} en este momento. Inténtalo de nuevo.`
-    );
-  }
-
   // Abrir la operación y descontar el saldo pasa por una función de base de
-  // datos (abrir_operacion, ver migraciones 010 y 019) que hace todo en una
-  // sola transacción atómica con bloqueo de fila — así dos clics rápidos o
-  // dos pestañas no pueden abrir dos operaciones ni descontar el saldo dos
-  // veces. El p_secreto es lo que le prueba a Postgres que la llamada viene
-  // de este servidor y no de alguien usando la anon key desde el navegador
-  // con un precio de entrada inventado (ver migración 019).
+  // datos (abrir_operacion, ver migraciones 010, 019 y 060) que hace todo
+  // en una sola transacción atómica con bloqueo de fila — así dos clics
+  // rápidos o dos pestañas no pueden abrir dos operaciones ni descontar el
+  // saldo dos veces. El p_secreto es lo que le prueba a Postgres que la
+  // llamada viene de este servidor y no de alguien usando la anon key
+  // desde el navegador (ver migración 019).
   const { error } = await supabase.rpc("abrir_operacion", {
     p_activo: activo,
     p_tipo: tipo,
-    p_precio: precio,
     p_monto: montoUsado,
     p_secreto: obtenerSecretoServidor(),
   });

@@ -58,8 +58,8 @@ export interface OperacionSimulada {
   usuario_id: string;
   activo: string;
   tipo: "compra" | "venta";
-  precio_entrada: number;
-  cantidad: number;
+  precio_entrada: number | null;
+  cantidad: number | null;
   monto_usado: number;
   precio_salida: number | null;
   ganancia_perdida: number | null;
