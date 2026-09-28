@@ -19,13 +19,22 @@ export default async function PaginaDepositos() {
 
   const supabase = await crearClienteSupabaseServidor();
 
-  const { data: depositosRaw } = await supabase
-    .from("depositos_simulados")
-    .select("*, usuarios!usuario_id(email, id_corto, nombre)")
-    .order("created_at", { ascending: false })
-    .returns<DepositoConUsuario[]>();
+  const [{ data: depositosRaw }, { data: saldosRaw }] = await Promise.all([
+    supabase
+      .from("depositos_simulados")
+      .select("*, usuarios!usuario_id(email, id_corto, nombre)")
+      .order("created_at", { ascending: false })
+      .returns<DepositoConUsuario[]>(),
+    // Solo para poder avisarle al admin, al revertir un depósito ya
+    // pagado, si el usuario ya gastó ese saldo (una operación abierta usa
+    // el saldo completo) y la reversión no le va a quedar exacta.
+    supabase.from("saldo_virtual").select("usuario_id, saldo_usd"),
+  ]);
 
   const depositos = depositosRaw ?? [];
+  const saldoPorUsuario = new Map(
+    (saldosRaw ?? []).map((s) => [s.usuario_id, Number(s.saldo_usd)])
+  );
 
   // URL firmada por depósito (bucket privado, igual que en el chat de
   // soporte) — se resuelve aquí en el servidor porque esta pantalla ya es
@@ -98,7 +107,12 @@ export default async function PaginaDepositos() {
             </a>
           )}
         </div>
-        <BotonPagoDeposito depositoId={d.id} pagado={d.pagado} />
+        <BotonPagoDeposito
+          depositoId={d.id}
+          pagado={d.pagado}
+          monto={Number(d.monto)}
+          saldoActual={saldoPorUsuario.get(d.usuario_id) ?? 0}
+        />
       </div>
     );
   }

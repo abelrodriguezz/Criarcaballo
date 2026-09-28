@@ -11,17 +11,22 @@ export default async function PaginaUsuarios() {
   if (!esAdmin(usuarioActual)) redirect("/perfil");
 
   const supabase = await crearClienteSupabaseServidor();
-  const [{ data: usuarios }, { data: depositosSimulados }] = await Promise.all([
-    supabase
-      .from("usuarios")
-      .select("*")
-      .order("created_at", { ascending: false })
-      .returns<Usuario[]>(),
-    supabase
-      .from("depositos_simulados")
-      .select("*")
-      .returns<DepositoSimulado[]>(),
-  ]);
+  const [{ data: usuarios }, { data: depositosSimulados }, { data: saldos }] =
+    await Promise.all([
+      supabase
+        .from("usuarios")
+        .select("*")
+        .order("created_at", { ascending: false })
+        .returns<Usuario[]>(),
+      supabase
+        .from("depositos_simulados")
+        .select("*")
+        .returns<DepositoSimulado[]>(),
+      // Solo para poder avisarle al admin, al borrar/revertir un depósito
+      // ya pagado, si el usuario ya gastó ese saldo (una operación abierta
+      // usa el saldo completo) y la reversión no le va a quedar exacta.
+      supabase.from("saldo_virtual").select("usuario_id, saldo_usd"),
+    ]);
 
   return (
     <div className="py-10">
@@ -44,6 +49,7 @@ export default async function PaginaUsuarios() {
           usuarios={usuarios}
           miId={usuarioActual.id}
           depositosSimulados={depositosSimulados ?? []}
+          saldos={saldos ?? []}
         />
       )}
     </div>

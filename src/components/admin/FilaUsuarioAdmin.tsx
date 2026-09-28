@@ -13,11 +13,14 @@ export function FilaUsuarioAdmin({
   esUnoMismo,
   cantidadInvitados,
   depositoSimulado,
+  saldoActual,
 }: {
   usuario: Usuario;
   esUnoMismo: boolean;
   cantidadInvitados: number;
   depositoSimulado: DepositoSimulado | null;
+  /** Saldo de inversión actual del usuario — solo para armar el aviso de abajo. */
+  saldoActual: number;
 }) {
   const router = useRouter();
   const [guardando, setGuardando] = useState(false);
@@ -27,6 +30,23 @@ export function FilaUsuarioAdmin({
   // 029. La base ya lo bloquea; esto es solo para no mostrarle a otro
   // admin controles que van a fallar con un error de Postgres.
   const protegido = usuario.es_principal && !esUnoMismo;
+
+  // Texto de confirmación armado a mano (no un valor fijo): si el depósito
+  // ya estaba pagado, avisa que borrar también le resta el saldo al
+  // usuario — y si ese usuario ya gastó parte o todo ese dinero (por
+  // ejemplo abrió una operación, que usa el saldo completo), la reversión
+  // se topa en $0 y no queda exacta (greatest(0, ...) en la base), así que
+  // se le avisa al admin para que lo revise a mano después de borrar.
+  let textoConfirmacionDeposito = "¿Eliminar este depósito simulado (pendiente, sin acreditar)? El usuario podrá volver a hacer la simulación.";
+  if (depositoSimulado?.pagado) {
+    const monto = Number(depositoSimulado.monto);
+    const saldoInsuficiente = saldoActual < monto;
+    textoConfirmacionDeposito =
+      `¿Eliminar este depósito ya PAGADO de $${monto.toFixed(2)}? Esto también le restará $${monto.toFixed(2)} del saldo de inversión del usuario, y podrá volver a depositar.` +
+      (saldoInsuficiente
+        ? ` ⚠️ Este usuario ya usó parte o todo este dinero (su saldo actual es de $${saldoActual.toFixed(2)}, menor al monto del depósito) — la reversión no le va a quedar exacta (el saldo nunca baja de $0). Revísalo a mano después de borrar.`
+        : "");
+  }
 
   async function cambiarRol(nuevoRol: "user" | "admin") {
     if (esUnoMismo || protegido) return; // ver select deshabilitado — nunca debería llamarse
@@ -118,7 +138,7 @@ export function FilaUsuarioAdmin({
           </div>
         )}
         {depositoSimulado && (
-          <div className="flex items-center gap-2 mt-1">
+          <div className="flex items-center gap-2 mt-1 flex-wrap">
             <span className="text-[11px] font-bold bg-gain/15 text-gain px-2 py-0.5 rounded-full">
               {/* formatearDinero en vez de .toFixed: un numeric no finito
                   ("NaN"/"Infinity") llega desde PostgREST como string y
@@ -126,10 +146,19 @@ export function FilaUsuarioAdmin({
                   página (500), dejando al admin sin Gestión de usuarios. */}
               Depósito simulado: ${formatearDinero(Number(depositoSimulado.monto))}
             </span>
+            <span
+              className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${
+                depositoSimulado.pagado
+                  ? "bg-brand-primary/15 text-brand-primary"
+                  : "bg-surface-hover text-foreground-muted"
+              }`}
+            >
+              {depositoSimulado.pagado ? "Pagado" : "Pendiente"}
+            </span>
             <BotonEliminarAdmin
               tabla="depositos_simulados"
               id={depositoSimulado.id}
-              textoConfirmacion="¿Eliminar este depósito simulado? El usuario podrá volver a hacer la simulación una vez."
+              textoConfirmacion={textoConfirmacionDeposito}
             />
           </div>
         )}

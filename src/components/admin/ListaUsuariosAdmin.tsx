@@ -8,10 +8,12 @@ export function ListaUsuariosAdmin({
   usuarios,
   miId,
   depositosSimulados,
+  saldos,
 }: {
   usuarios: Usuario[];
   miId: string;
   depositosSimulados: DepositoSimulado[];
+  saldos: { usuario_id: string; saldo_usd: number }[];
 }) {
   const [busqueda, setBusqueda] = useState("");
 
@@ -20,6 +22,12 @@ export function ListaUsuariosAdmin({
     for (const d of depositosSimulados) mapa.set(d.usuario_id, d);
     return mapa;
   }, [depositosSimulados]);
+
+  const saldoPorUsuario = useMemo(() => {
+    const mapa = new Map<string, number>();
+    for (const s of saldos) mapa.set(s.usuario_id, Number(s.saldo_usd));
+    return mapa;
+  }, [saldos]);
 
   // Se calcula una sola vez a partir de la lista completa — cada usuario
   // ya trae su propio invitado_por, así que contar cuántos apuntan a cada
@@ -68,6 +76,7 @@ export function ListaUsuariosAdmin({
               esUnoMismo={u.id === miId}
               cantidadInvitados={conteoInvitados.get(u.id) ?? 0}
               depositoSimulado={depositosPorUsuario.get(u.id) ?? null}
+              saldoActual={saldoPorUsuario.get(u.id) ?? 0}
             />
           ))}
         </div>
