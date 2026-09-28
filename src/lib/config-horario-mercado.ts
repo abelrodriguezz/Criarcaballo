@@ -34,15 +34,50 @@ async function obtenerHorarioGuardado(): Promise<Partial<ConfigHorarioMercado>> 
   return (data?.valor as Partial<ConfigHorarioMercado> | undefined) ?? {};
 }
 
-export async function obtenerHorarioMercado(): Promise<ConfigHorarioMercado> {
-  const guardado = await obtenerHorarioGuardado();
+/** "HH:MM" 24h válido (00:00-23:59) — el mismo patrón que valida la RPC. */
+export const PATRON_HORA_HHMM = /^([01][0-9]|2[0-3]):[0-5][0-9]$/;
+
+/**
+ * Cada campo inválido (hora vacía o mal formada, días fuera de 1-7, tipos
+ * raros) cae a su valor por defecto. Tiene que ser EXACTAMENTE la misma
+ * regla que aplica abrir_operacion en la base (migración 065): si no, la
+ * UI podría mostrar el mercado abierto mientras la base rechaza (o al
+ * revés). Antes, {"apertura": ""} guardado desde el formulario hacía que
+ * la UI usara el default y la base reventara con un error crudo de
+ * Postgres para todos los usuarios.
+ */
+function normalizarHorario(
+  guardado: Record<string, unknown>
+): ConfigHorarioMercado {
+  const hora = (v: unknown, porDefecto: string) =>
+    typeof v === "string" && PATRON_HORA_HHMM.test(v) ? v : porDefecto;
+
+  const dias = Array.isArray(guardado.dias)
+    ? [
+        ...new Set(
+          guardado.dias
+            .filter((d) => /^[1-7]$/.test(String(d)))
+            .map((d) => Number(d))
+        ),
+      ].sort()
+    : [];
 
   return {
-    apertura: guardado.apertura || HORARIO_MERCADO_POR_DEFECTO.apertura,
-    cierre: guardado.cierre || HORARIO_MERCADO_POR_DEFECTO.cierre,
-    dias: guardado.dias?.length ? guardado.dias : HORARIO_MERCADO_POR_DEFECTO.dias,
-    abierto_siempre: guardado.abierto_siempre ?? HORARIO_MERCADO_POR_DEFECTO.abierto_siempre,
+    apertura: hora(guardado.apertura, HORARIO_MERCADO_POR_DEFECTO.apertura),
+    cierre: hora(guardado.cierre, HORARIO_MERCADO_POR_DEFECTO.cierre),
+    dias: dias.length ? dias : HORARIO_MERCADO_POR_DEFECTO.dias,
+    abierto_siempre:
+      guardado.abierto_siempre === true || guardado.abierto_siempre === "true",
   };
+}
+
+export async function obtenerHorarioMercado(): Promise<ConfigHorarioMercado> {
+  const guardado = await obtenerHorarioGuardado();
+  return normalizarHorario(
+    guardado && typeof guardado === "object" && !Array.isArray(guardado)
+      ? (guardado as Record<string, unknown>)
+      : {}
+  );
 }
 
 /** "9:30 a.m." / "9:30 AM" a partir de "09:30". */

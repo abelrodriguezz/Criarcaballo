@@ -5,6 +5,7 @@ import { crearClienteSupabaseServidor } from "@/lib/supabase/server";
 import { esAdmin } from "@/lib/auth/sesion";
 import { estaAbiertaBolsaNY, fechaEnNY } from "@/lib/horarioMercado";
 import { obtenerHorarioMercado, formatearHorarioMercado } from "@/lib/config-horario-mercado";
+import { obtenerLocale } from "@/lib/i18n/servidor";
 import { obtenerSecretoServidor } from "@/lib/supabase/secretoServidor";
 import { parsearNumero } from "@/lib/format";
 import { exito, fallo, type Resultado } from "@/lib/actions/resultado";
@@ -48,7 +49,7 @@ export async function abrirOperacion(
   // en el código (lunes a viernes, 9:30am-4:00pm hora de NY).
   const horarioMercado = await obtenerHorarioMercado();
   if (!usuarioEsAdmin && !estaAbiertaBolsaNY(horarioMercado)) {
-    return fallo(formatearHorarioMercado(horarioMercado, "es"));
+    return fallo(formatearHorarioMercado(horarioMercado, await obtenerLocale()));
   }
 
   const activo = String(formData.get("activo")).toUpperCase().trim();

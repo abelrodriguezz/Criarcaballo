@@ -3,7 +3,11 @@
 import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { crearClienteSupabase } from "@/lib/supabase/client";
-import type { ConfigHorarioMercado } from "@/lib/config-horario-mercado";
+import type { ConfigHorarioMercado } from "@/lib/horarioMercado";
+
+// Mismo patrón que PATRON_HORA_HHMM de lib/config-horario-mercado.ts (no se
+// importa de ahí porque ese módulo toca el cliente Supabase de servidor).
+const PATRON_HORA_HHMM = /^([01][0-9]|2[0-3]):[0-5][0-9]$/;
 
 // Mismo patrón visual que AdminSimulacionForm/AdminPickForm — pantalla solo
 // de admin, textos fijos en español a propósito (decisión del usuario,
@@ -44,6 +48,16 @@ export function AdminHorarioMercadoForm({
 
     if (!horario.abierto_siempre && horario.dias.length === 0) {
       setError("Marca al menos un día habilitado, o activa \"cualquier momento\".");
+      return;
+    }
+    // Un <input type="time"> que el admin vacía manda "" — sin esto,
+    // "" >= "16:00" es false y se guardaba una apertura vacía.
+    if (
+      !horario.abierto_siempre &&
+      (!PATRON_HORA_HHMM.test(horario.apertura) ||
+        !PATRON_HORA_HHMM.test(horario.cierre))
+    ) {
+      setError("Completa la hora de apertura y la de cierre.");
       return;
     }
     if (!horario.abierto_siempre && horario.apertura >= horario.cierre) {
