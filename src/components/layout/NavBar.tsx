@@ -50,7 +50,16 @@ export function NavBar({
           perfil, idioma y tema: el header (fixed, ancho del viewport)
           cortaba Perfil/ES-EN/tema fuera de la pantalla, sin forma de
           llegar a ellos (la barra de abajo solo existe por debajo de md).
-          En ese rango se muestran solo los íconos. */}
+          En ese rango se muestran solo los íconos.
+
+          Sin sesión, el botón "Iniciar sesión" es más ancho que los dos
+          íconos circulares (campana+perfil) que ocupa ese espacio cuando sí
+          hay sesión. El header tiene un ancho MÁXIMO fijo (1080px) que no
+          crece aunque la pantalla sea más ancha, así que ese espacio de
+          más no lo da ningún tamaño de ventana: con las etiquetas de texto
+          visibles (xl+), "Nosotros" quedaba tapado por "Iniciar sesión" en
+          CUALQUIER resolución de escritorio (reproducido de 1280px a
+          1920px). Sin sesión, el menú se queda siempre en solo íconos. */}
       <nav className="hidden md:flex items-center gap-1 min-w-0">
         {ENLACES.map(({ href, label, Icono }) => {
           const activo = pathname === href;
@@ -67,7 +76,7 @@ export function NavBar({
               }`}
             >
               <Icono className="w-[18px] h-[18px] shrink-0" />
-              <span className="hidden xl:inline">{label}</span>
+              <span className={usuario ? "hidden xl:inline" : "hidden"}>{label}</span>
             </Link>
           );
         })}
