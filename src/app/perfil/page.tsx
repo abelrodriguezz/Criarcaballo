@@ -189,6 +189,12 @@ export default async function PaginaPerfil() {
                 ID: {perfilExtra.id_corto}
               </div>
             )}
+            {perfilExtra?.nombre && (
+              <>
+                <div className="text-[13px] text-foreground-muted">{t.perfil.nombre}</div>
+                <div className="font-medium text-sm mb-1.5">{perfilExtra.nombre}</div>
+              </>
+            )}
             <div className="text-[13px] text-foreground-muted">{t.perfil.correo}</div>
             <div className="font-medium text-sm break-all">
               {usuario.email}

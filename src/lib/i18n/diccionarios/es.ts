@@ -118,6 +118,7 @@ export const es = {
   },
   perfil: {
     titulo: "Perfil",
+    nombre: "Nombre",
     correo: "Correo",
     saldoDeInversion: "Saldo de Inversión",
     walletTitulo: "Wallet para recompensas (USDT · ERC20)",

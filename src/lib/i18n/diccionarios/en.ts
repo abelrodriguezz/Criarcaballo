@@ -116,6 +116,7 @@ export const en: typeof es = {
   },
   perfil: {
     titulo: "Profile",
+    nombre: "Name",
     correo: "Email",
     saldoDeInversion: "Investment Balance",
     walletTitulo: "Rewards wallet (USDT · ERC20)",
