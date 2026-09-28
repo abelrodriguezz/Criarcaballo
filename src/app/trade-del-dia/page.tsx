@@ -70,6 +70,48 @@ export default async function PaginaTradeDelDia() {
     ...new Set((simbolosAbiertosRaw ?? []).map((o) => o.activo)),
   ];
 
+  // Panel de la operación abierta del usuario. Se muestra también cuando NO
+  // hay pick vigente hoy: desde la migración 062 el pick vence al terminar
+  // el día NY (o el admin lo puede eliminar), pero la operación abierta
+  // sobre él sigue viva hasta que el admin la cierre — sin esto el usuario
+  // veía solo "no hay pick" y su saldo en $0 en /perfil, sin rastro de
+  // dónde estaba su dinero.
+  const panelOperacion = operacionAbierta ? (
+    <>
+      <div className="text-[13px] text-foreground-muted mb-0.5">
+        {t.tradeDelDia.operacionAbierta}
+      </div>
+      <div className="font-display font-semibold text-base">
+        {operacionAbierta.activo} ·{" "}
+        {operacionAbierta.tipo === "compra"
+          ? t.tradeDelDia.compra
+          : t.tradeDelDia.venta}
+      </div>
+      <div className="text-[12px] text-foreground-muted">
+        {t.tradeDelDia.abiertaALas}{" "}
+        {new Date(operacionAbierta.created_at).toLocaleTimeString(
+          locale === "en" ? "en-US" : "es-DO",
+          { hour: "2-digit", minute: "2-digit" }
+        )}{" "}
+        ·{" "}
+        {new Date(operacionAbierta.created_at).toLocaleDateString(
+          locale === "en" ? "en-US" : "es-DO",
+          { day: "numeric", month: "short" }
+        )}
+      </div>
+      <div className="flex items-center gap-1.5 text-[12px] text-foreground-muted bg-surface px-3 py-2 rounded-lg">
+        <IconoInfo />
+        {t.tradeDelDia.resultadoSeDefine}
+      </div>
+      <div className="font-display font-bold text-xl text-foreground-muted">
+        $0.00 {t.tradeDelDia.flotante}
+      </div>
+      <p className="text-[13px] text-foreground-muted mt-2">
+        {t.tradeDelDia.soloAdminCierra}
+      </p>
+    </>
+  ) : null;
+
   return (
     <div className="py-10">
       <h1 className="font-display font-semibold text-[26px] flex items-center gap-2.5 mb-1.5">
@@ -88,9 +130,16 @@ export default async function PaginaTradeDelDia() {
       )}
 
       {!pick ? (
-        <p className="text-foreground-muted text-sm border border-dashed border-[var(--border)] rounded-2xl p-6 text-center">
-          {t.tradeDelDia.sinPick}
-        </p>
+        <div className="flex flex-col gap-4">
+          <p className="text-foreground-muted text-sm border border-dashed border-[var(--border)] rounded-2xl p-6 text-center">
+            {t.tradeDelDia.sinPick}
+          </p>
+          {panelOperacion && (
+            <div className="border border-[var(--border)] rounded-2xl p-5 flex flex-col gap-2">
+              {panelOperacion}
+            </div>
+          )}
+        </div>
       ) : (
         <div className="grid md:grid-cols-[1.3fr_1fr] gap-4">
           <div className="border border-[var(--border)] rounded-2xl p-5 flex flex-col gap-3.5">
@@ -135,41 +184,7 @@ export default async function PaginaTradeDelDia() {
           </div>
 
           <div className="border border-[var(--border)] rounded-2xl p-5 flex flex-col gap-2">
-            {operacionAbierta ? (
-              <>
-                <div className="text-[13px] text-foreground-muted mb-0.5">
-                  {t.tradeDelDia.operacionAbierta}
-                </div>
-                <div className="font-display font-semibold text-base">
-                  {operacionAbierta.activo} ·{" "}
-                  {operacionAbierta.tipo === "compra"
-                    ? t.tradeDelDia.compra
-                    : t.tradeDelDia.venta}
-                </div>
-                <div className="text-[12px] text-foreground-muted">
-                  {t.tradeDelDia.abiertaALas}{" "}
-                  {new Date(operacionAbierta.created_at).toLocaleTimeString(
-                    locale === "en" ? "en-US" : "es-DO",
-                    { hour: "2-digit", minute: "2-digit" }
-                  )}{" "}
-                  ·{" "}
-                  {new Date(operacionAbierta.created_at).toLocaleDateString(
-                    locale === "en" ? "en-US" : "es-DO",
-                    { day: "numeric", month: "short" }
-                  )}
-                </div>
-                <div className="flex items-center gap-1.5 text-[12px] text-foreground-muted bg-surface px-3 py-2 rounded-lg">
-                  <IconoInfo />
-                  {t.tradeDelDia.resultadoSeDefine}
-                </div>
-                <div className="font-display font-bold text-xl text-foreground-muted">
-                  $0.00 {t.tradeDelDia.flotante}
-                </div>
-                <p className="text-[13px] text-foreground-muted mt-2">
-                  {t.tradeDelDia.soloAdminCierra}
-                </p>
-              </>
-            ) : (
+            {panelOperacion ?? (
               <p className="text-sm text-foreground-muted">
                 {t.tradeDelDia.sinOperacionAbierta}
               </p>
