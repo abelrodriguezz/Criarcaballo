@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { crearClienteSupabase } from "@/lib/supabase/client";
 import { Turnstile } from "@/components/auth/Turnstile";
+import { mensajeErrorAuth } from "@/lib/auth/mensajesError";
 import type { Diccionario, Locale } from "@/lib/i18n";
 
 // Sin site key configurada, Turnstile no puede renderizar un widget real y
@@ -13,11 +14,9 @@ import type { Diccionario, Locale } from "@/lib/i18n";
 // exige el token cuando tú actives "Attack Protection" con la secret key.
 const TURNSTILE_CONFIGURADO = !!process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
 
-// `locale` no se usa en este formulario en particular (no pasa por
-// mensajeErrorAuth), pero se recibe para que las 4 páginas de auth tengan
-// la misma firma y no haya que recordar cuál sí la necesita.
 export function LoginForm({
   t,
+  locale,
   cerradaPorInactividad,
 }: {
   t: Diccionario;
@@ -54,7 +53,12 @@ export function LoginForm({
     setCargando(false);
 
     if (error || !data.user) {
-      setError(t.auth.correoIncorrecto);
+      // Antes TODO error se mostraba como "Correo o contraseña incorrectos",
+      // incluido `email_not_confirmed`: quien se registró y aún no confirmó
+      // el correo (o nunca le llegó, sin SMTP propio) creía que había escrito
+      // mal la contraseña y reintentaba en bucle. Credenciales inválidas
+      // siguen cayendo en el mensaje de respaldo.
+      setError(mensajeErrorAuth(error, t.auth.correoIncorrecto, locale));
       setCaptchaToken(null); // el token de Turnstile es de un solo uso
       return;
     }
