@@ -195,10 +195,10 @@ export default async function PaginaTradeDelDia() {
                         seteado — pero el tipo quedó nullable desde que
                         abrir_operacion ya no captura ningún precio al abrir
                         (migración 060), así que se cubre igual el caso. */}
-                    {t.tradeDelDia.entrada} $
-                    {op.precio_entrada != null ? formatearPrecio(op.precio_entrada) : "—"} →{" "}
-                    {t.tradeDelDia.salida} $
-                    {op.precio_salida != null ? formatearPrecio(op.precio_salida) : "—"}
+                    {t.tradeDelDia.entrada}{" "}
+                    {op.precio_entrada != null ? `$${formatearPrecio(op.precio_entrada)}` : "—"} →{" "}
+                    {t.tradeDelDia.salida}{" "}
+                    {op.precio_salida != null ? `$${formatearPrecio(op.precio_salida)}` : "—"}
                   </div>
                 </div>
                 {/* shrink-0 + whitespace-nowrap: en móvil el importe se

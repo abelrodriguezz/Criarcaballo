@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import { crearClienteSupabase } from "@/lib/supabase/client";
 import { fechaEnNY } from "@/lib/horarioMercado";
 
+const MAX_LARGO_ACTIVO = 30;
+
 export function AdminPickForm() {
   const router = useRouter();
   const [activo, setActivo] = useState("");
@@ -25,6 +27,13 @@ export function AdminPickForm() {
     const activoNormalizado = activo.trim().toUpperCase();
     if (!activoNormalizado) {
       setError("Ingresa el nombre del activo.");
+      return;
+    }
+    // Mismo límite que abrirOperacion() (paperTrading.ts) y que el CHECK de
+    // pick_del_dia (migración 061): sin esto se podía guardar un pick que
+    // después ningún usuario podía operar ("Símbolo de activo inválido").
+    if (activoNormalizado.length > MAX_LARGO_ACTIVO) {
+      setError(`El nombre del activo no puede tener más de ${MAX_LARGO_ACTIVO} caracteres.`);
       return;
     }
 
@@ -87,6 +96,7 @@ export function AdminPickForm() {
         required
         value={activo}
         onChange={(e) => setActivo(e.target.value)}
+        maxLength={MAX_LARGO_ACTIVO}
         aria-label="Nombre del activo"
         placeholder="Nombre del activo (ej. BTCUSDT, GOLDUSD, AAPL)"
         className="w-full px-3 py-2 mb-2.5 rounded-lg border border-[var(--border)] bg-background text-sm"
