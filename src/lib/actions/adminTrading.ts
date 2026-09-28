@@ -5,6 +5,28 @@ import { crearClienteSupabaseServidor } from "@/lib/supabase/server";
 import { obtenerUsuarioActual, esAdmin } from "@/lib/auth/sesion";
 import { exito, fallo, type Resultado } from "@/lib/actions/resultado";
 
+/**
+ * Elimina el pick del día indicado (solo admin). No hay "editar": para
+ * cambiarlo, se borra el actual y se define uno nuevo — así queda un solo
+ * pick vigente a la vez en vez de acumular filas sin fin en la tabla.
+ */
+export async function eliminarPickDelDia(pickId: string): Promise<Resultado<null>> {
+  const usuario = await obtenerUsuarioActual();
+  if (!usuario || !esAdmin(usuario)) {
+    return fallo("Solo un admin puede hacer esto.");
+  }
+
+  const supabase = await crearClienteSupabaseServidor();
+  const { error } = await supabase.from("pick_del_dia").delete().eq("id", pickId);
+
+  if (error) {
+    return fallo("No se pudo eliminar el pick.");
+  }
+
+  revalidatePath("/trade-del-dia");
+  return exito(null);
+}
+
 /** Lo que el admin escribe una vez por símbolo para cerrar en bloque. */
 export interface DatosCierreSimbolo {
   precioEntrada: number;

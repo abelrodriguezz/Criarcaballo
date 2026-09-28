@@ -95,6 +95,21 @@ body {
   transition: background-color 0.2s ease, color 0.2s ease;
 }
 
+/* El ícono nativo de calendario/reloj de <input type="date|time|datetime-
+   local"> en Chrome/Edge de escritorio se dibuja en gris oscuro fijo —
+   invisible sobre el fondo oscuro de esta app (el tema por defecto). En
+   escritorio hay que darle clic exactamente a ese ícono para que aparezca
+   el selector visual (si no, solo se puede escribir la fecha a mano); en
+   móvil no importa porque el navegador abre el selector nativo tocando
+   cualquier parte del campo. Se invierte el ícono en modo oscuro para que
+   se vea blanco y sea visible/clickeable. */
+[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator,
+[data-theme="dark"] input[type="time"]::-webkit-calendar-picker-indicator,
+[data-theme="dark"] input[type="datetime-local"]::-webkit-calendar-picker-indicator {
+  filter: invert(1);
+  cursor: pointer;
+}
+
 .font-display {
   font-family: var(--font-display), var(--font-sans), sans-serif;
 }

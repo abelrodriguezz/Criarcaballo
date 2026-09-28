@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { crearClienteSupabaseServidor } from "@/lib/supabase/server";
 import { esAdmin } from "@/lib/auth/sesion";
-import { estaAbiertaBolsaNY } from "@/lib/horarioMercado";
+import { estaAbiertaBolsaNY, fechaEnNY } from "@/lib/horarioMercado";
 import { obtenerSecretoServidor } from "@/lib/supabase/secretoServidor";
 import { parsearNumero } from "@/lib/format";
 import { exito, fallo, type Resultado } from "@/lib/actions/resultado";
@@ -72,10 +72,13 @@ export async function abrirOperacion(
 
   // Verifica que el activo sea realmente el pick del día vigente —
   // evita que alguien manipule el campo oculto del formulario para
-  // operar un símbolo distinto al autorizado.
+  // operar un símbolo distinto al autorizado. Solo cuenta el pick si es de
+  // HOY (hora de NY): la RPC (migración 062) re-valida esto mismo, esto
+  // solo evita una petición innecesaria si acá ya sabemos que no aplica.
   const { data: pickVigente } = await supabase
     .from("pick_del_dia")
     .select("activo")
+    .eq("fecha", fechaEnNY())
     .order("created_at", { ascending: false })
     .limit(1)
     .maybeSingle();

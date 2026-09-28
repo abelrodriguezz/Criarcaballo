@@ -4,16 +4,42 @@ import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { crearClienteSupabase } from "@/lib/supabase/client";
 import { fechaEnNY } from "@/lib/horarioMercado";
+import { eliminarPickDelDia } from "@/lib/actions/adminTrading";
+import type { PickDelDia } from "@/lib/types";
 
 const MAX_LARGO_ACTIVO = 30;
 
-export function AdminPickForm() {
+export function AdminPickForm({
+  pickVigente,
+}: {
+  pickVigente: PickDelDia | null;
+}) {
   const router = useRouter();
   const [activo, setActivo] = useState("");
   const [nota, setNota] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [guardando, setGuardando] = useState(false);
   const [abierto, setAbierto] = useState(false);
+  const [eliminando, setEliminando] = useState(false);
+
+  async function manejarEliminar() {
+    if (
+      !window.confirm(
+        `¿Eliminar el pick de hoy (${pickVigente?.activo})? Los usuarios ya no podrán abrir operaciones nuevas hasta que definas otro.`
+      )
+    ) {
+      return;
+    }
+    if (!pickVigente) return;
+    setEliminando(true);
+    const resultado = await eliminarPickDelDia(pickVigente.id);
+    setEliminando(false);
+    if (!resultado.ok) {
+      window.alert(resultado.error);
+      return;
+    }
+    router.refresh();
+  }
 
   async function manejarEnvio(e: FormEvent) {
     e.preventDefault();
@@ -61,6 +87,30 @@ export function AdminPickForm() {
     setNota("");
     setAbierto(false);
     router.refresh();
+  }
+
+  // Con un pick ya vigente hoy, se muestra ese en vez del botón de
+  // "definir" — para cambiarlo, primero hay que eliminarlo. Así queda un
+  // solo pick a la vez en vez de ir acumulando filas sin fin en la tabla
+  // (lo que reportó el usuario: "el pick no vence, siempre está el pick").
+  if (!abierto && pickVigente) {
+    return (
+      <div className="border border-[var(--brand-primary)] bg-[var(--brand-primary)]/5 rounded-2xl p-4 mb-6 flex justify-between items-center gap-3">
+        <div className="min-w-0">
+          <div className="text-[12px] text-foreground-muted">Pick de hoy</div>
+          <div className="font-display font-semibold text-base truncate">
+            {pickVigente.activo}
+          </div>
+        </div>
+        <button
+          onClick={manejarEliminar}
+          disabled={eliminando}
+          className="shrink-0 border border-loss text-loss text-sm font-semibold px-4 py-2 rounded-xl hover:bg-loss/5 disabled:opacity-60 transition-colors"
+        >
+          {eliminando ? "Eliminando..." : "Eliminar"}
+        </button>
+      </div>
+    );
   }
 
   if (!abierto) {

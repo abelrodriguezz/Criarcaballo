@@ -6,7 +6,7 @@ import { AdminPickForm } from "@/components/admin/AdminPickForm";
 import { AbrirOperacionForm } from "@/components/reto/AbrirOperacionForm";
 import { BotonCerrarTodasOperaciones } from "@/components/admin/BotonCerrarTodasOperaciones";
 import { formatearDinero, formatearPrecio } from "@/lib/format";
-import { estaAbiertaBolsaNY } from "@/lib/horarioMercado";
+import { estaAbiertaBolsaNY, fechaEnNY } from "@/lib/horarioMercado";
 import { obtenerDiccionario, obtenerLocale } from "@/lib/i18n/servidor";
 import type { OperacionSimulada, PickDelDia } from "@/lib/types";
 
@@ -28,9 +28,14 @@ export default async function PaginaTradeDelDia() {
     { data: historial },
     { data: simbolosAbiertosRaw },
   ] = await Promise.all([
+    // Solo cuenta como "vigente" si es de HOY (hora de Nueva York) — antes
+    // se tomaba el más reciente que existiera sin importar la fecha, así
+    // que un pick de ayer seguía "vigente" para siempre si nadie definía
+    // uno nuevo.
     supabase
       .from("pick_del_dia")
       .select("*")
+      .eq("fecha", fechaEnNY())
       .order("created_at", { ascending: false })
       .limit(1)
       .maybeSingle<PickDelDia>(),
@@ -77,7 +82,7 @@ export default async function PaginaTradeDelDia() {
 
       {esAdmin(usuario) && (
         <>
-          <AdminPickForm />
+          <AdminPickForm pickVigente={pick ?? null} />
           <BotonCerrarTodasOperaciones simbolos={simbolosAbiertos} />
         </>
       )}
