@@ -56,7 +56,11 @@ export function CierreInactividad() {
       if (Date.now() - ultima >= LIMITE_INACTIVIDAD_MS) {
         cerrandoRef.current = true;
         const supabase = crearClienteSupabase();
-        await supabase.auth.signOut();
+        // scope "local": cierra SOLO la sesión de este navegador. El default
+        // de supabase-js es "global" (revoca todas las sesiones de la
+        // cuenta), y entonces una PC olvidada con la app abierta echaba al
+        // usuario de su celular mientras lo estaba usando.
+        await supabase.auth.signOut({ scope: "local" });
         router.push("/login?motivo=inactividad");
         router.refresh();
       }
