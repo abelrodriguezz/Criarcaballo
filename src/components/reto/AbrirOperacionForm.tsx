@@ -9,12 +9,15 @@ export function AbrirOperacionForm({
   activo,
   saldoDisponible,
   mercadoAbierto,
+  mensajeMercadoCerrado,
   esAdmin,
   t,
 }: {
   activo: string;
   saldoDisponible: number;
   mercadoAbierto: boolean;
+  /** Horario configurado (migración 064), ya formateado en el idioma actual. */
+  mensajeMercadoCerrado?: string;
   esAdmin: boolean;
   t: Diccionario;
 }) {
@@ -92,7 +95,7 @@ export function AbrirOperacionForm({
         <p className="text-[12px] text-brand-secondary bg-brand-secondary/10 rounded-lg px-3 py-2">
           {esAdmin
             ? t.abrirOperacion.mercadoCerradoAdmin
-            : t.abrirOperacion.mercadoCerrado}
+            : mensajeMercadoCerrado || t.abrirOperacion.mercadoCerrado}
         </p>
       )}
 

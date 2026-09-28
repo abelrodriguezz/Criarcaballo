@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { crearClienteSupabaseServidor } from "@/lib/supabase/server";
 import { esAdmin } from "@/lib/auth/sesion";
 import { estaAbiertaBolsaNY, fechaEnNY } from "@/lib/horarioMercado";
+import { obtenerHorarioMercado, formatearHorarioMercado } from "@/lib/config-horario-mercado";
 import { obtenerSecretoServidor } from "@/lib/supabase/secretoServidor";
 import { parsearNumero } from "@/lib/format";
 import { exito, fallo, type Resultado } from "@/lib/actions/resultado";
@@ -43,10 +44,11 @@ export async function abrirOperacion(
     role: perfilTrading?.role === "admin" ? "admin" : "user",
     activo: perfilTrading?.activo ?? true,
   });
-  if (!usuarioEsAdmin && !estaAbiertaBolsaNY()) {
-    return fallo(
-      "El mercado está cerrado. Solo se puede operar de lunes a viernes, 9:30am a 4:00pm hora de Nueva York."
-    );
+  // Horario configurable por el admin (migración 064) — antes estaba fijo
+  // en el código (lunes a viernes, 9:30am-4:00pm hora de NY).
+  const horarioMercado = await obtenerHorarioMercado();
+  if (!usuarioEsAdmin && !estaAbiertaBolsaNY(horarioMercado)) {
+    return fallo(formatearHorarioMercado(horarioMercado, "es"));
   }
 
   const activo = String(formData.get("activo")).toUpperCase().trim();

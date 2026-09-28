@@ -3,10 +3,12 @@ import { IconoReto, IconoInfo } from "@/components/ui/Iconos";
 import { esAdmin, obtenerUsuarioActual } from "@/lib/auth/sesion";
 import { crearClienteSupabaseServidor } from "@/lib/supabase/server";
 import { AdminPickForm } from "@/components/admin/AdminPickForm";
+import { AdminHorarioMercadoForm } from "@/components/admin/AdminHorarioMercadoForm";
 import { AbrirOperacionForm } from "@/components/reto/AbrirOperacionForm";
 import { BotonCerrarTodasOperaciones } from "@/components/admin/BotonCerrarTodasOperaciones";
 import { formatearDinero, formatearPrecio } from "@/lib/format";
 import { estaAbiertaBolsaNY, fechaEnNY } from "@/lib/horarioMercado";
+import { obtenerHorarioMercado, formatearHorarioMercado } from "@/lib/config-horario-mercado";
 import { obtenerDiccionario, obtenerLocale } from "@/lib/i18n/servidor";
 import type { OperacionSimulada, PickDelDia } from "@/lib/types";
 
@@ -22,12 +24,14 @@ export default async function PaginaTradeDelDia() {
   const supabase = await crearClienteSupabaseServidor();
 
   const [
+    horarioMercado,
     { data: pick },
     { data: saldo },
     { data: operacionAbierta },
     { data: historial },
     { data: simbolosAbiertosRaw },
   ] = await Promise.all([
+    obtenerHorarioMercado(),
     // Solo cuenta como "vigente" si es de HOY (hora de Nueva York) — antes
     // se tomaba el más reciente que existiera sin importar la fecha, así
     // que un pick de ayer seguía "vigente" para siempre si nadie definía
@@ -125,6 +129,7 @@ export default async function PaginaTradeDelDia() {
       {esAdmin(usuario) && (
         <>
           <AdminPickForm pickVigente={pick ?? null} />
+          <AdminHorarioMercadoForm horarioActual={horarioMercado} />
           <BotonCerrarTodasOperaciones simbolos={simbolosAbiertos} />
         </>
       )}
@@ -169,7 +174,8 @@ export default async function PaginaTradeDelDia() {
               <AbrirOperacionForm
                 activo={pick.activo}
                 saldoDisponible={saldo?.saldo_usd ?? 0}
-                mercadoAbierto={estaAbiertaBolsaNY()}
+                mercadoAbierto={estaAbiertaBolsaNY(horarioMercado)}
+                mensajeMercadoCerrado={formatearHorarioMercado(horarioMercado, locale)}
                 esAdmin={esAdmin(usuario)}
                 t={t}
               />

@@ -1,10 +1,32 @@
-// Horario de la Bolsa de Nueva York (NYSE): lunes a viernes, 9:30am-4:00pm
-// hora de Nueva York. Usa Intl con timeZone explícito para que el cálculo
-// sea correcto sin importar en qué huso horario corra el servidor, y para
-// que el horario de verano (EST/EDT) se ajuste solo.
+// El horario en que se puede operar (días + apertura/cierre) es
+// configurable por el admin desde /trade-del-dia (ver
+// lib/config-horario-mercado.ts, que importa este tipo de acá y no al
+// revés — este archivo no puede depender de nada del lado del servidor,
+// porque lo importan componentes "use client" como AdminPickForm.tsx). Esta
+// función solo hace el cálculo de "¿qué día/hora es AHORA en Nueva York?" y
+// lo compara contra la configuración que le pasen. Usa Intl con timeZone
+// explícito para que el cálculo sea correcto sin importar en qué huso
+// horario corra el servidor, y para que el horario de verano (EST/EDT) se
+// ajuste solo.
 const ZONA_NY = "America/New_York";
 
-export function estaAbiertaBolsaNY(fecha: Date = new Date()): boolean {
+export interface ConfigHorarioMercado {
+  /** "HH:MM", 24h. */
+  apertura: string;
+  /** "HH:MM", 24h. */
+  cierre: string;
+  /** Días ISO habilitados: 1=lunes ... 7=domingo. */
+  dias: number[];
+  /** Si es true, se ignoran apertura/cierre/dias: el mercado nunca cierra. */
+  abierto_siempre: boolean;
+}
+
+export function estaAbiertaBolsaNY(
+  config: ConfigHorarioMercado,
+  fecha: Date = new Date()
+): boolean {
+  if (config.abierto_siempre) return true;
+
   const partes = new Intl.DateTimeFormat("en-US", {
     timeZone: ZONA_NY,
     weekday: "short",
@@ -16,14 +38,26 @@ export function estaAbiertaBolsaNY(fecha: Date = new Date()): boolean {
   const mapa: Record<string, string> = {};
   for (const p of partes) mapa[p.type] = p.value;
 
-  if (mapa.weekday === "Sat" || mapa.weekday === "Sun") return false;
+  // ISO: 1=lunes ... 7=domingo, igual que los "dias" configurados.
+  const diasIso: Record<string, number> = {
+    Mon: 1,
+    Tue: 2,
+    Wed: 3,
+    Thu: 4,
+    Fri: 5,
+    Sat: 6,
+    Sun: 7,
+  };
+  if (!config.dias.includes(diasIso[mapa.weekday])) return false;
 
   const horas = parseInt(mapa.hour, 10) % 24; // Intl a veces da "24" para medianoche
   const minutos = parseInt(mapa.minute, 10);
   const minutosDelDia = horas * 60 + minutos;
 
-  const apertura = 9 * 60 + 30; // 9:30am
-  const cierre = 16 * 60; // 4:00pm
+  const [horaApertura, minApertura] = config.apertura.split(":").map(Number);
+  const [horaCierre, minCierre] = config.cierre.split(":").map(Number);
+  const apertura = horaApertura * 60 + minApertura;
+  const cierre = horaCierre * 60 + minCierre;
 
   return minutosDelDia >= apertura && minutosDelDia < cierre;
 }
