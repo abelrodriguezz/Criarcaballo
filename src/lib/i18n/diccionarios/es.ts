@@ -23,6 +23,10 @@ export const es = {
     ctaCrearCuenta: "Crear cuenta gratis",
     ctaTradeDelDia: "Trade del día",
     sp500Proximamente: "Índices en vivo próximamente.",
+    verGraficoSp500: "Ver gráfico del S&P 500 en TradingView",
+    metaTitulo: "Trade4U — Mercado, señales y práctica de trading",
+    metaDescripcion:
+      "Datos de mercado en tiempo real, análisis y un modo de práctica sin riesgo.",
     hoy: "hoy",
     noticiasEtiqueta: "Noticias",
     feature1Titulo: "Datos reales, no decorativos",

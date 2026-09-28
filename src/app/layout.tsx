@@ -27,11 +27,12 @@ const jetbrainsMono = JetBrains_Mono({
   weight: ["500", "600"],
 });
 
-export const metadata: Metadata = {
-  title: "Trade4U — Mercado, señales y práctica de trading",
-  description:
-    "Datos de mercado en tiempo real, análisis y un modo de práctica sin riesgo.",
-};
+// Título/descripción según el idioma elegido (cookie), igual que el resto
+// de la interfaz — antes quedaban fijos en español aun con la app en inglés.
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await obtenerDiccionario();
+  return { title: t.home.metaTitulo, description: t.home.metaDescripcion };
+}
 
 // Se ejecuta antes de que React hidrate y antes del primer pintado, para
 // que la página no "parpadee" en claro un instante cuando el usuario

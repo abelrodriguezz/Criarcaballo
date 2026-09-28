@@ -25,6 +25,10 @@ export const en: typeof es = {
     ctaCrearCuenta: "Create free account",
     ctaTradeDelDia: "Trade of the day",
     sp500Proximamente: "Live indices coming soon.",
+    verGraficoSp500: "View S&P 500 chart on TradingView",
+    metaTitulo: "Trade4U — Market, signals and trading practice",
+    metaDescripcion:
+      "Real-time market data, analysis and a risk-free practice mode.",
     hoy: "today",
     noticiasEtiqueta: "News",
     feature1Titulo: "Real data, not decoration",
