@@ -38,28 +38,29 @@ export async function firmaCoincide(archivo: File, tipo: string): Promise<boolea
 export async function subirComprobante(
   supabase: SupabaseClient,
   usuarioIdCarpeta: string,
-  archivo: File
+  archivo: File,
+  // Opcional: el flujo de depósito (i18n ES/EN) pasa sus textos traducidos;
+  // sin esto un usuario en inglés veía el rechazo de un archivo falso en
+  // español. El chat de soporte sigue usando los textos por defecto.
+  mensajes: { tipoInvalido: string; muyPesada: string } = {
+    tipoInvalido: "La imagen debe ser JPG, PNG o WEBP.",
+    muyPesada: "La imagen no puede pesar más de 5 MB.",
+  }
 ): Promise<{ path: string | null; error: string | null }> {
   if (archivo.size === 0) return { path: null, error: null };
 
   const extension = TIPOS_IMAGEN_PERMITIDOS[archivo.type];
   if (!extension) {
-    return {
-      path: null,
-      error: "La imagen debe ser JPG, PNG o WEBP.",
-    };
+    return { path: null, error: mensajes.tipoInvalido };
   }
   if (archivo.size > TAMANO_MAXIMO_IMAGEN) {
-    return { path: null, error: "La imagen no puede pesar más de 5 MB." };
+    return { path: null, error: mensajes.muyPesada };
   }
   // archivo.type lo pone el navegador según la EXTENSIÓN: un PDF (o
   // cualquier cosa) renombrado a .png pasaba como image/png, se guardaba
   // en el bucket y salía como imagen rota. Se comprueba la firma real.
   if (!(await firmaCoincide(archivo, archivo.type))) {
-    return {
-      path: null,
-      error: "La imagen debe ser JPG, PNG o WEBP.",
-    };
+    return { path: null, error: mensajes.tipoInvalido };
   }
 
   const path = `${usuarioIdCarpeta}/${crypto.randomUUID()}.${extension}`;

@@ -57,7 +57,11 @@ export async function registrarDepositoSimulado(
   const { path: comprobantePath, error: errorSubida } = await subirComprobante(
     supabase,
     user.id,
-    archivo
+    archivo,
+    {
+      tipoInvalido: t.perfil.depositarComprobanteTipoInvalido,
+      muyPesada: t.perfil.depositarComprobanteMuyPesada,
+    }
   );
   if (errorSubida || !comprobantePath) {
     return fallo(errorSubida ?? t.perfil.depositarComprobanteObligatorio);
