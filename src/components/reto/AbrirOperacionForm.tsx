@@ -10,6 +10,7 @@ export function AbrirOperacionForm({
   saldoDisponible,
   mercadoAbierto,
   mensajeMercadoCerrado,
+  tradingHabilitado,
   esAdmin,
   t,
 }: {
@@ -18,10 +19,13 @@ export function AbrirOperacionForm({
   mercadoAbierto: boolean;
   /** Horario configurado (migración 064), ya formateado en el idioma actual. */
   mensajeMercadoCerrado?: string;
+  /** Antes solo se sabía al intentar abrir (mensaje de la server action);
+   * ahora se avisa de entrada, sin esperar al clic. */
+  tradingHabilitado: boolean;
   esAdmin: boolean;
   t: Diccionario;
 }) {
-  const puedeOperar = mercadoAbierto || esAdmin;
+  const puedeOperar = (mercadoAbierto || esAdmin) && tradingHabilitado;
   const [tipo, setTipo] = useState<"compra" | "venta">("compra");
   const [enviando, setEnviando] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -96,6 +100,12 @@ export function AbrirOperacionForm({
           {esAdmin
             ? t.abrirOperacion.mercadoCerradoAdmin
             : mensajeMercadoCerrado || t.abrirOperacion.mercadoCerrado}
+        </p>
+      )}
+
+      {!tradingHabilitado && (
+        <p className="text-[12px] text-loss bg-loss/10 rounded-lg px-3 py-2">
+          {t.errores.tradingDeshabilitado}
         </p>
       )}
 

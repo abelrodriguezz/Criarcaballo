@@ -30,6 +30,7 @@ export default async function PaginaTradeDelDia() {
     { data: operacionAbierta },
     { data: historial },
     { data: simbolosAbiertosRaw },
+    { data: perfilTrading },
   ] = await Promise.all([
     obtenerHorarioMercado(),
     // Solo cuenta como "vigente" si es de HOY (hora de Nueva York) — antes
@@ -68,7 +69,17 @@ export default async function PaginaTradeDelDia() {
           .select("activo")
           .eq("estado", "abierta")
       : Promise.resolve({ data: null }),
+    supabase
+      .from("usuarios")
+      .select("trading_habilitado")
+      .eq("id", usuario.id)
+      .single(),
   ]);
+
+  // Antes solo se enteraba al intentar abrir (mensaje de la server action);
+  // el admin nunca lo tiene deshabilitado a sí mismo, así que esto no le
+  // aplica de todas formas.
+  const tradingHabilitado = perfilTrading?.trading_habilitado !== false;
 
   const simbolosAbiertos = [
     ...new Set((simbolosAbiertosRaw ?? []).map((o) => o.activo)),
@@ -176,6 +187,7 @@ export default async function PaginaTradeDelDia() {
                 saldoDisponible={saldo?.saldo_usd ?? 0}
                 mercadoAbierto={estaAbiertaBolsaNY(horarioMercado)}
                 mensajeMercadoCerrado={formatearHorarioMercado(horarioMercado, locale)}
+                tradingHabilitado={tradingHabilitado}
                 esAdmin={esAdmin(usuario)}
                 t={t}
               />
