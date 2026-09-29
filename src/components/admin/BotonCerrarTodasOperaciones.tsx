@@ -74,6 +74,10 @@ export function BotonCerrarTodasOperaciones({
       // Sin hora de cierre se usa "ahora", así que una entrada futura
       // también es inválida.
       const cierreEfectivo = horaCierre ? Date.parse(horaCierre) : Date.now();
+      if (horaCierre && cierreEfectivo > Date.now()) {
+        setMensaje(`${simbolo}: la hora de cierre no puede ser en el futuro.`);
+        return;
+      }
       if (horaEntrada && Date.parse(horaEntrada) >= cierreEfectivo) {
         setMensaje(
           `${simbolo}: la hora de entrada debe ser anterior a la hora de cierre.`

@@ -105,6 +105,13 @@ export async function adminCerrarTodasLasOperaciones(
     if ((entrada !== null && Number.isNaN(entrada)) || Number.isNaN(cierre)) {
       return fallo(`Hora inválida para ${simbolo}. No se cerró ninguna operación.`);
     }
+    // La base (migración 070) también lo rechaza, pero se valida antes de
+    // cerrar nada para no dejar un cierre a medias entre símbolos.
+    if (cierre > ahora) {
+      return fallo(
+        `${simbolo}: la hora de cierre no puede ser en el futuro. No se cerró ninguna operación.`
+      );
+    }
     const aperturas = abiertas.filter((op) => op.activo === simbolo);
     const conflicto = aperturas.some(
       (op) => (entrada ?? Date.parse(op.created_at)) >= cierre
