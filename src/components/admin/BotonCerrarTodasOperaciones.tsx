@@ -103,23 +103,18 @@ export function BotonCerrarTodasOperaciones({
       // action (ver src/lib/actions/resultado.ts).
       const resultado = await adminCerrarTodasLasOperaciones(datosPorSimbolo);
       if (!resultado.ok) {
+        // El cierre es todo-o-nada (migración 071): si esto se dispara, NO
+        // se cerró ninguna operación, no solo "algunas fallaron".
         setMensaje(resultado.error);
         return;
       }
-      const { cerradas, fallidas, sinPrecio, motivoFallo } = resultado.datos;
+      const { cerradas, sinPrecio } = resultado.datos;
 
       const partes: string[] = [];
-      if (cerradas === 0 && fallidas === 0 && sinPrecio.length === 0) {
+      if (cerradas === 0 && sinPrecio.length === 0) {
         partes.push("No había ninguna operación abierta.");
       } else {
         partes.push(`${cerradas} operación(es) cerrada(s).`);
-      }
-      if (fallidas > 0) {
-        partes.push(
-          motivoFallo
-            ? `${fallidas} fallaron (${motivoFallo}).`
-            : `${fallidas} fallaron.`
-        );
       }
       // Alguien pudo abrir una operación de otro símbolo mientras esta
       // pantalla estaba abierta: sin precio para ese símbolo la operación

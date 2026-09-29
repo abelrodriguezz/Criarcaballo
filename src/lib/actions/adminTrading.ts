@@ -50,7 +50,6 @@ export interface DatosCierreSimbolo {
  */
 export interface ResultadoCierreMasivo {
   cerradas: number;
-  fallidas: number;
   /**
    * Símbolos que tenían operaciones abiertas pero para los que no se
    * recibió precio de salida — normalmente porque alguien abrió una
@@ -58,11 +57,6 @@ export interface ResultadoCierreMasivo {
    * símbolo no estaba en el formulario. Esas operaciones siguen abiertas.
    */
   sinPrecio: string[];
-  /**
-   * Motivo del primer cierre que falló, para poder mostrarlo. Sin esto el
-   * admin solo veía "N fallaron" y no tenía forma de saber por qué.
-   */
-  motivoFallo: string | null;
 }
 
 export async function adminCerrarTodasLasOperaciones(
@@ -89,7 +83,7 @@ export async function adminCerrarTodasLasOperaciones(
   }
 
   if (!abiertas || abiertas.length === 0) {
-    return exito({ cerradas: 0, fallidas: 0, sinPrecio: [], motivoFallo: null });
+    return exito({ cerradas: 0, sinPrecio: [] });
   }
 
   // Validación de horas ANTES de cerrar nada: la base (migración 069)
@@ -120,10 +114,14 @@ export async function adminCerrarTodasLasOperaciones(
     }
   }
 
-  let cerradas = 0;
-  let fallidas = 0;
-  let motivoFallo: string | null = null;
   const sinPrecio = new Set<string>();
+  const cierres: {
+    operacion_id: string;
+    precio_entrada: number;
+    precio_salida: number;
+    hora_entrada: string | null;
+    hora_cierre: string | null;
+  }[] = [];
 
   for (const op of abiertas) {
     const datos = datosPorSimbolo[op.activo];
@@ -136,24 +134,39 @@ export async function adminCerrarTodasLasOperaciones(
       continue;
     }
 
-    const { error } = await supabase.rpc("admin_cerrar_operacion", {
-      p_operacion_id: op.id,
-      p_precio_entrada: datos.precioEntrada,
-      p_precio_salida: datos.precioSalida,
-      p_hora_entrada: datos.horaEntrada ?? null,
-      p_hora_cierre: datos.horaCierre ?? null,
+    cierres.push({
+      operacion_id: op.id,
+      precio_entrada: datos.precioEntrada,
+      precio_salida: datos.precioSalida,
+      hora_entrada: datos.horaEntrada ?? null,
+      hora_cierre: datos.horaCierre ?? null,
     });
+  }
 
-    if (error) {
-      fallidas++;
-      motivoFallo ??= error.message || null;
-    } else {
-      cerradas++;
-    }
+  if (cierres.length === 0) {
+    return exito({ cerradas: 0, sinPrecio: [...sinPrecio] });
+  }
+
+  // Una sola llamada RPC: adentro de admin_cerrar_operaciones_bloque (migración
+  // 071) todo el bucle corre como una única transacción de Postgres. Si UNA
+  // sola operación falla (precio inválido, horas invertidas, ya estaba
+  // cerrada), la función entera revierte — no queda un cierre a medias.
+  const { data: cerradas, error } = await supabase.rpc(
+    "admin_cerrar_operaciones_bloque",
+    { p_cierres: cierres }
+  );
+
+  if (error) {
+    // "⚠️" a propósito: sin nada que lo distinga, un admin apurado puede
+    // confundir este aviso con el "cerradas" de un cierre exitoso y no
+    // notar que, en realidad, NO se cerró nada (queda todo como estaba).
+    return fallo(
+      `⚠️ No se cerró ninguna operación: ${error.message || "error desconocido"}.`
+    );
   }
 
   revalidatePath("/trade-del-dia");
   revalidatePath("/usuarios");
 
-  return exito({ cerradas, fallidas, sinPrecio: [...sinPrecio], motivoFallo });
+  return exito({ cerradas: cerradas?.length ?? 0, sinPrecio: [...sinPrecio] });
 }
