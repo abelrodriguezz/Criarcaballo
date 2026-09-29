@@ -11,10 +11,13 @@ export function TarjetaNoticiaAdmin({
   noticia,
   esAdmin,
   locale = "es",
+  etiquetas = { destacada: "Destacada", verFuente: "Ver fuente →" },
 }: {
   noticia: Noticia;
   esAdmin: boolean;
   locale?: Locale;
+  // Textos públicos de la tarjeta, ya traducidos por la página (servidor).
+  etiquetas?: { destacada: string; verFuente: string };
 }) {
   const [editando, setEditando] = useState(false);
   // Aunque la base ya solo acepta http/https (constraint
@@ -39,17 +42,20 @@ export function TarjetaNoticiaAdmin({
   return (
     <article className="border border-[var(--border)] rounded-2xl p-5">
       <div className="flex items-start justify-between gap-3 mb-1.5">
-        <h2 className="font-display font-semibold text-base">
+        {/* min-w-0 + overflow-wrap:anywhere: un título/resumen con una
+            palabra muy larga (p. ej. un enlace pegado) se cortaba fuera de
+            la tarjeta en celular en vez de partirse en líneas. */}
+        <h2 className="font-display font-semibold text-base min-w-0 [overflow-wrap:anywhere]">
           {tituloMostrado}
         </h2>
         {noticia.destacada && (
           <span className="bg-brand-secondary/15 text-brand-secondary text-xs font-bold px-2.5 py-1 rounded-full whitespace-nowrap">
-            Destacada
+            {etiquetas.destacada}
           </span>
         )}
       </div>
       {resumenMostrado && (
-        <p className="text-sm text-foreground-muted mb-2">
+        <p className="text-sm text-foreground-muted mb-2 [overflow-wrap:anywhere] whitespace-pre-line">
           {resumenMostrado}
         </p>
       )}
@@ -60,7 +66,7 @@ export function TarjetaNoticiaAdmin({
           rel="noopener noreferrer"
           className="text-brand-primary text-[13px] font-semibold"
         >
-          Ver fuente →
+          {etiquetas.verFuente}
         </a>
       )}
       {esAdmin && (

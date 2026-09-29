@@ -306,6 +306,8 @@ export const en: typeof es = {
     titulo: "News",
     subtitulo: "Filtered market updates.",
     sinNoticias: "No news published yet.",
+    destacada: "Featured",
+    verFuente: "View source →",
   },
   copiar: {
     copiar: "Copy",

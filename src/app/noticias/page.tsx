@@ -43,6 +43,10 @@ export default async function PaginaNoticias() {
               noticia={noticia}
               esAdmin={usuarioEsAdmin}
               locale={locale}
+              etiquetas={{
+                destacada: t.noticias.destacada,
+                verFuente: t.noticias.verFuente,
+              }}
             />
           ))}
         </div>

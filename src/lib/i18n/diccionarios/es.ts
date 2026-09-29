@@ -311,6 +311,8 @@ export const es = {
     titulo: "Noticias",
     subtitulo: "Actualizaciones filtradas del mercado.",
     sinNoticias: "Todavía no hay noticias publicadas.",
+    destacada: "Destacada",
+    verFuente: "Ver fuente →",
   },
   copiar: {
     copiar: "Copiar",
