@@ -68,11 +68,23 @@ export function BotonCerrarTodasOperaciones({
         setMensaje(`Falta un precio de salida válido para ${simbolo}.`);
         return;
       }
+      const horaEntrada = horaAIso(c.horaEntrada);
+      const horaCierre = horaAIso(c.horaCierre);
+      // Mismo chequeo que hace el servidor, para avisar antes del confirm.
+      // Sin hora de cierre se usa "ahora", así que una entrada futura
+      // también es inválida.
+      const cierreEfectivo = horaCierre ? Date.parse(horaCierre) : Date.now();
+      if (horaEntrada && Date.parse(horaEntrada) >= cierreEfectivo) {
+        setMensaje(
+          `${simbolo}: la hora de entrada debe ser anterior a la hora de cierre.`
+        );
+        return;
+      }
       datosPorSimbolo[simbolo] = {
         precioEntrada,
         precioSalida,
-        horaEntrada: horaAIso(c.horaEntrada),
-        horaCierre: horaAIso(c.horaCierre),
+        horaEntrada,
+        horaCierre,
       };
     }
 

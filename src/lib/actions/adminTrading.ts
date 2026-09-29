@@ -79,7 +79,7 @@ export async function adminCerrarTodasLasOperaciones(
   // no cerraba nada de nadie más).
   const { data: abiertas, error: errorLectura } = await supabase
     .from("operaciones_simuladas")
-    .select("id, activo")
+    .select("id, activo, created_at")
     .eq("estado", "abierta");
 
   if (errorLectura) {
@@ -90,6 +90,34 @@ export async function adminCerrarTodasLasOperaciones(
 
   if (!abiertas || abiertas.length === 0) {
     return exito({ cerradas: 0, fallidas: 0, sinPrecio: [], motivoFallo: null });
+  }
+
+  // Validación de horas ANTES de cerrar nada: la base (migración 069)
+  // rechaza igual cada operación con hora de entrada >= hora de cierre,
+  // pero como se cierra una por una, un símbolo con horas válidas quedaba
+  // liquidado y otro con horas inválidas no — cierre a medias. Se compara
+  // con los valores efectivos: sin hora de entrada cuenta la apertura real
+  // de la operación; sin hora de cierre, el momento actual.
+  const ahora = Date.now();
+  for (const [simbolo, datos] of Object.entries(datosPorSimbolo)) {
+    const entrada = datos.horaEntrada ? Date.parse(datos.horaEntrada) : null;
+    const cierre = datos.horaCierre ? Date.parse(datos.horaCierre) : ahora;
+    if ((entrada !== null && Number.isNaN(entrada)) || Number.isNaN(cierre)) {
+      return fallo(`Hora inválida para ${simbolo}. No se cerró ninguna operación.`);
+    }
+    const aperturas = abiertas.filter((op) => op.activo === simbolo);
+    const conflicto = aperturas.some(
+      (op) => (entrada ?? Date.parse(op.created_at)) >= cierre
+    );
+    if (conflicto) {
+      return fallo(
+        `${simbolo}: la hora de entrada debe ser anterior a la hora de cierre` +
+          (entrada === null
+            ? " (sin hora de entrada se usa la hora real en que se abrió cada operación)."
+            : ".") +
+          " No se cerró ninguna operación."
+      );
+    }
   }
 
   let cerradas = 0;
