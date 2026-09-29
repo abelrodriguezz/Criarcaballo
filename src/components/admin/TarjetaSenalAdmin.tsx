@@ -137,12 +137,18 @@ export function TarjetaSenalAdmin({
           </button>
         </>
       )}
-      <button
-        onClick={() => setEditando(true)}
-        className="text-xs font-semibold text-brand-primary hover:underline"
-      >
-        Editar
-      </button>
+      {/* Una señal cerrada no se edita: su precio de cierre y porcentaje
+          se calcularon con los niveles de ese momento, y cambiarlos dejaba
+          el historial público incoherente (la base también lo bloquea,
+          migración 067). */}
+      {!senal.resultado && (
+        <button
+          onClick={() => setEditando(true)}
+          className="text-xs font-semibold text-brand-primary hover:underline"
+        >
+          Editar
+        </button>
+      )}
       <BotonEliminarAdmin
         tabla="senales"
         id={senal.id}

@@ -41,6 +41,8 @@ function elegirIntervalo(msTranscurridos: number): string {
 
 interface Toque {
   resultado: "tp" | "sl";
+  /** Apertura de la vela que tocó el nivel (ISO): la fecha real del cierre. */
+  tocadoEn: string | null;
 }
 
 /**
@@ -86,6 +88,10 @@ async function buscarToqueTpSl(senal: Senal): Promise<Toque | null> {
       const high = parseFloat(String(velaRaw[2]));
       const low = parseFloat(String(velaRaw[3]));
       if (!Number.isFinite(high) || !Number.isFinite(low)) continue;
+      const aperturaMs = Number(velaRaw[0]);
+      const tocadoEn = Number.isFinite(aperturaMs)
+        ? new Date(aperturaMs).toISOString()
+        : null;
 
       // Dentro de UNA vela solo se conocen el máximo y el mínimo, no en
       // qué orden ocurrieron: si la vela tocó los dos niveles, es
@@ -95,17 +101,17 @@ async function buscarToqueTpSl(senal: Senal): Promise<Toque | null> {
       // señales, que es justo lo que da o quita credibilidad al producto.
       if (senal.tipo === "compra") {
         if (senal.stop_loss != null && low <= senal.stop_loss) {
-          return { resultado: "sl" };
+          return { resultado: "sl", tocadoEn };
         }
         if (senal.take_profit != null && high >= senal.take_profit) {
-          return { resultado: "tp" };
+          return { resultado: "tp", tocadoEn };
         }
       } else {
         if (senal.stop_loss != null && high >= senal.stop_loss) {
-          return { resultado: "sl" };
+          return { resultado: "sl", tocadoEn };
         }
         if (senal.take_profit != null && low <= senal.take_profit) {
-          return { resultado: "tp" };
+          return { resultado: "tp", tocadoEn };
         }
       }
     }
@@ -178,11 +184,14 @@ export async function revisarYCerrarSenalesActivas(): Promise<void> {
           if (!toque) return null;
           // La función de Postgres recalcula precio de cierre y
           // porcentaje desde la propia señal (migración 019) — desde aquí
-          // solo se le dice si tocó TP o SL.
+          // solo se le dice si tocó TP o SL, y en qué vela (migración 067:
+          // sin esto, cerrado_en quedaba con la hora de la visita a la
+          // página, que puede ser horas o días después del toque real).
           return supabase.rpc("cerrar_senal_automatica", {
             p_senal_id: senal.id,
             p_resultado: toque.resultado,
             p_secreto: secreto,
+            p_tocado_en: toque.tocadoEn,
           });
         })
       );
