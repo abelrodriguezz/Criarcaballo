@@ -16,6 +16,7 @@ interface UsuarioReferido extends NodoArbolReferido {
 interface DepositoPlano {
   usuario_id: string;
   monto: number;
+  pagado: boolean;
 }
 
 export function BuscadorReferidos({
@@ -51,7 +52,9 @@ export function BuscadorReferidos({
       const comisionPorInvitado = new Map(
         comisiones.map((c) => [c.invitado_id as string, { id: c.id, monto: c.monto, pagado: c.pagado }])
       );
-      const depositoPorUsuario = new Map(depositos.map((d) => [d.usuario_id, Number(d.monto)]));
+      const depositoPorUsuario = new Map(
+        depositos.map((d) => [d.usuario_id, { monto: Number(d.monto), pagado: d.pagado }])
+      );
       return { emailPorUsuario, nombrePorUsuario, hijosPorPadre, raices, comisionPorInvitado, depositoPorUsuario };
     }, [todos, comisiones, depositos]);
 
@@ -226,7 +229,11 @@ export function BuscadorReferidos({
                   </div>
                   <div className="text-[12px] text-foreground-muted">
                     {deposito != null
-                      ? `Depósito simulado: $${formatearDinero(deposito)}`
+                      ? `Depósito simulado: $${formatearDinero(deposito.monto)}${
+                          deposito.pagado
+                            ? ""
+                            : " · sin confirmar (no genera comisión hasta que lo marques pagado)"
+                        }`
                       : "Todavía no hizo su depósito simulado"}
                   </div>
                 </div>
@@ -266,7 +273,7 @@ export function BuscadorReferidos({
       </h2>
       <p className="text-foreground-muted text-[12px] mb-3">
         Premio extra (aparte de la comisión normal) que se otorga solo
-        cuando alguien acumula referidos que ya depositaron en múltiplos
+        cuando alguien acumula referidos con el depósito ya confirmado (marcado pagado) en múltiplos
         de la cantidad configurada arriba — por ejemplo, al llegar a 10,
         20, 30... Vacío hasta que alguien alcance la primera meta.
       </p>

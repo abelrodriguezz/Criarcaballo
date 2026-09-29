@@ -16,9 +16,10 @@ export interface ConfigPremioReferido {
  * Cómo se paga hoy un referido:
  * - Comisión: `porcentaje`% del monto que el invitado carga en SU
  *   depósito simulado (una vez por usuario, ver migración 026). Si nunca
- *   deposita, no genera comisión — la migración 034 lo calcula solo, con
- *   un trigger sobre `depositos_simulados`, no desde aquí.
- * - Bono: cada `bonoCada` referidos "calificados" (que ya depositaron) se
+ *   deposita, no genera comisión — la calcula sola un trigger sobre
+ *   `depositos_simulados` (migración 052), no desde aquí, y solo cuando
+ *   el admin CONFIRMA el depósito (pagado = true), no al registrarlo.
+ * - Bono: cada `bonoCada` referidos "calificados" (depósito confirmado) se
  *   suma un bono fijo de `bonoMonto`, repetible (10, 20, 30...).
  */
 export async function obtenerConfigPremioReferido(): Promise<ConfigPremioReferido> {

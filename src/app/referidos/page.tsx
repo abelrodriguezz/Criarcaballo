@@ -42,7 +42,7 @@ export default async function PaginaReferidos() {
         .eq("origen", "referido")
         .returns<GananciaConcurso[]>(),
       obtenerConfigPremioReferido(),
-      supabase.from("depositos_simulados").select("usuario_id, monto"),
+      supabase.from("depositos_simulados").select("usuario_id, monto, pagado"),
     ]);
 
   const todos = todosUsuarios ?? [];
@@ -67,9 +67,10 @@ export default async function PaginaReferidos() {
         {cantidadInvitados === 1
           ? "persona se registró por invitación"
           : "personas se registraron por invitación"}
-        . Cuando un invitado hace su depósito simulado, se le genera
-        automáticamente a quien lo invitó una comisión pendiente de pago
-        — se paga en USDT vía tarjeta de regalo (gift card), fuera de la
+        . Cuando confirmas como pagado el depósito simulado de un invitado
+        (en Depósitos), se le genera automáticamente a quien lo invitó una
+        comisión pendiente de pago (un depósito sin confirmar no genera
+        nada todavía) — se paga en USDT vía tarjeta de regalo (gift card), fuera de la
         plataforma. Márcala como pagada aquí cuando ya se la hayas
         enviado.
       </p>

@@ -1,7 +1,7 @@
 "use client";
 
 import { descargarCSV, filaCSV } from "@/lib/csv";
-import type { NodoArbolReferido } from "@/components/admin/ArbolReferidos";
+import type { DepositoResumen, NodoArbolReferido } from "@/components/admin/ArbolReferidos";
 
 interface UsuarioConInvitador extends NodoArbolReferido {
   invitado_por: string | null;
@@ -25,7 +25,7 @@ export function BotonExportarArbolReferidos({
 }: {
   raices: UsuarioConInvitador[];
   hijosPorPadre: Map<string, UsuarioConInvitador[]>;
-  depositoPorUsuario: Map<string, number>;
+  depositoPorUsuario: Map<string, DepositoResumen>;
   comisionPorInvitado: Map<string, ComisionResumen>;
   emailPorUsuario: Map<string, string>;
   nombrePorUsuario: Map<string, string | null>;
@@ -54,9 +54,11 @@ export function BotonExportarArbolReferidos({
         ? comision.pagado
           ? "Pagado"
           : "Pendiente"
-        : deposito != null
-          ? "Sin comisión"
-          : "Sin depósito";
+        : deposito == null
+          ? "Sin depósito"
+          : deposito.pagado
+            ? "Sin comisión"
+            : "Depósito sin confirmar";
 
       const nombreInvitador = usuario.invitado_por
         ? nombrePorUsuario.get(usuario.invitado_por)
@@ -77,7 +79,7 @@ export function BotonExportarArbolReferidos({
           usuario.email,
           usuario.id_corto ?? "",
           invitadoPor,
-          deposito != null ? deposito.toFixed(2) : "",
+          deposito != null ? deposito.monto.toFixed(2) : "",
           estado,
           comision ? comision.monto.toFixed(2) : "",
         ])

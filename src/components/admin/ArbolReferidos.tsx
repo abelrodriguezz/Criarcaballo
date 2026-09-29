@@ -13,6 +13,14 @@ interface ComisionResumen {
   pagado: boolean;
 }
 
+// `pagado` = el admin ya confirmó el depósito. Solo ahí se genera la
+// comisión y cuenta como referido calificado (migración 052) — sin esto
+// un depósito sin confirmar se veía igual que uno confirmado.
+export interface DepositoResumen {
+  monto: number;
+  pagado: boolean;
+}
+
 // Ancho fijo (px) de cada tramo de línea conectora entre un nodo y la
 // columna de sus hijos — mismo valor en los dos lugares donde se dibuja
 // (el tramo padre→columna y el tramo columna→cada hijo) para que las
@@ -54,7 +62,7 @@ function CajaNodo({
   usuario: NodoArbolReferido;
   posicion: number | null;
   comision: ComisionResumen | undefined;
-  deposito: number | undefined;
+  deposito: DepositoResumen | undefined;
   cantidadHijos: number;
   onSeleccionar: (id: string) => void;
 }) {
@@ -100,7 +108,8 @@ function CajaNodo({
           </span>
         ) : deposito != null ? (
           <span className="text-[10px] text-foreground-muted">
-            depositó ${formatearDinero(deposito)}
+            depositó ${formatearDinero(deposito.monto)}
+            {!deposito.pagado && " (sin confirmar)"}
           </span>
         ) : posicion != null ? (
           <span className="text-[10px] text-foreground-muted">sin depósito todavía</span>
@@ -133,7 +142,7 @@ function Nodo({
   usuario: NodoArbolReferido;
   posicion: number | null;
   hijosPorPadre: Map<string, NodoArbolReferido[]>;
-  depositoPorUsuario: Map<string, number>;
+  depositoPorUsuario: Map<string, DepositoResumen>;
   comisionPorInvitado: Map<string, ComisionResumen>;
   onSeleccionar: (id: string) => void;
   ancestros: ReadonlySet<string>;
@@ -222,7 +231,7 @@ export function ArbolReferidos({
 }: {
   raices: NodoArbolReferido[];
   hijosPorPadre: Map<string, NodoArbolReferido[]>;
-  depositoPorUsuario: Map<string, number>;
+  depositoPorUsuario: Map<string, DepositoResumen>;
   comisionPorInvitado: Map<string, ComisionResumen>;
   onSeleccionar: (id: string) => void;
 }) {
