@@ -38,6 +38,17 @@ export function AdminNosotrosForm({
     router.refresh();
   }
 
+  // Cancelar descarta lo editado: sin esto, el estado local sobrevivía al
+  // cerrar el form, al reabrirlo aparecían los cambios "cancelados" y un
+  // "Guardar" posterior los publicaba. nosotrosActual viene del servidor y
+  // se actualiza con router.refresh() tras cada guardado.
+  function cancelar() {
+    setNosotros(nosotrosActual);
+    setIdioma("es");
+    setError(null);
+    setAbierto(false);
+  }
+
   if (!abierto) {
     return (
       <button
@@ -99,7 +110,7 @@ export function AdminNosotrosForm({
         </h3>
         <button
           type="button"
-          onClick={() => setAbierto(false)}
+          onClick={cancelar}
           className="text-xs text-foreground-muted"
         >
           Cancelar
