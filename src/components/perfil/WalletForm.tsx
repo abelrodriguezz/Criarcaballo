@@ -83,7 +83,12 @@ export function WalletForm({
     setGuardando(false);
 
     if (error) {
-      setError(t.wallet.errorGuardar);
+      // Migración 076: la cuenta pudo desactivarse con /perfil ya abierto.
+      setError(
+        error.message?.includes("desactivada")
+          ? t.errores.cuentaDesactivadaAccion
+          : t.wallet.errorGuardar
+      );
       return;
     }
 

@@ -68,7 +68,11 @@ export function BotonSolicitarRetiro({
       // conocidos al idioma activo y el resto cae al mensaje generico.
       const msg = dbError.message ?? "";
       setError(
-        msg.includes("pendiente")
+        // Primero: "Tu cuenta está desactivada." (migración 076) — la
+        // cuenta pudo desactivarse con este modal ya abierto.
+        msg.includes("desactivada")
+          ? t.errores.cuentaDesactivadaAccion
+          : msg.includes("pendiente")
           ? t.perfil.retirarYaPendiente
           : msg.includes("wallet")
             ? t.perfil.retirarSinWallet

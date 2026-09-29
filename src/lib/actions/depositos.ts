@@ -33,9 +33,9 @@ export async function registrarDepositoSimulado(
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) return fallo("Debes iniciar sesión.");
+  if (!user) return fallo(t.errores.debesIniciarSesion);
   if (!(await cuentaActiva(supabase, user.id))) {
-    return fallo("Tu cuenta está desactivada.");
+    return fallo(t.errores.cuentaDesactivadaAccion);
   }
 
   const montoTexto = String(formData.get("monto") ?? "");
