@@ -16,20 +16,20 @@ import {
   IconoCampana,
 } from "@/components/ui/Iconos";
 import type { SesionUsuario } from "@/lib/auth/sesion";
+import { useMensajesSinLeer } from "@/components/layout/ContadorSoporte";
 import type { Diccionario, Locale } from "@/lib/i18n";
 
 export function NavBar({
   usuario,
   locale,
   t,
-  mensajesSinLeer = 0,
 }: {
   usuario: SesionUsuario | null;
   locale: Locale;
   t: Diccionario;
-  mensajesSinLeer?: number;
 }) {
   const pathname = usePathname();
+  const mensajesSinLeer = useMensajesSinLeer();
 
   const ENLACES = [
     { href: "/", label: t.nav.inicio, Icono: IconoInicio },

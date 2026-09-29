@@ -12,6 +12,7 @@ import {
   IconoInfo,
 } from "@/components/ui/Iconos";
 import type { Diccionario } from "@/lib/i18n";
+import { useMensajesSinLeer } from "@/components/layout/ContadorSoporte";
 
 // useLinkStatus solo funciona dentro de un descendiente del propio <Link>
 // (no sirve leerlo desde el componente que lo renderiza) — por eso es un
@@ -36,14 +37,9 @@ function PulsoDeCarga() {
  * de moverse entre módulos en mobile — sin ella, la app queda sin navegación
  * utilizable en un teléfono.
  */
-export function MobileTabBar({
-  t,
-  mensajesSinLeer = 0,
-}: {
-  t: Diccionario;
-  mensajesSinLeer?: number;
-}) {
+export function MobileTabBar({ t }: { t: Diccionario }) {
   const pathname = usePathname();
+  const mensajesSinLeer = useMensajesSinLeer();
 
   const ENLACES = [
     { href: "/", label: t.nav.inicio, Icono: IconoInicio },

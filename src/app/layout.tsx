@@ -4,6 +4,7 @@ import { Inter, Space_Grotesk, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { NavBar } from "@/components/layout/NavBar";
 import { MobileTabBar } from "@/components/layout/MobileTabBar";
+import { ContadorSoporteProvider } from "@/components/layout/ContadorSoporte";
 import { BarridoTransition } from "@/components/layout/BarridoTransition";
 import { CierreInactividad } from "@/components/auth/CierreInactividad";
 import { esAdmin, obtenerUsuarioActual } from "@/lib/auth/sesion";
@@ -58,8 +59,9 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
 
   // Contador de mensajes de soporte sin leer, para la campanita del nav —
   // mismo query que ya usaba /perfil para el badge de "Bandeja de soporte".
-  // Se recalcula en cada navegación de página completa (no en vivo sin
-  // recargar), igual que el resto de la app.
+  // Es solo el valor inicial: ContadorSoporteProvider lo vuelve a consultar
+  // en cada cambio de ruta, porque este layout raíz no se re-renderiza en
+  // una navegación suave y el número quedaba congelado.
   let mensajesSinLeer = 0;
   if (usuario) {
     const supabase = await crearClienteSupabaseServidor();
@@ -89,15 +91,21 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
       </head>
       <body className="min-h-full flex flex-col bg-background text-foreground overflow-x-hidden">
         {usuario && <CierreInactividad />}
-        <NavBar usuario={usuario} locale={locale} t={t} mensajesSinLeer={mensajesSinLeer} />
-        {/* NavBar es fixed/flotante (ya no ocupa espacio en el flujo normal),
-            así que este padding-top es lo que evita que el contenido quede
-            tapado debajo — mismo motivo que el pb-24 de abajo para la
-            barra flotante de mobile. */}
-        <main className="flex-1 max-w-[1080px] mx-auto w-full px-6 pt-24 sm:pt-28 pb-24 md:pb-16">
-          <BarridoTransition>{children}</BarridoTransition>
-        </main>
-        <MobileTabBar t={t} mensajesSinLeer={mensajesSinLeer} />
+        <ContadorSoporteProvider
+          inicial={mensajesSinLeer}
+          usuarioId={usuario?.id ?? null}
+          esAdmin={esAdmin(usuario)}
+        >
+          <NavBar usuario={usuario} locale={locale} t={t} />
+          {/* NavBar es fixed/flotante (ya no ocupa espacio en el flujo normal),
+              así que este padding-top es lo que evita que el contenido quede
+              tapado debajo — mismo motivo que el pb-24 de abajo para la
+              barra flotante de mobile. */}
+          <main className="flex-1 max-w-[1080px] mx-auto w-full px-6 pt-24 sm:pt-28 pb-24 md:pb-16">
+            <BarridoTransition>{children}</BarridoTransition>
+          </main>
+          <MobileTabBar t={t} />
+        </ContadorSoporteProvider>
       </body>
     </html>
   );
