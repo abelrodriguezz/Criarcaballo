@@ -18,7 +18,15 @@ interface FilaAgregado {
   ganancia_neta: number | string;
 }
 
-type GananciaPendiente = GananciaConcurso & {
+function esFechaReal(texto: string): boolean {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(texto)) return false;
+  const anio = Number(texto.slice(0, 4));
+  if (anio < 2000 || anio > 2100) return false;
+  const d = new Date(`${texto}T00:00:00Z`);
+  return !Number.isNaN(d.getTime()) && d.toISOString().slice(0, 10) === texto;
+}
+
+type GananciaPendiente =GananciaConcurso & {
   usuarios: { email: string; id_corto: number | null; wallet_usdt_erc20: string | null } | null;
 };
 
@@ -47,7 +55,12 @@ export default async function PaginaReportes({
   // de noche hora de NY aparecía en el reporte del día siguiente. Estos
   // reportes son los que deciden a quién se le paga el premio, así que la
   // fecha tiene que significar lo que el admin cree que significa.
-  const fechaValida = /^\d{4}-\d{2}-\d{2}$/.test(fechaParam ?? "");
+  // El formato solo no basta: "2026-13-01" pasaba el regex y
+  // `.toISOString()` de una fecha inválida tiraba la página entera (500), y
+  // "2026-02-30" se desbordaba en silencio al 2 de marzo mostrando datos de
+  // otro día. Se exige que la fecha exista de verdad (ida y vuelta) y esté
+  // en un rango razonable; si no, se usa el día de hoy.
+  const fechaValida = esFechaReal(fechaParam ?? "");
   const fecha = fechaValida ? (fechaParam as string) : fechaEnNY();
   const usuarioIdFiltro = usuarioIdParam || "";
   // "" = todos, "si" = solo los que operaron, "no" = solo los que no

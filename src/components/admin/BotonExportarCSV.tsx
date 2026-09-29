@@ -38,7 +38,13 @@ export function BotonExportarCSV({
   }
 
   return (
+    // type="button": este botón vive dentro del <form> de filtros de
+    // /usuarios/reportes; sin esto era un submit y, además de descargar, la
+    // página se recargaba con lo que hubiera en los filtros (aunque no se
+    // hubiera pulsado "Generar reporte"), así que el CSV bajado y la
+    // pantalla que quedaba podían ser de fechas distintas.
     <button
+      type="button"
       onClick={exportar}
       disabled={filas.length === 0}
       className="border border-[var(--border)] text-sm font-semibold px-4 py-2.5 rounded-xl hover:bg-surface-hover transition-colors disabled:opacity-50"
