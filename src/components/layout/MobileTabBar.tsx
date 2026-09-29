@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import Link, { useLinkStatus } from "next/link";
 import { usePathname } from "next/navigation";
 import {
   IconoInicio,
@@ -12,6 +12,23 @@ import {
   IconoInfo,
 } from "@/components/ui/Iconos";
 import type { Diccionario } from "@/lib/i18n";
+
+// useLinkStatus solo funciona dentro de un descendiente del propio <Link>
+// (no sirve leerlo desde el componente que lo renderiza) — por eso es un
+// componente aparte. Sin esto, tocar un tab en mobile no daba ninguna señal
+// de que el toque se registró mientras cargaba la página siguiente (1-3s
+// medido en QA), y parecía que el botón no respondió.
+function PulsoDeCarga() {
+  const { pending } = useLinkStatus();
+  return (
+    <span
+      aria-hidden
+      className={`absolute inset-0 rounded-xl bg-brand-primary/10 transition-opacity duration-150 ${
+        pending ? "opacity-100 animate-pulse" : "opacity-0"
+      }`}
+    />
+  );
+}
 
 /**
  * En pantallas md+ la navegación vive en NavBar (arriba). Por debajo de md,
@@ -56,6 +73,7 @@ export function MobileTabBar({
               activo ? "text-brand-primary bg-brand-primary/10" : "text-foreground-muted"
             }`}
           >
+            <PulsoDeCarga />
             <span className="relative">
               <Icono className="w-5 h-5 shrink-0" />
               {href === "/perfil" && mensajesSinLeer > 0 && (

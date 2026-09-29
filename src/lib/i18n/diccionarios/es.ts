@@ -116,6 +116,24 @@ export const es = {
     correoSinConfirmar: "Todavía no confirmaste tu correo. Revisa tu bandeja de entrada.",
     errorEnvioCorreo:
       "No se pudo enviar el correo de confirmación. Inténtalo más tarde o escribe a soporte.",
+    // Estos vienen tal cual de Server Actions o de RPC de la base (mensajes
+    // fijos en español, ver src/lib/erroresConocidos.ts) — antes se le
+    // mostraban a un usuario con la app en inglés sin traducir.
+    debesIniciarSesion: "Debes iniciar sesión.",
+    cuentaDesactivadaAccion: "Tu cuenta está desactivada.",
+    simboloInvalido: "Símbolo de activo inválido.",
+    tipoOperacionInvalido: "Tipo de operación inválido.",
+    montoInvalido: "El monto debe ser mayor a cero.",
+    pickNoVigente: "Ese activo ya no es el pick del día vigente.",
+    saldoInsuficiente: "Saldo virtual insuficiente.",
+    operacionYaAbierta:
+      "Ya tienes una operación abierta. Podrás abrir otra cuando el admin cierre la sesión.",
+    tradingDeshabilitado: "Un administrador deshabilitó el trading para tu cuenta.",
+    noPudoAbrirOperacion: "No se pudo abrir la operación.",
+    topeFavoritos:
+      "Llegaste al máximo de 50 activos favoritos. Quita alguno antes de agregar otro.",
+    noPudoGuardarFavorito: "No se pudo guardar el favorito.",
+    noPudoQuitarFavorito: "No se pudo quitar el favorito.",
   },
   cuentaDesactivada: {
     titulo: "Cuenta desactivada",
@@ -244,6 +262,8 @@ export const es = {
     errorGuardar: "No se pudo guardar. Intenta de nuevo.",
     descripcion:
       "Solo se usa para enviarte recompensas si ganas un concurso — no habilita depósitos ni retiros en la plataforma. Asegúrate de que sea tu dirección en la red Ethereum (ERC20), no en BSC, Polygon u otra red compatible — el formato es el mismo pero el pago se hace específicamente en ERC20.",
+    confirmarVaciar:
+      "Vas a dejar esta wallet vacía. Si tienes un retiro pendiente o ganas un concurso, no podremos pagarte hasta que agregues una de nuevo. ¿Continuar?",
   },
   datosContacto: {
     titulo: "Datos de contacto",

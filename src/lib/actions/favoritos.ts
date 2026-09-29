@@ -4,6 +4,8 @@ import { revalidatePath } from "next/cache";
 import { crearClienteSupabaseServidor } from "@/lib/supabase/server";
 import { cuentaActiva } from "@/lib/auth/sesion";
 import { exito, fallo, type Resultado } from "@/lib/actions/resultado";
+import { obtenerDiccionario, obtenerLocale } from "@/lib/i18n/servidor";
+import { traducirErrorConocido } from "@/lib/erroresConocidos";
 
 /**
  * Mismo formato que exigen el pick del día y las señales: un par de
@@ -35,16 +37,17 @@ export async function agregarFavorito(
   formData: FormData
 ): Promise<Resultado<null>> {
   const supabase = await crearClienteSupabaseServidor();
+  const [t, locale] = await Promise.all([obtenerDiccionario(), obtenerLocale()]);
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) return fallo("Debes iniciar sesión.");
+  if (!user) return fallo(t.errores.debesIniciarSesion);
   if (!(await cuentaActiva(supabase, user.id))) {
-    return fallo("Tu cuenta está desactivada.");
+    return fallo(t.errores.cuentaDesactivadaAccion);
   }
 
   const activo = normalizarSimbolo(formData);
-  if (!activo) return fallo("Símbolo de activo inválido.");
+  if (!activo) return fallo(t.errores.simboloInvalido);
 
   const { error } = await supabase
     .from("favoritos")
@@ -54,9 +57,11 @@ export async function agregarFavorito(
     );
 
   // El tope por usuario lo aplica un trigger en la base (migración 021),
-  // que es donde no se puede saltar: hay que mostrar su mensaje.
+  // que es donde no se puede saltar: hay que mostrar su mensaje, traducido.
   if (error) {
-    return fallo(error.message || "No se pudo guardar el favorito.");
+    return fallo(
+      traducirErrorConocido(error.message || t.errores.noPudoGuardarFavorito, locale)
+    );
   }
 
   revalidatePath("/mercado");
@@ -68,16 +73,17 @@ export async function quitarFavorito(
   formData: FormData
 ): Promise<Resultado<null>> {
   const supabase = await crearClienteSupabaseServidor();
+  const [t, locale] = await Promise.all([obtenerDiccionario(), obtenerLocale()]);
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) return fallo("Debes iniciar sesión.");
+  if (!user) return fallo(t.errores.debesIniciarSesion);
   if (!(await cuentaActiva(supabase, user.id))) {
-    return fallo("Tu cuenta está desactivada.");
+    return fallo(t.errores.cuentaDesactivadaAccion);
   }
 
   const activo = normalizarSimbolo(formData);
-  if (!activo) return fallo("Símbolo de activo inválido.");
+  if (!activo) return fallo(t.errores.simboloInvalido);
 
   const { error } = await supabase
     .from("favoritos")
@@ -86,7 +92,9 @@ export async function quitarFavorito(
     .eq("activo", activo);
 
   if (error) {
-    return fallo(error.message || "No se pudo quitar el favorito.");
+    return fallo(
+      traducirErrorConocido(error.message || t.errores.noPudoQuitarFavorito, locale)
+    );
   }
 
   revalidatePath("/mercado");

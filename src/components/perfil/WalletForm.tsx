@@ -53,6 +53,17 @@ export function WalletForm({
       }
     }
 
+    // Antes se podía vaciar una wallet ya configurada sin ningún aviso —
+    // si había un retiro pendiente o se ganaba un concurso después, no
+    // había forma de pagarle a esa persona hasta que la agregara de nuevo.
+    const seVaciaAlguna =
+      (walletActual && !limpio) ||
+      (esAdmin && wallet2Actual && !limpio2) ||
+      (esAdmin && wallet3Actual && !limpio3);
+    if (seVaciaAlguna && !window.confirm(t.wallet.confirmarVaciar)) {
+      return;
+    }
+
     setGuardando(true);
     const supabase = crearClienteSupabase();
     const datos: Record<string, string | null> = {

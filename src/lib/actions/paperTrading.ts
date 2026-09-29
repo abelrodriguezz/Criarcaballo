@@ -5,10 +5,11 @@ import { crearClienteSupabaseServidor } from "@/lib/supabase/server";
 import { esAdmin } from "@/lib/auth/sesion";
 import { estaAbiertaBolsaNY, fechaEnNY } from "@/lib/horarioMercado";
 import { obtenerHorarioMercado, formatearHorarioMercado } from "@/lib/config-horario-mercado";
-import { obtenerLocale } from "@/lib/i18n/servidor";
+import { obtenerLocale, obtenerDiccionario } from "@/lib/i18n/servidor";
 import { obtenerSecretoServidor } from "@/lib/supabase/secretoServidor";
 import { parsearNumero } from "@/lib/format";
 import { exito, fallo, type Resultado } from "@/lib/actions/resultado";
+import { traducirErrorConocido } from "@/lib/erroresConocidos";
 
 /**
  * Los fallos esperados se DEVUELVEN, no se lanzan: en producción Next.js
@@ -20,11 +21,12 @@ export async function abrirOperacion(
   formData: FormData
 ): Promise<Resultado<null>> {
   const supabase = await crearClienteSupabaseServidor();
+  const t = await obtenerDiccionario();
 
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) return fallo("Debes iniciar sesión.");
+  if (!user) return fallo(t.errores.debesIniciarSesion);
 
   const { data: perfilTrading } = await supabase
     .from("usuarios")
@@ -33,10 +35,10 @@ export async function abrirOperacion(
     .single();
 
   if (perfilTrading?.activo === false) {
-    return fallo("Tu cuenta está desactivada.");
+    return fallo(t.errores.cuentaDesactivadaAccion);
   }
   if (perfilTrading?.trading_habilitado === false) {
-    return fallo("Un administrador deshabilitó el trading para tu cuenta.");
+    return fallo(t.errores.tradingDeshabilitado);
   }
 
   const usuarioEsAdmin = esAdmin({
@@ -64,13 +66,13 @@ export async function abrirOperacion(
   // es la que sigue abajo (coincide con el pick vigente), no la forma del
   // texto.
   if (!activo || activo.length > 30) {
-    return fallo("Símbolo de activo inválido.");
+    return fallo(t.errores.simboloInvalido);
   }
   if (tipo !== "compra" && tipo !== "venta") {
-    return fallo("Tipo de operación inválido.");
+    return fallo(t.errores.tipoOperacionInvalido);
   }
   if (!Number.isFinite(montoUsado) || montoUsado <= 0) {
-    return fallo("El monto debe ser mayor a cero.");
+    return fallo(t.errores.montoInvalido);
   }
 
   // Verifica que el activo sea realmente el pick del día vigente —
@@ -87,7 +89,7 @@ export async function abrirOperacion(
     .maybeSingle();
 
   if (!pickVigente || pickVigente.activo.toUpperCase() !== activo) {
-    return fallo("Ese activo ya no es el pick del día vigente.");
+    return fallo(t.errores.pickNoVigente);
   }
 
   // Ya no se busca ningún precio en vivo (ni Binance ni ninguna otra
@@ -112,7 +114,10 @@ export async function abrirOperacion(
   });
 
   if (error) {
-    return fallo(error.message || "No se pudo abrir la operación.");
+    const locale = await obtenerLocale();
+    return fallo(
+      traducirErrorConocido(error.message || t.errores.noPudoAbrirOperacion, locale)
+    );
   }
 
   revalidatePath("/trade-del-dia");

@@ -114,6 +114,21 @@ export const en: typeof es = {
     correoSinConfirmar: "You haven't confirmed your email yet. Check your inbox.",
     errorEnvioCorreo:
       "Couldn't send the confirmation email. Try again later or contact support.",
+    debesIniciarSesion: "You must be logged in.",
+    cuentaDesactivadaAccion: "Your account is deactivated.",
+    simboloInvalido: "Invalid asset symbol.",
+    tipoOperacionInvalido: "Invalid operation type.",
+    montoInvalido: "The amount must be greater than zero.",
+    pickNoVigente: "That asset is no longer today's pick.",
+    saldoInsuficiente: "Insufficient virtual balance.",
+    operacionYaAbierta:
+      "You already have an open operation. You can open another once the admin closes it.",
+    tradingDeshabilitado: "An administrator disabled trading for your account.",
+    noPudoAbrirOperacion: "Couldn't open the operation.",
+    topeFavoritos:
+      "You reached the limit of 50 favorite assets. Remove one before adding another.",
+    noPudoGuardarFavorito: "Couldn't save the favorite.",
+    noPudoQuitarFavorito: "Couldn't remove the favorite.",
   },
   cuentaDesactivada: {
     titulo: "Account deactivated",
@@ -239,6 +254,8 @@ export const en: typeof es = {
     errorGuardar: "Couldn't save. Try again.",
     descripcion:
       "This is only used to send you rewards if you win a contest — it does not enable deposits or withdrawals on the platform. Make sure it's your address on the Ethereum (ERC20) network, not BSC, Polygon or another compatible network — the format is the same but the payment is made specifically in ERC20.",
+    confirmarVaciar:
+      "You're about to leave this wallet empty. If you have a pending withdrawal or win a contest, we won't be able to pay you until you add one again. Continue?",
   },
   datosContacto: {
     titulo: "Contact details",

@@ -27,11 +27,13 @@ export function Logo({ className = "", mostrarWordmark = true }: LogoProps) {
         />
       </svg>
       {mostrarWordmark && (
-        // Oculto por debajo de 380px: en un iPhone SE (320px) la fila del
-        // header (logo + botón de login/perfil + selector de idioma + tema)
-        // no cabe con el wordmark completo y desborda la página entera. El
-        // ícono solo sigue siendo un link a "/" igual de reconocible.
-        <span className="hidden min-[380px]:inline font-display font-bold text-xl tracking-tight">
+        // Oculto por debajo de 375px (el ancho de iPhone más común, medido
+        // en QA, ya cabe con el wordmark completo tanto con sesión como sin
+        // ella): en un iPhone SE (320px) la fila del header (logo + botón de
+        // login/perfil + selector de idioma + tema) no cabe con el wordmark
+        // completo y desborda la página entera. El ícono solo sigue siendo
+        // un link a "/" igual de reconocible.
+        <span className="hidden min-[375px]:inline font-display font-bold text-xl tracking-tight">
           Trade<span style={{ color: "var(--brand-primary)" }}>4U</span>
         </span>
       )}
