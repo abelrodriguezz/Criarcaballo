@@ -8,6 +8,9 @@ import { AdminSaldoForm } from "@/components/admin/AdminSaldoForm";
 import { formatearDinero, formatearPrecio } from "@/lib/format";
 import type { GananciaConcurso, OperacionSimulada, Usuario } from "@/lib/types";
 
+const FORMATO_UUID =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
 async function obtenerEmailPorId(
   supabase: Awaited<ReturnType<typeof crearClienteSupabaseServidor>>,
   id: string | null
@@ -33,6 +36,12 @@ export default async function PaginaDetalleUsuario({
   if (!usuarioActual.activo) redirect("/cuenta-desactivada");
   if (!esAdmin(usuarioActual)) redirect("/perfil");
 
+  // Mismo problema que /soporte/[usuarioId]: un id mal escrito o de un
+  // usuario que ya no existe (el registro se puede borrar desde Supabase
+  // Auth) mostraba una ficha vacía con el título "Usuario" en vez de
+  // avisar que no hay nada que ver.
+  if (!FORMATO_UUID.test(usuarioId)) redirect("/usuarios");
+
   const supabase = await crearClienteSupabaseServidor();
 
   const [
@@ -46,7 +55,7 @@ export default async function PaginaDetalleUsuario({
       .from("usuarios")
       .select("*")
       .eq("id", usuarioId)
-      .single<Usuario>(),
+      .maybeSingle<Usuario>(),
     supabase
       .from("ganancias_concursos")
       .select("*")
@@ -70,6 +79,8 @@ export default async function PaginaDetalleUsuario({
       .limit(20)
       .returns<OperacionSimulada[]>(),
   ]);
+
+  if (!perfil) redirect("/usuarios");
 
   const emailInvitador = await obtenerEmailPorId(supabase, perfil?.invitado_por ?? null);
 
