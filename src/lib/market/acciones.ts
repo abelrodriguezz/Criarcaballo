@@ -103,6 +103,14 @@ async function obtenerMovidasAccionesYahoo(
       .filter(
         (v): v is PrecioActivo =>
           v.simbolo !== "" && Number.isFinite(v.precio) && Number.isFinite(v.cambioPorc)
+      )
+      // Yahoo hoy ya los devuelve ordenados, pero es una API no oficial:
+      // no se depende de eso. Ganadores: mayor subida primero; perdedores:
+      // mayor caída primero.
+      .sort((a, b) =>
+        scrId === "day_gainers"
+          ? b.cambioPorc - a.cambioPorc
+          : a.cambioPorc - b.cambioPorc
       );
   } catch {
     return [];

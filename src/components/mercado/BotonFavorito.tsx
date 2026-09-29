@@ -13,6 +13,18 @@ export function BotonFavorito({
 }) {
   const [esFavorito, setEsFavorito] = useState(esFavoritoInicial);
   const [error, setError] = useState<string | null>(null);
+
+  // Un mismo activo puede aparecer en dos tarjetas de /mercado a la vez
+  // (p. ej. HBARUSDT en "Lo que más subió hoy" y en "Cripto"). Al marcar una
+  // estrella, la Server Action revalida la página y llega el valor nuevo
+  // por props, pero useState ignoraba ese cambio: la otra estrella seguía
+  // mostrando el estado viejo hasta recargar. Se sincroniza cuando el valor
+  // del servidor cambia (patrón "ajustar estado durante el render").
+  const [inicialPrevio, setInicialPrevio] = useState(esFavoritoInicial);
+  if (inicialPrevio !== esFavoritoInicial) {
+    setInicialPrevio(esFavoritoInicial);
+    setEsFavorito(esFavoritoInicial);
+  }
   const [pendiente, iniciarTransicion] = useTransition();
 
   function alternar() {

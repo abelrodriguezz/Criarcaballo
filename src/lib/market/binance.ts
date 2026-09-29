@@ -178,7 +178,12 @@ function procesarTickers(data: unknown[], limite: number): PrecioCripto[] {
     .filter(
       (t) =>
         typeof t?.symbol === "string" &&
-        t.symbol.endsWith("USDT") &&
+        // Binance lista pares con caracteres no ASCII (p. ej. "币安人生USDT",
+        // "牛来USDT") con volumen suficiente para entrar al top. Esos
+        // símbolos no pasan el formato que exigen favoritos, pick y señales
+        // (/^[A-Z0-9]{5,20}$/), así que la estrella de su tarjeta fallaba
+        // siempre con "Símbolo de activo inválido". Se excluyen del top.
+        /^[A-Z0-9]{1,16}USDT$/.test(t.symbol) &&
         parseFloat(t.quoteVolume) >= VOLUMEN_MINIMO_USDT
     )
     .map((t) => ({

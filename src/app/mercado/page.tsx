@@ -57,13 +57,21 @@ export default async function PaginaMercado() {
 
   // Top ganadores del día mezclando cripto y acciones (no solo un tipo),
   // ordenado de mayor a menor subida.
+  // El top de cripto sale de un listado cacheado hasta 30s; si el mismo par
+  // está también en la sección "Cripto" (precio recién pedido), se usa ese
+  // valor para que la misma moneda no muestre dos precios distintos en la
+  // misma pantalla.
+  const criptoFresco = new Map(cripto.map((c) => [c.simbolo, c]));
   const topGanadores: ActivoNormalizado[] = [
-    ...topCripto.map((c) => ({
-      simbolo: c.simbolo,
-      precio: c.precio,
-      cambioPorc: c.cambioPorc24h,
-      tipo: "Cripto" as const,
-    })),
+    ...topCripto.map((c) => {
+      const fresco = criptoFresco.get(c.simbolo) ?? c;
+      return {
+        simbolo: c.simbolo,
+        precio: fresco.precio,
+        cambioPorc: fresco.cambioPorc24h,
+        tipo: "Cripto" as const,
+      };
+    }),
     ...topAcciones.map((a) => ({
       simbolo: a.simbolo,
       precio: a.precio,
