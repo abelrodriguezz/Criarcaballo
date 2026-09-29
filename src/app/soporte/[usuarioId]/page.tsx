@@ -6,6 +6,9 @@ import { marcarLeidoPorAdmin } from "@/lib/actions/chat";
 import { ChatBox } from "@/components/chat/ChatBox";
 import type { MensajeSoporte } from "@/lib/types";
 
+const FORMATO_UUID =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
 export default async function PaginaSoporteConversacion({
   params,
 }: {
@@ -18,6 +21,13 @@ export default async function PaginaSoporteConversacion({
   if (!usuario.activo) redirect("/cuenta-desactivada");
   if (!esAdmin(usuario)) redirect("/soporte");
 
+  // Un id mal escrito o de un usuario que ya no existe mostraba un chat
+  // vacío con la caja de envío activa, y cada intento de responder
+  // fallaba ("Conversación inválida" o error de clave foránea). Como los
+  // mensajes se borran en cascada con el usuario, no hay conversación que
+  // mostrar: se vuelve a la bandeja.
+  if (!FORMATO_UUID.test(usuarioId)) redirect("/soporte");
+
   const supabase = await crearClienteSupabaseServidor();
 
   const [{ data: mensajes }, { data: perfilUsuario }] = await Promise.all([
@@ -27,8 +37,14 @@ export default async function PaginaSoporteConversacion({
       .eq("usuario_id", usuarioId)
       .order("created_at", { ascending: true })
       .returns<MensajeSoporte[]>(),
-    supabase.from("usuarios").select("email").eq("id", usuarioId).single(),
+    supabase
+      .from("usuarios")
+      .select("email")
+      .eq("id", usuarioId)
+      .maybeSingle(),
   ]);
+
+  if (!perfilUsuario) redirect("/soporte");
 
   await marcarLeidoPorAdmin(usuarioId);
 
