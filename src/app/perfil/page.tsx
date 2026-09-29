@@ -49,7 +49,7 @@ export default async function PaginaPerfil() {
     depositoSimuladoRaw,
     { data: solicitudesRetiro },
     { count: retirosPendientesCount },
-    { count: depositosSinRevisarCount },
+    { count: depositosPendientesCount },
     { data: totalesAdmin },
   ] = await Promise.all([
     supabase
@@ -113,11 +113,16 @@ export default async function PaginaPerfil() {
           .select("id", { count: "exact", head: true })
           .eq("estado", "pendiente")
       : Promise.resolve({ count: 0 }),
+    // Mismo criterio que retirosPendientesCount: el badge del menú cuenta
+    // lo que sigue necesitando acción del admin (pagado=false), no si ya
+    // se "vio" la pantalla — antes usaba revisado_por_admin, que se
+    // marcaba con solo ENTRAR a /depositos, así que el badge se apagaba
+    // aunque siguieran pendientes de pago.
     usuarioEsAdmin
       ? supabase
           .from("depositos_simulados")
           .select("id", { count: "exact", head: true })
-          .eq("revisado_por_admin", false)
+          .eq("pagado", false)
       : Promise.resolve({ count: 0 }),
     // El admin no opera — su propia fila de saldo_virtual no significa
     // nada. En su lugar ve la suma de TODAS las cuentas de inversión, y
@@ -333,7 +338,7 @@ export default async function PaginaPerfil() {
           icono={<IconoDeposito />}
           titulo="Depósitos"
           subtitulo="Depósitos simulados registrados por los usuarios"
-          badge={depositosSinRevisarCount ?? 0}
+          badge={depositosPendientesCount ?? 0}
         />
       )}
 
