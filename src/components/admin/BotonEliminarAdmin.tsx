@@ -3,15 +3,19 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { crearClienteSupabase } from "@/lib/supabase/client";
+import { es } from "@/lib/i18n/diccionarios/es";
+import type { TextosAdmin } from "@/lib/i18n";
 
 export function BotonEliminarAdmin({
   tabla,
   id,
   textoConfirmacion,
+  ta = es.admin,
 }: {
   tabla: "senales" | "noticias" | "ganancias_concursos" | "depositos_simulados";
   id: string;
   textoConfirmacion: string;
+  ta?: TextosAdmin;
 }) {
   const router = useRouter();
   const [eliminando, setEliminando] = useState(false);
@@ -25,7 +29,7 @@ export function BotonEliminarAdmin({
     setEliminando(false);
 
     if (error) {
-      alert("No se pudo eliminar. Verifica tu permiso de admin.");
+      alert(ta.errorEliminar);
       return;
     }
 
@@ -38,7 +42,7 @@ export function BotonEliminarAdmin({
       disabled={eliminando}
       className="text-xs font-semibold text-loss hover:underline disabled:opacity-50"
     >
-      {eliminando ? "Eliminando..." : "Eliminar"}
+      {eliminando ? ta.eliminando : ta.eliminar}
     </button>
   );
 }

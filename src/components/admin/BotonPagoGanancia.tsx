@@ -3,13 +3,17 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { crearClienteSupabase } from "@/lib/supabase/client";
+import { es } from "@/lib/i18n/diccionarios/es";
+import type { TextosAdmin } from "@/lib/i18n";
 
 export function BotonPagoGanancia({
   gananciaId,
   pagado,
+  ta = es.admin,
 }: {
   gananciaId: string;
   pagado: boolean;
+  ta?: TextosAdmin;
 }) {
   const router = useRouter();
   const [guardando, setGuardando] = useState(false);
@@ -20,12 +24,7 @@ export function BotonPagoGanancia({
   const deshabilitado = guardando || refrescando;
 
   async function alternarPago() {
-    if (
-      !pagado &&
-      !window.confirm(
-        "¿Confirmas que ya transferiste el USDT a la wallet del usuario?"
-      )
-    ) {
+    if (!pagado && !window.confirm(ta.confirmarPago)) {
       return;
     }
 
@@ -54,12 +53,12 @@ export function BotonPagoGanancia({
     setGuardando(false);
 
     if (error) {
-      alert("No se pudo actualizar. Verifica tu permiso de admin.");
+      alert(ta.errorActualizar);
       return;
     }
 
     if (!data) {
-      alert("Este pago ya fue actualizado por otro admin, se refrescará la página.");
+      alert(ta.pagoYaActualizado);
       startTransition(() => router.refresh());
       return;
     }
@@ -74,7 +73,7 @@ export function BotonPagoGanancia({
         disabled={deshabilitado}
         className="text-xs font-semibold text-foreground-muted hover:underline disabled:opacity-50"
       >
-        {deshabilitado ? "..." : "Marcar como pendiente"}
+        {deshabilitado ? "..." : ta.marcarPendiente}
       </button>
     );
   }
@@ -85,7 +84,7 @@ export function BotonPagoGanancia({
       disabled={deshabilitado}
       className="text-xs font-semibold text-brand-primary hover:underline disabled:opacity-50"
     >
-      {deshabilitado ? "Guardando..." : "Marcar como pagado"}
+      {deshabilitado ? ta.guardando : ta.marcarPagado}
     </button>
   );
 }

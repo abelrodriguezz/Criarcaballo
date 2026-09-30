@@ -4,20 +4,23 @@ import { useState } from "react";
 import { AdminNoticiaForm } from "@/components/admin/AdminNoticiaForm";
 import { BotonEliminarAdmin } from "@/components/admin/BotonEliminarAdmin";
 import { urlSeguraParaEnlace } from "@/lib/url";
+import { es } from "@/lib/i18n/diccionarios/es";
+import { rellenar, type Locale, type TextosAdmin } from "@/lib/i18n";
 import type { Noticia } from "@/lib/types";
-import type { Locale } from "@/lib/i18n";
 
 export function TarjetaNoticiaAdmin({
   noticia,
   esAdmin,
   locale = "es",
   etiquetas = { destacada: "Destacada", verFuente: "Ver fuente →" },
+  ta = es.admin,
 }: {
   noticia: Noticia;
   esAdmin: boolean;
   locale?: Locale;
   // Textos públicos de la tarjeta, ya traducidos por la página (servidor).
   etiquetas?: { destacada: string; verFuente: string };
+  ta?: TextosAdmin;
 }) {
   const [editando, setEditando] = useState(false);
   // Aunque la base ya solo acepta http/https (constraint
@@ -35,6 +38,7 @@ export function TarjetaNoticiaAdmin({
       <AdminNoticiaForm
         noticiaExistente={noticia}
         onCancelar={() => setEditando(false)}
+        ta={ta}
       />
     );
   }
@@ -75,12 +79,13 @@ export function TarjetaNoticiaAdmin({
             onClick={() => setEditando(true)}
             className="text-xs font-semibold text-brand-primary hover:underline"
           >
-            Editar
+            {ta.editar}
           </button>
           <BotonEliminarAdmin
             tabla="noticias"
             id={noticia.id}
-            textoConfirmacion={`¿Eliminar la noticia "${noticia.titulo}"?`}
+            textoConfirmacion={rellenar(ta.confirmarEliminarNoticia, { t: noticia.titulo })}
+            ta={ta}
           />
         </div>
       )}

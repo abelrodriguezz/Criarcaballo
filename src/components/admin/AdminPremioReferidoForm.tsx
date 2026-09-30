@@ -3,7 +3,8 @@
 import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { crearClienteSupabase } from "@/lib/supabase/client";
-import { parsearNumero } from "@/lib/format";
+import { parsearNumero, formatearDinero } from "@/lib/format";
+import { rellenar, type TextosAdmin } from "@/lib/i18n";
 import type { ConfigPremioReferido } from "@/lib/config-referidos";
 
 // Literal duplicado a propósito, no importado de "@/lib/config-referidos":
@@ -14,8 +15,10 @@ const CLAVE_PREMIO_REFERIDO = "premio_referido";
 
 export function AdminPremioReferidoForm({
   configActual,
+  ta,
 }: {
   configActual: ConfigPremioReferido;
+  ta: TextosAdmin;
 }) {
   const router = useRouter();
   const [editando, setEditando] = useState(false);
@@ -34,15 +37,15 @@ export function AdminPremioReferidoForm({
     const bonoMontoNum = parsearNumero(bonoMonto);
 
     if (!Number.isFinite(porcentajeNum) || porcentajeNum < 0 || porcentajeNum > 100) {
-      setError("El porcentaje debe estar entre 0 y 100.");
+      setError(ta.premioErrPorcentaje);
       return;
     }
     if (!Number.isInteger(bonoCadaNum) || bonoCadaNum <= 0) {
-      setError("La cantidad de referidos para el bono debe ser un entero mayor a cero.");
+      setError(ta.premioErrBonoCada);
       return;
     }
     if (!Number.isFinite(bonoMontoNum) || bonoMontoNum < 0) {
-      setError("El monto del bono debe ser un número igual o mayor a cero.");
+      setError(ta.premioErrBonoMonto);
       return;
     }
 
@@ -62,7 +65,7 @@ export function AdminPremioReferidoForm({
     setGuardando(false);
 
     if (error) {
-      setError("No se pudo guardar. Verifica tu permiso de admin.");
+      setError(ta.errorPermiso);
       return;
     }
 
@@ -76,9 +79,11 @@ export function AdminPremioReferidoForm({
         onClick={() => setEditando(true)}
         className="w-full text-left border border-dashed border-[var(--brand-primary)] text-brand-primary text-sm font-semibold px-4 py-2.5 rounded-xl mb-4 hover:bg-[var(--brand-primary)]/5 transition-colors"
       >
-        ✎ Comisión {configActual.porcentaje}% por depósito · Bono $
-        {configActual.bonoMonto.toFixed(2)} cada {configActual.bonoCada}{" "}
-        referidos calificados (editar)
+        {rellenar(ta.premioResumen, {
+          p: configActual.porcentaje,
+          m: formatearDinero(configActual.bonoMonto),
+          c: configActual.bonoCada,
+        })}
       </button>
     );
   }
@@ -90,7 +95,7 @@ export function AdminPremioReferidoForm({
     >
       <div className="flex justify-between items-center mb-3">
         <h3 className="font-display font-semibold text-sm">
-          Configuración de premios por referido
+          {ta.premioTitulo}
         </h3>
         <button
           type="button"
@@ -103,55 +108,50 @@ export function AdminPremioReferidoForm({
           }}
           className="text-xs text-foreground-muted"
         >
-          Cancelar
+          {ta.cancelar}
         </button>
       </div>
 
       <label className="block text-[12px] font-medium text-foreground-muted mb-1.5">
-        Comisión — % del depósito simulado del invitado
+        {ta.premioComisionLabel}
       </label>
       <input
         value={porcentaje}
         onChange={(e) => setPorcentaje(e.target.value)}
         inputMode="decimal"
-        placeholder="Ej. 10"
+        placeholder={`${ta.ejemplo} 10`}
         className="w-full px-3.5 py-2.5 mb-2.5 rounded-lg border border-[var(--border)] bg-background text-sm"
       />
 
       <div className="grid grid-cols-2 gap-2.5 mb-2.5">
         <div>
           <label className="block text-[12px] font-medium text-foreground-muted mb-1.5">
-            Bono cada X referidos
+            {ta.premioBonoCadaLabel}
           </label>
           <input
             value={bonoCada}
             onChange={(e) => setBonoCada(e.target.value)}
             inputMode="numeric"
-            placeholder="Ej. 10"
+            placeholder={`${ta.ejemplo} 10`}
             className="w-full px-3.5 py-2.5 rounded-lg border border-[var(--border)] bg-background text-sm"
           />
         </div>
         <div>
           <label className="block text-[12px] font-medium text-foreground-muted mb-1.5">
-            Monto del bono (USDT)
+            {ta.premioBonoMontoLabel}
           </label>
           <input
             value={bonoMonto}
             onChange={(e) => setBonoMonto(e.target.value)}
             inputMode="decimal"
-            placeholder="Ej. 1000"
+            placeholder={`${ta.ejemplo} 1000`}
             className="w-full px-3.5 py-2.5 rounded-lg border border-[var(--border)] bg-background text-sm"
           />
         </div>
       </div>
 
       <p className="text-[12px] text-foreground-muted mb-3">
-        Cuando un invitado hace su depósito simulado, se le genera al
-        instante a quien lo invitó una comisión pendiente por ese
-        porcentaje. Al llegar a un múltiplo de la cantidad de referidos
-        configurada (los que ya depositaron), se suma además el bono —
-        se repite cada vez que se alcanza otro múltiplo. Los cambios solo
-        aplican hacia adelante, no a lo ya otorgado.
+        {ta.premioAyuda}
       </p>
 
       {error && <p className="text-loss text-[13px] mb-2">{error}</p>}
@@ -161,7 +161,7 @@ export function AdminPremioReferidoForm({
         disabled={guardando}
         className="bg-brand-primary hover:bg-brand-primary-hover disabled:opacity-60 text-white font-semibold text-sm px-5 py-2.5 rounded-lg transition-colors"
       >
-        {guardando ? "Guardando..." : "Guardar cambios"}
+        {guardando ? ta.guardando : ta.guardarCambios}
       </button>
     </form>
   );

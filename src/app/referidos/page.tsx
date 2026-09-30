@@ -5,6 +5,8 @@ import { crearClienteSupabaseServidor } from "@/lib/supabase/server";
 import { obtenerConfigPremioReferido } from "@/lib/config-referidos";
 import { AdminPremioReferidoForm } from "@/components/admin/AdminPremioReferidoForm";
 import { BuscadorReferidos } from "@/components/admin/BuscadorReferidos";
+import { obtenerDiccionario, obtenerLocale } from "@/lib/i18n/servidor";
+import { rellenar } from "@/lib/i18n";
 import type { GananciaConcurso } from "@/lib/types";
 
 interface FilaUsuarioCompleta {
@@ -21,6 +23,9 @@ export default async function PaginaReferidos() {
   if (!usuarioActual) redirect("/login");
   if (!usuarioActual.activo) redirect("/cuenta-desactivada");
   if (!esAdmin(usuarioActual)) redirect("/perfil");
+
+  const [t, locale] = await Promise.all([obtenerDiccionario(), obtenerLocale()]);
+  const ta = t.admin;
 
   const supabase = await crearClienteSupabaseServidor();
 
@@ -56,35 +61,32 @@ export default async function PaginaReferidos() {
         href="/perfil"
         className="text-[13px] text-brand-primary font-semibold mb-4 inline-block"
       >
-        ← Volver a perfil
+        {ta.volverAPerfil}
       </Link>
 
       <h1 className="font-display font-semibold text-[26px] mb-1.5">
-        Referidos
+        {ta.referidosTitulo}
       </h1>
       <p className="text-foreground-muted text-[15px] mb-7">
-        {cantidadInvitados}{" "}
-        {cantidadInvitados === 1
-          ? "persona se registró por invitación"
-          : "personas se registraron por invitación"}
-        . Cuando confirmas como pagado el depósito simulado de un invitado
-        (en Depósitos), se le genera automáticamente a quien lo invitó una
-        comisión pendiente de pago (un depósito sin confirmar no genera
-        nada todavía) — se paga en USDT vía tarjeta de regalo (gift card), fuera de la
-        plataforma. Márcala como pagada aquí cuando ya se la hayas
-        enviado.
+        {rellenar(
+          cantidadInvitados === 1 ? ta.referidosInvitadosUno : ta.referidosInvitadosVarios,
+          { n: cantidadInvitados }
+        )}{" "}
+        {ta.referidosIntro}
       </p>
 
       <h2 className="font-display font-semibold text-lg mb-3">
-        Configuración
+        {ta.configuracion}
       </h2>
-      <AdminPremioReferidoForm configActual={config} />
+      <AdminPremioReferidoForm configActual={config} ta={ta} />
 
       <BuscadorReferidos
         todos={todos}
         comisiones={comisiones}
         bonos={bonos}
         depositos={depositos ?? []}
+        ta={ta}
+        locale={locale}
       />
     </div>
   );

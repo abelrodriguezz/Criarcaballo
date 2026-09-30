@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { formatearDinero } from "@/lib/format";
+import { rellenar, type TextosAdmin } from "@/lib/i18n";
 
 export interface NodoArbolReferido {
   id: string;
@@ -58,6 +59,7 @@ function CajaNodo({
   deposito,
   cantidadHijos,
   onSeleccionar,
+  ta,
 }: {
   usuario: NodoArbolReferido;
   posicion: number | null;
@@ -65,6 +67,7 @@ function CajaNodo({
   deposito: DepositoResumen | undefined;
   cantidadHijos: number;
   onSeleccionar: (id: string) => void;
+  ta: TextosAdmin;
 }) {
   return (
     <div className="flex items-center gap-1.5 shrink-0">
@@ -80,7 +83,7 @@ function CajaNodo({
         <button
           type="button"
           onClick={() => onSeleccionar(usuario.id)}
-          title="Ver la red de referidos de esta persona"
+          title={ta.verRedDeEsta}
           className="text-sm font-medium hover:text-brand-primary break-all text-left"
         >
           {usuario.nombre ? `${usuario.nombre} · ${usuario.email}` : usuario.email}
@@ -94,7 +97,7 @@ function CajaNodo({
           href={`/usuarios/${usuario.id}`}
           className="text-[10px] text-foreground-muted hover:text-brand-primary underline shrink-0"
         >
-          Perfil
+          {ta.perfil}
         </Link>
         {comision ? (
           <span
@@ -104,19 +107,19 @@ function CajaNodo({
                 : "bg-brand-secondary/15 text-brand-secondary"
             }`}
           >
-            ${formatearDinero(comision.monto)} {comision.pagado ? "pagado" : "pendiente"}
+            ${formatearDinero(comision.monto)} {comision.pagado ? ta.pagadoMin : ta.pendienteMin}
           </span>
         ) : deposito != null ? (
           <span className="text-[10px] text-foreground-muted">
-            depositó ${formatearDinero(deposito.monto)}
-            {!deposito.pagado && " (sin confirmar)"}
+            {rellenar(ta.deposito, { m: formatearDinero(deposito.monto) })}
+            {!deposito.pagado && ta.sinConfirmarCorto}
           </span>
         ) : posicion != null ? (
-          <span className="text-[10px] text-foreground-muted">sin depósito todavía</span>
+          <span className="text-[10px] text-foreground-muted">{ta.sinDepositoCorto}</span>
         ) : null}
         {cantidadHijos > 0 && (
           <span className="text-[10px] text-foreground-muted">
-            · {cantidadHijos} {cantidadHijos === 1 ? "referido directo" : "referidos directos"}
+            · {cantidadHijos} {cantidadHijos === 1 ? ta.referidoDirecto : ta.referidosDirectos}
           </span>
         )}
       </div>
@@ -138,6 +141,7 @@ function Nodo({
   comisionPorInvitado,
   onSeleccionar,
   ancestros,
+  ta,
 }: {
   usuario: NodoArbolReferido;
   posicion: number | null;
@@ -146,6 +150,7 @@ function Nodo({
   comisionPorInvitado: Map<string, ComisionResumen>;
   onSeleccionar: (id: string) => void;
   ancestros: ReadonlySet<string>;
+  ta: TextosAdmin;
 }) {
   // Corta los ciclos de invitado_por (A invitado por B y B por A, o
   // alguien invitado por sí mismo). El registro normal no los produce,
@@ -156,7 +161,7 @@ function Nodo({
   if (ancestros.has(usuario.id)) {
     return (
       <div className="flex items-center text-[11px] text-loss shrink-0">
-        ↩ {usuario.nombre ?? usuario.email} — cadena circular, se corta aquí
+        ↩ {usuario.nombre ?? usuario.email} — {ta.cadenaCircular}
       </div>
     );
   }
@@ -176,6 +181,7 @@ function Nodo({
           deposito={deposito}
           cantidadHijos={hijos.length}
           onSeleccionar={onSeleccionar}
+          ta={ta}
         />
       </div>
 
@@ -210,6 +216,7 @@ function Nodo({
                       comisionPorInvitado={comisionPorInvitado}
                       onSeleccionar={onSeleccionar}
                       ancestros={ancestrosConEste}
+                      ta={ta}
                     />
                   </div>
                 </div>
@@ -228,17 +235,19 @@ export function ArbolReferidos({
   depositoPorUsuario,
   comisionPorInvitado,
   onSeleccionar,
+  ta,
 }: {
   raices: NodoArbolReferido[];
   hijosPorPadre: Map<string, NodoArbolReferido[]>;
   depositoPorUsuario: Map<string, DepositoResumen>;
   comisionPorInvitado: Map<string, ComisionResumen>;
   onSeleccionar: (id: string) => void;
+  ta: TextosAdmin;
 }) {
   if (raices.length === 0) {
     return (
       <p className="text-foreground-muted text-sm border border-dashed border-[var(--border)] rounded-2xl p-6 text-center mb-8">
-        Todavía no hay ninguna cadena de referidos.
+        {ta.sinCadenas}
       </p>
     );
   }
@@ -256,6 +265,7 @@ export function ArbolReferidos({
             comisionPorInvitado={comisionPorInvitado}
             onSeleccionar={onSeleccionar}
             ancestros={new Set()}
+            ta={ta}
           />
         ))}
       </div>

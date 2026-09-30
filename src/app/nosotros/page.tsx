@@ -23,7 +23,7 @@ export default async function PaginaNosotros() {
   return (
     <div className="py-10 max-w-[640px]">
       {usuarioEsAdmin && nosotrosCompleto && (
-        <AdminNosotrosForm nosotrosActual={nosotrosCompleto} />
+        <AdminNosotrosForm nosotrosActual={nosotrosCompleto} ta={t.admin} />
       )}
 
       <h1 className="font-display font-semibold text-[26px] mb-6">

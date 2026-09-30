@@ -220,7 +220,7 @@ export default async function PaginaPerfil() {
                 y cuánto hay pendiente de pagar por lo que se ganó HOY. */}
             <div className="border-t border-[var(--border)] pt-4 mb-4">
               <div className="text-[13px] text-foreground-muted mb-1">
-                Total en cuentas de inversión (todos los usuarios)
+                {t.admin.totalCuentas}
               </div>
               <div className="font-display font-bold text-2xl tabular">
                 ${formatearDinero(totalTodasLasCuentas)}
@@ -228,7 +228,7 @@ export default async function PaginaPerfil() {
             </div>
             <div className="border-t border-[var(--border)] pt-4">
               <div className="text-[13px] text-foreground-muted mb-1">
-                Total a pagar hoy (ganancias de hoy sin pagar)
+                {t.admin.totalPagarHoy}
               </div>
               <div
                 className={`font-display font-bold text-2xl tabular ${
@@ -297,18 +297,18 @@ export default async function PaginaPerfil() {
         <TarjetaMenu
           href="/usuarios"
           icono={<IconoUsuarios />}
-          titulo="Gestión de usuarios"
-          subtitulo="Cambiar roles y activar/desactivar cuentas"
+          titulo={t.admin.menuUsuarios}
+          subtitulo={t.admin.menuUsuariosSub}
         />
       )}
 
       <TarjetaMenu
         href="/soporte"
         icono={<IconoSoporte />}
-        titulo={esAdmin(usuario) ? "Bandeja de soporte" : t.perfil.contactarSoporte}
+        titulo={esAdmin(usuario) ? t.admin.menuSoporte : t.perfil.contactarSoporte}
         subtitulo={
           esAdmin(usuario)
-            ? "Conversaciones de usuarios, en orden de llegada"
+            ? t.admin.menuSoporteSub
             : t.perfil.contactarSoporteSub
         }
         badge={noLeidos ?? 0}
@@ -318,8 +318,8 @@ export default async function PaginaPerfil() {
         <TarjetaMenu
           href="/usuarios/reportes"
           icono={<IconoReportes />}
-          titulo="Reportes"
-          subtitulo="Ganancias/pérdidas y quién operó por fecha"
+          titulo={t.admin.menuReportes}
+          subtitulo={t.admin.menuReportesSub}
         />
       )}
 
@@ -327,8 +327,8 @@ export default async function PaginaPerfil() {
         <TarjetaMenu
           href="/referidos"
           icono={<IconoUsuarios />}
-          titulo="Referidos"
-          subtitulo="Quién invitó a quién y premios por referido"
+          titulo={t.admin.menuReferidos}
+          subtitulo={t.admin.menuReferidosSub}
         />
       )}
 
@@ -336,8 +336,8 @@ export default async function PaginaPerfil() {
         <TarjetaMenu
           href="/depositos"
           icono={<IconoDeposito />}
-          titulo="Depósitos"
-          subtitulo="Depósitos simulados registrados por los usuarios"
+          titulo={t.admin.menuDepositos}
+          subtitulo={t.admin.menuDepositosSub}
           badge={depositosPendientesCount ?? 0}
         />
       )}
@@ -346,8 +346,8 @@ export default async function PaginaPerfil() {
         <TarjetaMenu
           href="/retiros"
           icono={<IconoWallet />}
-          titulo="Retiros"
-          subtitulo="Solicitudes de retiro de los usuarios"
+          titulo={t.admin.menuRetiros}
+          subtitulo={t.admin.menuRetirosSub}
           badge={retirosPendientesCount ?? 0}
         />
       )}

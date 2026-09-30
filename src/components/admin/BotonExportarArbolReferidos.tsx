@@ -2,6 +2,7 @@
 
 import { descargarCSV, filaCSV } from "@/lib/csv";
 import type { DepositoResumen, NodoArbolReferido } from "@/components/admin/ArbolReferidos";
+import type { TextosAdmin } from "@/lib/i18n";
 
 interface UsuarioConInvitador extends NodoArbolReferido {
   invitado_por: string | null;
@@ -22,6 +23,7 @@ export function BotonExportarArbolReferidos({
   comisionPorInvitado,
   emailPorUsuario,
   nombrePorUsuario,
+  ta,
 }: {
   raices: UsuarioConInvitador[];
   hijosPorPadre: Map<string, UsuarioConInvitador[]>;
@@ -29,6 +31,7 @@ export function BotonExportarArbolReferidos({
   comisionPorInvitado: Map<string, ComisionResumen>;
   emailPorUsuario: Map<string, string>;
   nombrePorUsuario: Map<string, string | null>;
+  ta: TextosAdmin;
 }) {
   function exportar() {
     const lineas: string[] = [];
@@ -52,13 +55,13 @@ export function BotonExportarArbolReferidos({
       const comision = comisionPorInvitado.get(usuario.id);
       const estado = comision
         ? comision.pagado
-          ? "Pagado"
-          : "Pendiente"
+          ? ta.pagado
+          : ta.pendiente
         : deposito == null
-          ? "Sin depósito"
+          ? ta.csvSinDeposito
           : deposito.pagado
-            ? "Sin comisión"
-            : "Depósito sin confirmar";
+            ? ta.csvSinComision
+            : ta.csvDepositoSinConfirmar;
 
       const nombreInvitador = usuario.invitado_por
         ? nombrePorUsuario.get(usuario.invitado_por)
@@ -95,16 +98,16 @@ export function BotonExportarArbolReferidos({
     }
 
     descargarCSV(
-      `arbol-referidos-${new Date().toISOString().slice(0, 10)}.csv`,
+      `${ta.csvArchivo}-${new Date().toISOString().slice(0, 10)}.csv`,
       [
-        "Nivel",
-        "Nombre",
-        "Correo",
-        "ID",
-        "Invitado por",
-        "Depósito simulado (USD)",
-        "Estado comisión",
-        "Monto comisión (USD)",
+        ta.csvNivel,
+        ta.csvNombre,
+        ta.csvCorreo,
+        ta.csvId,
+        ta.csvInvitadoPor,
+        ta.csvDeposito,
+        ta.csvEstado,
+        ta.csvMonto,
       ],
       lineas
     );
@@ -116,7 +119,7 @@ export function BotonExportarArbolReferidos({
       disabled={raices.length === 0}
       className="border border-[var(--border)] text-sm font-semibold px-4 py-2.5 rounded-xl hover:bg-surface-hover transition-colors disabled:opacity-50"
     >
-      Exportar árbol a Excel (.csv)
+      {ta.exportarArbol}
     </button>
   );
 }

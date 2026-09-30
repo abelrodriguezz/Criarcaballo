@@ -29,7 +29,7 @@ export default async function PaginaNoticias() {
         {t.noticias.subtitulo}
       </p>
 
-      {usuarioEsAdmin && <AdminNoticiaForm />}
+      {usuarioEsAdmin && <AdminNoticiaForm ta={t.admin} />}
 
       {!noticias || noticias.length === 0 ? (
         <p className="text-foreground-muted text-sm border border-dashed border-[var(--border)] rounded-2xl p-6 text-center">
@@ -47,6 +47,7 @@ export default async function PaginaNoticias() {
                 destacada: t.noticias.destacada,
                 verFuente: t.noticias.verFuente,
               }}
+              ta={t.admin}
             />
           ))}
         </div>

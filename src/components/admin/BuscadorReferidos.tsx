@@ -6,6 +6,7 @@ import { ArbolReferidos, type NodoArbolReferido } from "@/components/admin/Arbol
 import { BotonExportarArbolReferidos } from "@/components/admin/BotonExportarArbolReferidos";
 import { BotonPagoGanancia } from "@/components/admin/BotonPagoGanancia";
 import { formatearDinero } from "@/lib/format";
+import { rellenar, type TextosAdmin, type Locale } from "@/lib/i18n";
 import type { GananciaConcurso } from "@/lib/types";
 
 interface UsuarioReferido extends NodoArbolReferido {
@@ -24,11 +25,15 @@ export function BuscadorReferidos({
   comisiones,
   bonos,
   depositos,
+  ta,
+  locale,
 }: {
   todos: UsuarioReferido[];
   comisiones: GananciaConcurso[];
   bonos: GananciaConcurso[];
   depositos: DepositoPlano[];
+  ta: TextosAdmin;
+  locale: Locale;
 }) {
   const [busqueda, setBusqueda] = useState("");
   // Al hacer clic en alguien del árbol, se vuelve la "raíz" de la vista
@@ -129,14 +134,14 @@ export function BuscadorReferidos({
           setBusqueda(e.target.value);
           setRaizManual(null);
         }}
-        placeholder="Buscar por nombre, correo o ID de usuario..."
-        aria-label="Buscar referido"
+        placeholder={ta.buscarPlaceholder}
+        aria-label={ta.buscarAria}
         className="w-full px-3.5 py-2.5 mb-4 rounded-lg border border-[var(--border)] bg-background text-sm"
       />
 
       <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
         <h2 className="font-display font-semibold text-lg">
-          Árbol de referidos
+          {ta.arbolTitulo}
         </h2>
         <BotonExportarArbolReferidos
           raices={raicesEfectivas}
@@ -145,33 +150,32 @@ export function BuscadorReferidos({
           comisionPorInvitado={comisionPorInvitado}
           emailPorUsuario={emailPorUsuario}
           nombrePorUsuario={nombrePorUsuario}
+          ta={ta}
         />
       </div>
       <p className="text-foreground-muted text-[12px] mb-3">
-        Quién invitó a quién, en cadena — no solo el nivel directo. Toca
-        el nombre de cualquier persona para verla como principal y ver
-        solo su propia red hacia abajo.
+        {ta.arbolAyuda}
       </p>
       {raizManual && (
         <div className="flex flex-wrap items-center gap-2 mb-3 text-[13px]">
-          <span className="text-foreground-muted">Mostrando la red de</span>
+          <span className="text-foreground-muted">{ta.mostrandoRedDe}</span>
           <span className="font-semibold">
-            {nombrePorUsuario.get(raizManual) ?? emailPorUsuario.get(raizManual) ?? "esta persona"}
+            {nombrePorUsuario.get(raizManual) ?? emailPorUsuario.get(raizManual) ?? ta.estaPersona}
           </span>
           <button
             type="button"
             onClick={() => setRaizManual(null)}
             className="text-brand-primary font-semibold hover:underline"
           >
-            ← Volver al árbol completo
+            {ta.volverArbolCompleto}
           </button>
         </div>
       )}
       {raicesEfectivas.length === 0 ? (
         <p className="text-foreground-muted text-sm border border-dashed border-[var(--border)] rounded-2xl p-6 text-center mb-8">
           {busqueda
-            ? `Ningún referido coincide con "${busqueda}".`
-            : "Todavía no hay ninguna cadena de referidos."}
+            ? rellenar(ta.ningunReferidoCoincide, { q: busqueda })
+            : ta.sinCadenas}
         </p>
       ) : (
         <ArbolReferidos
@@ -180,23 +184,21 @@ export function BuscadorReferidos({
           depositoPorUsuario={depositoPorUsuario}
           comisionPorInvitado={comisionPorInvitado}
           onSeleccionar={seleccionarComoPrincipal}
+          ta={ta}
         />
       )}
 
       <h2 className="font-display font-semibold text-lg mb-1">
-        Comisiones por referido
+        {ta.comisionesTitulo}
       </h2>
       <p className="text-foreground-muted text-[12px] mb-3">
-        Una fila por cada persona invitada. &quot;Sin comisión todavía&quot;
-        significa que esa persona no ha hecho su depósito simulado — en
-        cuanto lo haga, aparece aquí el monto pendiente y el botón para
-        marcarlo pagado.
+        {ta.comisionesAyuda}
       </p>
       {filasFiltradas.length === 0 ? (
         <p className="text-foreground-muted text-sm border border-dashed border-[var(--border)] rounded-2xl p-6 text-center mb-8">
           {busqueda
-            ? `Ningún referido coincide con "${busqueda}".`
-            : "Todavía nadie se ha registrado con un código de invitación."}
+            ? rellenar(ta.ningunReferidoCoincide, { q: busqueda })
+            : ta.sinRegistrosInvitacion}
         </p>
       ) : (
         <div className="flex flex-col gap-2.5 mb-8">
@@ -213,7 +215,7 @@ export function BuscadorReferidos({
                     {f.nombre ? `${f.nombre} · ${f.email}` : f.email}
                   </div>
                   <div className="text-[12px] text-foreground-muted break-all">
-                    Invitado por{" "}
+                    {ta.invitadoPor}{" "}
                     <Link
                       href={`/usuarios/${f.invitado_por}`}
                       className="font-medium hover:text-brand-primary"
@@ -221,27 +223,24 @@ export function BuscadorReferidos({
                       {emailPorUsuario.get(f.invitado_por as string) ?? "—"}
                     </Link>{" "}
                     ·{" "}
-                    {new Date(f.created_at).toLocaleDateString("es-DO", {
-                      day: "numeric",
-                      month: "short",
-                      year: "numeric",
-                    })}
+                    {new Date(f.created_at).toLocaleDateString(
+                      locale === "en" ? "en-US" : "es-DO",
+                      { day: "numeric", month: "short", year: "numeric" }
+                    )}
                   </div>
                   <div className="text-[12px] text-foreground-muted">
                     {deposito != null
-                      ? `Depósito simulado: $${formatearDinero(deposito.monto)}${
-                          deposito.pagado
-                            ? ""
-                            : " · sin confirmar (no genera comisión hasta que lo marques pagado)"
+                      ? `${rellenar(ta.depositoSimulado, { m: formatearDinero(deposito.monto) })}${
+                          deposito.pagado ? "" : ta.depositoSinConfirmar
                         }`
-                      : "Todavía no hizo su depósito simulado"}
+                      : ta.sinDepositoAun}
                   </div>
                 </div>
 
                 <div className="shrink-0">
                   {!comision ? (
                     <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-foreground-muted/15 text-foreground-muted">
-                      Sin comisión todavía
+                      {ta.sinComisionAun}
                     </span>
                   ) : (
                     <div className="flex items-center gap-3">
@@ -252,12 +251,13 @@ export function BuscadorReferidos({
                             : "bg-brand-secondary/15 text-brand-secondary"
                         }`}
                       >
-                        {comision.pagado ? "Pagado" : "Pendiente"} · $
+                        {comision.pagado ? ta.pagado : ta.pendiente} · $
                         {formatearDinero(comision.monto)}
                       </span>
                       <BotonPagoGanancia
                         gananciaId={comision.id}
                         pagado={comision.pagado}
+                        ta={ta}
                       />
                     </div>
                   )}
@@ -269,19 +269,16 @@ export function BuscadorReferidos({
       )}
 
       <h2 className="font-display font-semibold text-lg mb-1">
-        Bonos por meta de referidos
+        {ta.bonosTitulo}
       </h2>
       <p className="text-foreground-muted text-[12px] mb-3">
-        Premio extra (aparte de la comisión normal) que se otorga solo
-        cuando alguien acumula referidos con el depósito ya confirmado (marcado pagado) en múltiplos
-        de la cantidad configurada arriba — por ejemplo, al llegar a 10,
-        20, 30... Vacío hasta que alguien alcance la primera meta.
+        {ta.bonosAyuda}
       </p>
       {bonosFiltrados.length === 0 ? (
         <p className="text-foreground-muted text-sm border border-dashed border-[var(--border)] rounded-2xl p-6 text-center">
           {busqueda
-            ? `Ningún bono coincide con "${busqueda}".`
-            : "Todavía no se alcanzó ninguna meta de referidos calificados."}
+            ? rellenar(ta.ningunBonoCoincide, { q: busqueda })
+            : ta.sinMetas}
         </p>
       ) : (
         <div className="flex flex-col gap-2.5">
@@ -292,15 +289,14 @@ export function BuscadorReferidos({
             >
               <div className="min-w-0">
                 <div className="text-sm font-medium break-all">
-                  {emailPorUsuario.get(b.usuario_id) ?? "Usuario"}
+                  {emailPorUsuario.get(b.usuario_id) ?? ta.usuario}
                 </div>
                 <div className="text-[12px] text-foreground-muted">
                   {b.concepto} ·{" "}
-                  {new Date(b.created_at).toLocaleDateString("es-DO", {
-                    day: "numeric",
-                    month: "short",
-                    year: "numeric",
-                  })}
+                  {new Date(b.created_at).toLocaleDateString(
+                    locale === "en" ? "en-US" : "es-DO",
+                    { day: "numeric", month: "short", year: "numeric" }
+                  )}
                 </div>
               </div>
               <div className="flex items-center gap-3 shrink-0">
@@ -311,10 +307,10 @@ export function BuscadorReferidos({
                       : "bg-brand-secondary/15 text-brand-secondary"
                   }`}
                 >
-                  {b.pagado ? "Pagado" : "Pendiente"} · $
+                  {b.pagado ? ta.pagado : ta.pendiente} · $
                   {formatearDinero(b.monto)}
                 </span>
-                <BotonPagoGanancia gananciaId={b.id} pagado={b.pagado} />
+                <BotonPagoGanancia gananciaId={b.id} pagado={b.pagado} ta={ta} />
               </div>
             </div>
           ))}

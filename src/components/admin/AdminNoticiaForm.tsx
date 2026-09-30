@@ -4,16 +4,20 @@ import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { crearClienteSupabase } from "@/lib/supabase/client";
 import { urlSeguraParaEnlace } from "@/lib/url";
+import { es } from "@/lib/i18n/diccionarios/es";
+import { rellenar, type TextosAdmin } from "@/lib/i18n";
 import type { Noticia } from "@/lib/types";
 
 interface AdminNoticiaFormProps {
   noticiaExistente?: Noticia;
   onCancelar?: () => void;
+  ta?: TextosAdmin;
 }
 
 export function AdminNoticiaForm({
   noticiaExistente,
   onCancelar,
+  ta = es.admin,
 }: AdminNoticiaFormProps) {
   const router = useRouter();
   const esEdicion = !!noticiaExistente;
@@ -42,7 +46,7 @@ export function AdminNoticiaForm({
     setError(null);
 
     if (!titulo.trim()) {
-      setError("El título no puede estar vacío.");
+      setError(ta.errTituloVacio);
       return;
     }
 
@@ -51,9 +55,7 @@ export function AdminNoticiaForm({
     // aquí el mensaje es entendible en vez de un error de Postgres.
     const urlLimpia = urlFuente?.trim() ? urlSeguraParaEnlace(urlFuente) : null;
     if (urlFuente?.trim() && !urlLimpia) {
-      setError(
-        "La URL de la fuente tiene que ser un enlace http:// o https:// válido."
-      );
+      setError(ta.errUrl);
       return;
     }
 
@@ -79,7 +81,7 @@ export function AdminNoticiaForm({
     setGuardando(false);
 
     if (error) {
-      setError("No se pudo guardar. Verifica tu permiso de admin.");
+      setError(ta.errorPermiso);
       return;
     }
 
@@ -103,7 +105,7 @@ export function AdminNoticiaForm({
         onClick={() => setAbierto(true)}
         className="border border-dashed border-[var(--brand-primary)] text-brand-primary text-sm font-semibold px-4 py-2.5 rounded-xl mb-6 hover:bg-[var(--brand-primary)]/5 transition-colors"
       >
-        + Publicar noticia (admin)
+        {ta.publicarNoticiaBoton}
       </button>
     );
   }
@@ -115,14 +117,14 @@ export function AdminNoticiaForm({
     >
       <div className="flex justify-between items-center mb-3">
         <h3 className="font-display font-semibold text-sm">
-          {esEdicion ? "Editar noticia" : "Publicar noticia"}
+          {esEdicion ? ta.editarNoticia : ta.publicarNoticia}
         </h3>
         <button
           type="button"
           onClick={cerrar}
           className="text-xs text-foreground-muted"
         >
-          Cancelar
+          {ta.cancelar}
         </button>
       </div>
 
@@ -130,38 +132,38 @@ export function AdminNoticiaForm({
         required
         value={titulo}
         onChange={(e) => setTitulo(e.target.value)}
-        aria-label="Título"
-        placeholder="Título"
+        aria-label={ta.noticiaTitulo}
+        placeholder={ta.noticiaTitulo}
         className="w-full px-3 py-2 mb-2.5 rounded-lg border border-[var(--border)] bg-background text-sm"
       />
       <textarea
         value={resumen ?? ""}
         onChange={(e) => setResumen(e.target.value)}
-        aria-label="Resumen"
-        placeholder="Resumen (opcional)"
+        aria-label={ta.noticiaResumen}
+        placeholder={ta.noticiaResumen}
         rows={2}
         className="w-full px-3 py-2 mb-2.5 rounded-lg border border-[var(--border)] bg-background text-sm resize-none"
       />
       <input
         value={tituloEn}
         onChange={(e) => setTituloEn(e.target.value)}
-        aria-label="Title (English)"
-        placeholder="Título en inglés (opcional)"
+        aria-label={ta.noticiaTituloEn}
+        placeholder={ta.noticiaTituloEn}
         className="w-full px-3 py-2 mb-2.5 rounded-lg border border-[var(--border)] bg-background text-sm"
       />
       <textarea
         value={resumenEn ?? ""}
         onChange={(e) => setResumenEn(e.target.value)}
-        aria-label="Summary (English)"
-        placeholder="Resumen en inglés (opcional)"
+        aria-label={ta.noticiaResumenEn}
+        placeholder={ta.noticiaResumenEn}
         rows={2}
         className="w-full px-3 py-2 mb-2.5 rounded-lg border border-[var(--border)] bg-background text-sm resize-none"
       />
       <input
         value={urlFuente ?? ""}
         onChange={(e) => setUrlFuente(e.target.value)}
-        aria-label="URL de la fuente"
-        placeholder="URL de la fuente (opcional)"
+        aria-label={ta.noticiaUrl}
+        placeholder={ta.noticiaUrl}
         className="w-full px-3 py-2 mb-2.5 rounded-lg border border-[var(--border)] bg-background text-sm"
       />
       <label className="flex items-center gap-2 text-sm mb-3">
@@ -170,7 +172,7 @@ export function AdminNoticiaForm({
           checked={destacada}
           onChange={(e) => setDestacada(e.target.checked)}
         />
-        Destacar en portada
+        {ta.destacarPortada}
       </label>
 
       {error && <p className="text-loss text-[13px] mb-2">{error}</p>}
@@ -180,7 +182,7 @@ export function AdminNoticiaForm({
         disabled={guardando}
         className="bg-brand-primary hover:bg-brand-primary-hover disabled:opacity-60 text-white font-semibold text-sm px-5 py-2.5 rounded-lg transition-colors"
       >
-        {guardando ? "Guardando..." : esEdicion ? "Guardar cambios" : "Publicar"}
+        {guardando ? ta.guardando : esEdicion ? ta.guardarCambios : ta.publicar}
       </button>
     </form>
   );

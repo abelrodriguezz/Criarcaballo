@@ -3,12 +3,15 @@
 import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { crearClienteSupabase } from "@/lib/supabase/client";
+import type { TextosAdmin } from "@/lib/i18n";
 import type { ConfigNosotrosAmbosIdiomas } from "@/lib/config-nosotros";
 
 export function AdminNosotrosForm({
   nosotrosActual,
+  ta,
 }: {
   nosotrosActual: ConfigNosotrosAmbosIdiomas;
+  ta: TextosAdmin;
 }) {
   const router = useRouter();
   const [abierto, setAbierto] = useState(false);
@@ -30,7 +33,7 @@ export function AdminNosotrosForm({
     setGuardando(false);
 
     if (error) {
-      setError("No se pudo guardar. Verifica tu permiso de admin.");
+      setError(ta.errorPermiso);
       return;
     }
 
@@ -55,7 +58,7 @@ export function AdminNosotrosForm({
         onClick={() => setAbierto(true)}
         className="border border-dashed border-[var(--brand-primary)] text-brand-primary text-sm font-semibold px-4 py-2.5 rounded-xl mb-8 hover:bg-[var(--brand-primary)]/5 transition-colors"
       >
-        ✎ Editar &quot;Nosotros&quot; (admin)
+        {ta.nosotrosEditarBoton}
       </button>
     );
   }
@@ -106,14 +109,14 @@ export function AdminNosotrosForm({
     >
       <div className="flex justify-between items-center mb-4">
         <h3 className="font-display font-semibold text-sm">
-          Editar &quot;Nosotros&quot;
+          {ta.nosotrosEditarTitulo}
         </h3>
         <button
           type="button"
           onClick={cancelar}
           className="text-xs text-foreground-muted"
         >
-          Cancelar
+          {ta.cancelar}
         </button>
       </div>
 
@@ -139,7 +142,7 @@ export function AdminNosotrosForm({
       </div>
 
       <label className="block text-[12px] font-medium text-foreground-muted mb-1">
-        Título
+        {ta.titulo}
       </label>
       <input
         value={titulo}
@@ -148,7 +151,7 @@ export function AdminNosotrosForm({
       />
 
       <label className="block text-[12px] font-medium text-foreground-muted mb-1">
-        Párrafos
+        {ta.parrafos}
       </label>
       <div className="flex flex-col gap-2 mb-2.5">
         {parrafos.map((p, i) => (
@@ -164,13 +167,13 @@ export function AdminNosotrosForm({
               onClick={() => eliminarParrafo(i)}
               className="text-loss text-xs font-semibold px-2 py-2 shrink-0"
             >
-              Eliminar
+              {ta.eliminar}
             </button>
           </div>
         ))}
         {parrafos.length === 0 && (
           <p className="text-[12px] text-foreground-muted italic">
-            Sin párrafos — la página no mostrará texto aparte del título.
+            {ta.sinParrafos}
           </p>
         )}
       </div>
@@ -180,7 +183,7 @@ export function AdminNosotrosForm({
         onClick={agregarParrafo}
         className="text-brand-primary text-xs font-semibold mb-4"
       >
-        + Agregar párrafo
+        {ta.agregarParrafo}
       </button>
 
       {error && <p className="text-loss text-[13px] mb-2">{error}</p>}
@@ -191,7 +194,7 @@ export function AdminNosotrosForm({
           disabled={guardando}
           className="bg-brand-primary hover:bg-brand-primary-hover disabled:opacity-60 text-white font-semibold text-sm px-5 py-2.5 rounded-lg transition-colors"
         >
-          {guardando ? "Guardando..." : "Guardar cambios"}
+          {guardando ? ta.guardando : ta.guardarCambios}
         </button>
       </div>
     </form>
