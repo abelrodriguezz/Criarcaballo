@@ -213,6 +213,7 @@ export const en: typeof es = {
     saldoDeInversion: "Investment Balance",
     pickDeHoy: "Today's pick",
     saldoPractica: "Practice balance — no real monetary value.",
+    saldoInvertido: "Balance invested in this position: {monto}",
     yaTienesOperacion: "You already have an open position in",
     esperaAdminCierre: "You'll be able to open another once the admin closes today's session.",
     operacionAbierta: "Open position",

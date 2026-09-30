@@ -26,7 +26,6 @@ export function AbrirOperacionForm({
   t: Diccionario;
 }) {
   const puedeOperar = (mercadoAbierto || esAdmin) && tradingHabilitado;
-  const [tipo, setTipo] = useState<"compra" | "venta">("compra");
   const [enviando, setEnviando] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -55,31 +54,10 @@ export function AbrirOperacionForm({
     <form action={accion} className="flex flex-col gap-3">
       <input type="hidden" name="activo" value={activo} />
 
-      <div className="grid grid-cols-2 gap-2.5">
-        <button
-          type="button"
-          onClick={() => setTipo("compra")}
-          className={`py-2 rounded-lg text-sm font-semibold border transition-colors ${
-            tipo === "compra"
-              ? "bg-gain/15 border-gain text-gain"
-              : "border-[var(--border)] text-foreground-muted"
-          }`}
-        >
-          {t.tradeDelDia.compra}
-        </button>
-        <button
-          type="button"
-          onClick={() => setTipo("venta")}
-          className={`py-2 rounded-lg text-sm font-semibold border transition-colors ${
-            tipo === "venta"
-              ? "bg-loss/15 border-loss text-loss"
-              : "border-[var(--border)] text-foreground-muted"
-          }`}
-        >
-          {t.tradeDelDia.venta}
-        </button>
+      <div className="py-2 rounded-lg text-sm font-semibold border bg-gain/15 border-gain text-gain text-center">
+        {t.tradeDelDia.compra}
       </div>
-      <input type="hidden" name="tipo" value={tipo} />
+      <input type="hidden" name="tipo" value="compra" />
 
       <div>
         <input

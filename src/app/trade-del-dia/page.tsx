@@ -10,6 +10,7 @@ import { formatearDinero, formatearPrecio } from "@/lib/format";
 import { estaAbiertaBolsaNY, fechaEnNY } from "@/lib/horarioMercado";
 import { obtenerHorarioMercado, formatearHorarioMercado } from "@/lib/config-horario-mercado";
 import { obtenerDiccionario, obtenerLocale } from "@/lib/i18n/servidor";
+import { rellenar } from "@/lib/i18n";
 import type { OperacionSimulada, PickDelDia } from "@/lib/types";
 
 export default async function PaginaTradeDelDia() {
@@ -178,7 +179,11 @@ export default async function PaginaTradeDelDia() {
 
             <div className="flex items-center gap-1.5 text-xs text-foreground-muted bg-surface px-3 py-2 rounded-lg">
               <IconoInfo />
-              {t.tradeDelDia.saldoPractica}
+              {operacionAbierta
+                ? rellenar(t.tradeDelDia.saldoInvertido, {
+                    monto: `$${formatearDinero(operacionAbierta.monto_usado)}`,
+                  })
+                : t.tradeDelDia.saldoPractica}
             </div>
 
             {!operacionAbierta ? (

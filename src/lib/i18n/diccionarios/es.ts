@@ -220,6 +220,7 @@ export const es = {
     saldoDeInversion: "Saldo de Inversión",
     pickDeHoy: "Pick de hoy",
     saldoPractica: "Saldo de práctica — sin valor monetario real.",
+    saldoInvertido: "Saldo invertido en esta operación: {monto}",
     yaTienesOperacion: "Ya tienes una operación abierta en",
     esperaAdminCierre:
       "Podrás abrir otra cuando el admin cierre la sesión de hoy.",
