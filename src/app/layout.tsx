@@ -4,6 +4,8 @@ import { Inter, Space_Grotesk, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { NavBar } from "@/components/layout/NavBar";
 import { MobileTabBar } from "@/components/layout/MobileTabBar";
+import { Footer } from "@/components/layout/Footer";
+import { BotonFlotanteSoporte } from "@/components/layout/BotonFlotanteSoporte";
 import { ContadorSoporteProvider } from "@/components/layout/ContadorSoporte";
 import { BarridoTransition } from "@/components/layout/BarridoTransition";
 import { CierreInactividad } from "@/components/auth/CierreInactividad";
@@ -104,6 +106,8 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
           <main className="flex-1 max-w-[1080px] mx-auto w-full px-6 pt-24 sm:pt-28 pb-24 md:pb-16">
             <BarridoTransition>{children}</BarridoTransition>
           </main>
+          <Footer />
+          <BotonFlotanteSoporte logueado={!!usuario} label={t.perfil.contactarSoporte} />
           <MobileTabBar t={t} />
         </ContadorSoporteProvider>
       </body>
