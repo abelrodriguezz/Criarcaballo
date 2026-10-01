@@ -257,38 +257,32 @@ body {
 }
 
 .tarjeta-ganancia-entrando {
-  animation: tarjetaGananciaAbrir 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation: tarjetaGananciaAbrir 0.55s cubic-bezier(0.19, 1, 0.22, 1) both;
 }
 .tarjeta-ganancia-saliendo {
-  animation: tarjetaGananciaCerrar 0.5s cubic-bezier(0.6, 0, 0.8, 0.2) both;
+  animation: tarjetaGananciaCerrar 0.35s cubic-bezier(0.6, 0, 0.8, 0.2) both;
 }
-/* La tarjeta da una vuelta completa (giro 3D en el eje Y) mientras crece,
-   como una moneda girando hasta caer mostrando la cara — no un simple
-   aparecer/crecer. 720deg = 2 vueltas completas, se nota más que una sola. */
 @keyframes tarjetaGananciaAbrir {
-  0% {
+  from {
     opacity: 0;
-    transform: perspective(1600px) scale(0.3) rotateY(0deg);
+    transform: perspective(1400px) scale(0.55) rotateY(-35deg) translateY(30px);
   }
-  12% {
+  60% {
     opacity: 1;
   }
-  100% {
+  to {
     opacity: 1;
-    transform: perspective(1600px) scale(1) rotateY(720deg);
+    transform: perspective(1400px) scale(1) rotateY(0deg) translateY(0);
   }
 }
 @keyframes tarjetaGananciaCerrar {
-  0% {
+  from {
     opacity: 1;
-    transform: perspective(1600px) scale(1) rotateY(720deg);
+    transform: perspective(1400px) scale(1) rotateY(0deg) translateY(0);
   }
-  85% {
-    opacity: 1;
-  }
-  100% {
+  to {
     opacity: 0;
-    transform: perspective(1600px) scale(0.3) rotateY(1440deg);
+    transform: perspective(1400px) scale(0.55) rotateY(35deg) translateY(30px);
   }
 }
 

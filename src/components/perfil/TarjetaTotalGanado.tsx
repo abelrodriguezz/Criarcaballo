@@ -175,7 +175,7 @@ function CuerpoTarjeta({ monto, idCorto, t, escala }: TarjetaTotalGanadoProps & 
 // X o Esc.
 // Duración de tarjeta-ganancia-saliendo (globals.css) — hay que esperarla
 // antes de desmontar o el cierre se corta en seco a mitad de la animación.
-const DURACION_CIERRE_MS = 500;
+const DURACION_CIERRE_MS = 350;
 
 export function TarjetaTotalGanado(props: TarjetaTotalGanadoProps) {
   const { t } = props;
