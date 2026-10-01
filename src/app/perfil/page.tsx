@@ -7,6 +7,7 @@ import { WalletForm } from "@/components/perfil/WalletForm";
 import { DatosContactoForm } from "@/components/perfil/DatosContactoForm";
 import { BotonDepositarSimulado } from "@/components/perfil/BotonDepositarSimulado";
 import { BotonSolicitarRetiro } from "@/components/perfil/BotonSolicitarRetiro";
+import { TarjetaTotalGanado } from "@/components/perfil/TarjetaTotalGanado";
 import { AdminSimulacionForm } from "@/components/admin/AdminSimulacionForm";
 import { TarjetaMenu } from "@/components/ui/TarjetaMenu";
 import { IconoUsuarios, IconoSoporte, IconoReportes, IconoWallet, IconoDeposito } from "@/components/ui/Iconos";
@@ -241,13 +242,13 @@ export default async function PaginaPerfil() {
             </div>
           </>
         ) : (
-          <div className="border-t border-[var(--border)] pt-4">
-            <div className="text-[13px] text-foreground-muted mb-1">
+          <div className="rounded-xl px-4 py-5 bg-gain/10 text-center">
+            <div className="text-[12px] font-semibold text-foreground-muted uppercase tracking-wide mb-1">
               {t.perfil.saldoDeInversion}
             </div>
             {/* Si por lo que sea no hay fila de saldo, mostrar $0.00 — antes
                 caía a "10,000.00" fijo, un saldo que el usuario no tiene. */}
-            <div className="font-display font-bold text-2xl tabular">
+            <div className="font-display font-extrabold text-[36px] leading-tight tabular text-gain">
               ${formatearDinero(saldo?.saldo_usd ?? 0)}
             </div>
           </div>
@@ -356,22 +357,11 @@ export default async function PaginaPerfil() {
       {!usuarioEsAdmin && (
       <div className="border border-[var(--border)] rounded-2xl p-5 mb-4 mt-1">
         <div className="font-medium text-sm mb-3">{t.perfil.ganancias}</div>
-        <div
-          className={`rounded-xl px-4 py-5 mb-3 text-center ${
-            totalGanancias > 0 ? "bg-gain/10" : "bg-[var(--surface)]"
-          }`}
-        >
-          <div className="text-[12px] font-semibold text-foreground-muted uppercase tracking-wide mb-1">
-            {t.perfil.totalGanado}
-          </div>
-          <div
-            className={`font-display font-extrabold text-[36px] leading-tight tabular ${
-              totalGanancias > 0 ? "text-gain" : "text-foreground-muted"
-            }`}
-          >
-            {totalGanancias > 0 ? "+" : ""}${formatearDinero(totalGanancias)}
-          </div>
-        </div>
+        <TarjetaTotalGanado
+          monto={totalGanancias}
+          idCorto={perfilExtra?.id_corto ?? null}
+          t={t}
+        />
         {pendienteGanancias > 0 && (
           <div className="bg-brand-secondary/10 rounded-lg px-3 py-2 mb-3 flex justify-between items-center">
             <span className="text-[13px] text-foreground-muted">
