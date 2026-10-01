@@ -3,7 +3,7 @@
 import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { crearClienteSupabase } from "@/lib/supabase/client";
-import { parsearNumero, formatearDinero } from "@/lib/format";
+import { parsearMontoUsuario, formatearDinero } from "@/lib/format";
 import { rellenar, type TextosAdmin } from "@/lib/i18n";
 import type { ConfigPremioReferido } from "@/lib/config-referidos";
 
@@ -32,9 +32,13 @@ export function AdminPremioReferidoForm({
     e.preventDefault();
     setError(null);
 
-    const porcentajeNum = parsearNumero(porcentaje);
-    const bonoCadaNum = parsearNumero(bonoCada);
-    const bonoMontoNum = parsearNumero(bonoMonto);
+    // parsearMontoUsuario, no parsearNumero: este último borra TODAS las
+    // comas (las trata siempre como separador de miles), así que "2,5"
+    // (como se escribe en español) se leía como 25 en vez de 2.5 — mismo
+    // bug ya encontrado y arreglado en AdminFeeRetiroForm.tsx.
+    const porcentajeNum = Math.round(parsearMontoUsuario(porcentaje) * 100) / 100;
+    const bonoCadaNum = Math.round(parsearMontoUsuario(bonoCada));
+    const bonoMontoNum = Math.round(parsearMontoUsuario(bonoMonto) * 100) / 100;
 
     if (!Number.isFinite(porcentajeNum) || porcentajeNum < 0 || porcentajeNum > 100) {
       setError(ta.premioErrPorcentaje);
