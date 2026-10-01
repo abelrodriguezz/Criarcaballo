@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { formatearDinero } from "@/lib/format";
+import { compartirImagenTarjeta } from "@/lib/compartirTarjetaGanancia";
 import type { Diccionario } from "@/lib/i18n";
 
 interface TarjetaTotalGanadoProps {
@@ -174,14 +175,39 @@ function CuerpoTarjeta({ monto, idCorto, t, escala }: TarjetaTotalGanadoProps & 
 // X o Esc.
 // Duración de tarjeta-ganancia-saliendo (globals.css) — hay que esperarla
 // antes de desmontar o el cierre se corta en seco a mitad de la animación.
-const DURACION_CIERRE_MS = 350;
+const DURACION_CIERRE_MS = 500;
 
 export function TarjetaTotalGanado(props: TarjetaTotalGanadoProps) {
   const { t } = props;
   const [expandida, setExpandida] = useState(false);
   const [cerrando, setCerrando] = useState(false);
+  const [compartiendo, setCompartiendo] = useState(false);
+  const [errorCompartir, setErrorCompartir] = useState(false);
   const botonAbrir = useRef<HTMLButtonElement>(null);
   const botonCerrar = useRef<HTMLButtonElement>(null);
+
+  async function compartir() {
+    setErrorCompartir(false);
+    setCompartiendo(true);
+    try {
+      await compartirImagenTarjeta({
+        monto: props.monto,
+        idCorto: props.idCorto,
+        etiqueta: t.perfil.totalGanado,
+        formatearDinero,
+      });
+    } catch (e) {
+      // AbortError: la persona cerró el panel nativo de compartir sin
+      // elegir nada -- cancelar no es un error, no hay nada que avisar.
+      if (e instanceof DOMException && e.name === "AbortError") {
+        // no-op
+      } else {
+        setErrorCompartir(true);
+      }
+    } finally {
+      setCompartiendo(false);
+    }
+  }
 
   function abrir() {
     setCerrando(false);
@@ -266,12 +292,33 @@ export function TarjetaTotalGanado(props: TarjetaTotalGanadoProps) {
             </button>
             <button
               type="button"
+              onClick={compartir}
+              disabled={compartiendo}
+              aria-label={t.perfil.compartirGanancia}
+              className="absolute -top-3 -left-3 z-10 w-9 h-9 rounded-full bg-surface border border-[var(--border)] flex items-center justify-center text-foreground shadow-lg disabled:opacity-60"
+            >
+              {compartiendo ? (
+                <span className="block w-3.5 h-3.5 rounded-full border-2 border-foreground-muted border-t-transparent animate-spin" />
+              ) : (
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <path d="M12 16V4M12 4l-4 4M12 4l4 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                  <path d="M4 14v4a2 2 0 002 2h12a2 2 0 002-2v-4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              )}
+            </button>
+            <button
+              type="button"
               onClick={cerrar}
               className="w-full text-left appearance-none bg-transparent border-0 p-0 m-0 block cursor-pointer"
             >
               <CuerpoTarjeta {...props} escala={1.7} />
               <span className="sr-only">{t.perfil.cerrarTarjeta}</span>
             </button>
+            {errorCompartir && (
+              <p className="absolute left-0 right-0 -bottom-7 text-center text-[12px] text-loss">
+                {t.perfil.errorCompartir}
+              </p>
+            )}
           </div>
         </div>
       )}

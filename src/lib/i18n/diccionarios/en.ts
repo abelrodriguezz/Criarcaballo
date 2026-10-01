@@ -148,6 +148,7 @@ export const en: typeof es = {
   perfil: {
     titulo: "Profile",
     nombre: "Name",
+    cedula: "National ID",
     correo: "Email",
     saldoDeInversion: "Investment Balance",
     walletTitulo: "Rewards wallet (USDT · ERC20)",
@@ -164,6 +165,8 @@ export const en: typeof es = {
     totalGanado: "Total earned",
     agrandarTarjeta: "View the card enlarged",
     cerrarTarjeta: "Close",
+    compartirGanancia: "Share",
+    errorCompartir: "Couldn't share the image. Try again.",
     pendientePorRecibir: "Pending to receive",
     sinGanancias:
       "You haven't won any contest yet. When you win one, the prize will be paid to your wallet and reflected here.",
@@ -276,10 +279,15 @@ export const en: typeof es = {
     sinDatos: "You haven't added your name or phone number yet.",
     nombreLabel: "Name",
     nombrePlaceholder: "Your name (optional)",
+    apellidoLabel: "Last name",
+    apellidoPlaceholder: "Your last name (optional)",
+    cedulaLabel: "National ID",
+    cedulaPlaceholder: "001-1234567-8 (optional)",
     telefonoLabel: "Phone",
     telefonoPlaceholder: "+1 809 555 1234 (optional)",
     formatoInvalido: "That phone number doesn't look valid.",
-    descripcion: "Both fields are optional. Only used to contact you if needed — never shown to other users.",
+    cedulaFormatoInvalido: "National ID must be in the format 001-1234567-8.",
+    descripcion: "All fields here are optional. Only used to contact you if needed — never shown to other users.",
   },
   mercado: {
     titulo: "Market view",

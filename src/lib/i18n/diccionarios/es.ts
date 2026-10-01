@@ -153,6 +153,7 @@ export const es = {
   perfil: {
     titulo: "Perfil",
     nombre: "Nombre",
+    cedula: "Cédula",
     correo: "Correo",
     saldoDeInversion: "Saldo de Inversión",
     walletTitulo: "Wallet para recompensas (USDT · ERC20)",
@@ -169,6 +170,8 @@ export const es = {
     totalGanado: "Total ganado",
     agrandarTarjeta: "Ver la tarjeta en grande",
     cerrarTarjeta: "Cerrar",
+    compartirGanancia: "Compartir",
+    errorCompartir: "No se pudo compartir la imagen. Intenta de nuevo.",
     pendientePorRecibir: "Pendiente por recibir",
     sinGanancias:
       "Todavía no has ganado ningún concurso. Cuando ganes uno, el premio se pagará a tu wallet y quedará reflejado aquí.",
@@ -284,10 +287,15 @@ export const es = {
     sinDatos: "No has agregado tu nombre ni teléfono todavía.",
     nombreLabel: "Nombre",
     nombrePlaceholder: "Tu nombre (opcional)",
+    apellidoLabel: "Apellido",
+    apellidoPlaceholder: "Tu apellido (opcional)",
+    cedulaLabel: "Cédula",
+    cedulaPlaceholder: "001-1234567-8 (opcional)",
     telefonoLabel: "Teléfono",
     telefonoPlaceholder: "+1 809 555 1234 (opcional)",
     formatoInvalido: "Ese teléfono no parece válido.",
-    descripcion: "Ambos campos son opcionales. Solo se usan para contactarte si hace falta — no se muestran a otros usuarios.",
+    cedulaFormatoInvalido: "La cédula debe tener el formato 001-1234567-8.",
+    descripcion: "Todos los campos son opcionales aquí. Solo se usan para contactarte si hace falta — no se muestran a otros usuarios.",
   },
   mercado: {
     titulo: "Vista de mercado",

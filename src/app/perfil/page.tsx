@@ -74,7 +74,7 @@ export default async function PaginaPerfil() {
           .eq("leido_usuario", false),
     supabase
       .from("usuarios")
-      .select("wallet_usdt_erc20, wallet_usdt_erc20_2, wallet_usdt_erc20_3, id_corto, nombre, telefono")
+      .select("wallet_usdt_erc20, wallet_usdt_erc20_2, wallet_usdt_erc20_3, id_corto, nombre, apellido, telefono, cedula")
       .eq("id", usuario.id)
       .single(),
     supabase
@@ -199,7 +199,15 @@ export default async function PaginaPerfil() {
             {perfilExtra?.nombre && (
               <>
                 <div className="text-[13px] text-foreground-muted">{t.perfil.nombre}</div>
-                <div className="font-medium text-sm mb-1.5">{perfilExtra.nombre}</div>
+                <div className="font-medium text-sm mb-1.5">
+                  {[perfilExtra.nombre, perfilExtra.apellido].filter(Boolean).join(" ")}
+                </div>
+              </>
+            )}
+            {perfilExtra?.cedula && (
+              <>
+                <div className="text-[13px] text-foreground-muted">{t.perfil.cedula}</div>
+                <div className="font-medium text-sm font-mono mb-1.5">{perfilExtra.cedula}</div>
               </>
             )}
             <div className="text-[13px] text-foreground-muted">{t.perfil.correo}</div>
@@ -282,6 +290,8 @@ export default async function PaginaPerfil() {
       <DatosContactoForm
         usuarioId={usuario.id}
         nombreActual={perfilExtra?.nombre ?? null}
+        apellidoActual={perfilExtra?.apellido ?? null}
+        cedulaActual={perfilExtra?.cedula ?? null}
         telefonoActual={perfilExtra?.telefono ?? null}
         t={t}
       />

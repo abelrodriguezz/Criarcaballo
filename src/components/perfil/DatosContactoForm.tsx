@@ -11,20 +11,41 @@ import type { Diccionario } from "@/lib/i18n";
 // espacios y los símbolos comunes en números de teléfono.
 const TELEFONO_VALIDO = /^[0-9+\-\s()]{6,30}$/;
 
+// Duplicado a propósito de RegistroForm.tsx: cédula dominicana (3 dígitos,
+// guion, 7 dígitos, guion, 1 dígito), mismo formato que exige la base de
+// datos (migración 084, constraint usuarios_cedula_formato).
+const CEDULA_VALIDA = /^[0-9]{3}-[0-9]{7}-[0-9]$/;
+
+function formatearCedula(valor: string): string {
+  const digitos = valor.replace(/\D/g, "").slice(0, 11);
+  const p1 = digitos.slice(0, 3);
+  const p2 = digitos.slice(3, 10);
+  const p3 = digitos.slice(10, 11);
+  if (digitos.length <= 3) return p1;
+  if (digitos.length <= 10) return `${p1}-${p2}`;
+  return `${p1}-${p2}-${p3}`;
+}
+
 export function DatosContactoForm({
   usuarioId,
   nombreActual,
+  apellidoActual,
+  cedulaActual,
   telefonoActual,
   t,
 }: {
   usuarioId: string;
   nombreActual: string | null;
+  apellidoActual: string | null;
+  cedulaActual: string | null;
   telefonoActual: string | null;
   t: Diccionario;
 }) {
   const router = useRouter();
   const [editando, setEditando] = useState(false);
   const [nombre, setNombre] = useState(nombreActual ?? "");
+  const [apellido, setApellido] = useState(apellidoActual ?? "");
+  const [cedula, setCedula] = useState(cedulaActual ?? "");
   const [telefono, setTelefono] = useState(telefonoActual ?? "");
   const [error, setError] = useState<string | null>(null);
   const [guardando, setGuardando] = useState(false);
@@ -34,10 +55,16 @@ export function DatosContactoForm({
     setError(null);
 
     const nombreLimpio = nombre.trim();
+    const apellidoLimpio = apellido.trim();
+    const cedulaLimpia = cedula.trim();
     const telefonoLimpio = telefono.trim();
 
     if (telefonoLimpio && !TELEFONO_VALIDO.test(telefonoLimpio)) {
       setError(t.datosContacto.formatoInvalido);
+      return;
+    }
+    if (cedulaLimpia && !CEDULA_VALIDA.test(cedulaLimpia)) {
+      setError(t.datosContacto.cedulaFormatoInvalido);
       return;
     }
 
@@ -47,6 +74,8 @@ export function DatosContactoForm({
       .from("usuarios")
       .update({
         nombre: nombreLimpio || null,
+        apellido: apellidoLimpio || null,
+        cedula: cedulaLimpia || null,
         telefono: telefonoLimpio || null,
       })
       .eq("id", usuarioId);
@@ -67,7 +96,12 @@ export function DatosContactoForm({
   }
 
   if (!editando) {
-    const resumen = [nombreActual, telefonoActual].filter(Boolean).join(" · ");
+    const resumen = [
+      [nombreActual, apellidoActual].filter(Boolean).join(" "),
+      telefonoActual,
+    ]
+      .filter(Boolean)
+      .join(" · ");
     return (
       <button
         onClick={() => setEditando(true)}
@@ -109,6 +143,8 @@ export function DatosContactoForm({
           onClick={() => {
             setEditando(false);
             setNombre(nombreActual ?? "");
+            setApellido(apellidoActual ?? "");
+            setCedula(cedulaActual ?? "");
             setTelefono(telefonoActual ?? "");
             setError(null);
           }}
@@ -118,11 +154,28 @@ export function DatosContactoForm({
         </button>
       </div>
 
+      <div className="grid grid-cols-2 gap-1.5 mb-1.5">
+        <input
+          value={nombre}
+          onChange={(e) => setNombre(e.target.value)}
+          placeholder={t.datosContacto.nombrePlaceholder}
+          maxLength={100}
+          className="w-full px-3.5 py-2.5 rounded-lg border border-[var(--border)] bg-background text-sm"
+        />
+        <input
+          value={apellido}
+          onChange={(e) => setApellido(e.target.value)}
+          placeholder={t.datosContacto.apellidoPlaceholder}
+          maxLength={100}
+          className="w-full px-3.5 py-2.5 rounded-lg border border-[var(--border)] bg-background text-sm"
+        />
+      </div>
       <input
-        value={nombre}
-        onChange={(e) => setNombre(e.target.value)}
-        placeholder={t.datosContacto.nombrePlaceholder}
-        maxLength={100}
+        value={cedula}
+        onChange={(e) => setCedula(formatearCedula(e.target.value))}
+        placeholder={t.datosContacto.cedulaPlaceholder}
+        inputMode="numeric"
+        maxLength={13}
         className="w-full px-3.5 py-2.5 mb-1.5 rounded-lg border border-[var(--border)] bg-background text-sm"
       />
       <input
