@@ -16,6 +16,7 @@ function simboloCorto(simbolo: string): string {
  */
 export function TarjetaActivo({
   simbolo,
+  nombreMostrado,
   precio,
   cambioPorc,
   etiqueta,
@@ -24,6 +25,10 @@ export function TarjetaActivo({
   sparkline,
 }: {
   simbolo: string;
+  /** Texto a mostrar en vez del símbolo técnico — p. ej. "AAPL" en vez de
+   * "AAPLXUSDT" (el par real en MEXC de la acción tokenizada de Apple).
+   * El símbolo técnico se sigue usando para el gráfico y el badge. */
+  nombreMostrado?: string;
   precio: number;
   cambioPorc: number;
   etiqueta?: string;
@@ -67,7 +72,7 @@ export function TarjetaActivo({
                   />
                 </span>
               )}
-              <span className="truncate">{simbolo}</span>
+              <span className="truncate">{nombreMostrado ?? simbolo}</span>
             </div>
             {etiqueta && (
               <span className="text-[10px] font-bold uppercase tracking-wide text-foreground-muted">

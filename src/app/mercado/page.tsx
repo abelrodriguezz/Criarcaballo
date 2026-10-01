@@ -4,18 +4,29 @@ import {
   obtenerVariosPreciosCripto,
   obtenerTopGanadoresCripto,
   obtenerVariosSparklinesCripto,
-} from "@/lib/market/binance";
+} from "@/lib/market/mexc";
 import {
-  obtenerVariosPreciosAcciones,
   obtenerTopGanadoresAcciones,
   obtenerTopPerdedoresAcciones,
 } from "@/lib/market/acciones";
-import { obtenerUsuarioActual } from "@/lib/auth/sesion";
-import { crearClienteSupabaseServidor } from "@/lib/supabase/server";
 import { obtenerDiccionario } from "@/lib/i18n/servidor";
 
 const PARES_CRIPTO = ["BTCUSDT", "ETHUSDT", "SOLUSDT", "XRPUSDT", "HBARUSDT"];
-const SIMBOLOS_INDICES = ["SPX", "IXIC", "DJI"];
+
+// Acciones tokenizadas reales (xStock — respaldadas 1:1 por la acción de
+// verdad, no monedas meme) listadas en MEXC con la misma API que la
+// cripto. Reemplaza a los índices (S&P 500/Nasdaq/Dow) que antes salían
+// de Twelve Data: esa key nunca se configuró, y de todas formas un índice
+// no existe como acción individual tokenizable.
+const ACCIONES_TOKENIZADAS = [
+  { simbolo: "AAPLXUSDT", nombre: "AAPL" },
+  { simbolo: "TSLAXUSDT", nombre: "TSLA" },
+  { simbolo: "NVDAXUSDT", nombre: "NVDA" },
+  { simbolo: "GOOGLXUSDT", nombre: "GOOGL" },
+  { simbolo: "METAXUSDT", nombre: "META" },
+  { simbolo: "AMZNXUSDT", nombre: "AMZN" },
+  { simbolo: "COINXUSDT", nombre: "COIN" },
+];
 
 export const revalidate = 30; // refresca los precios cada 30s como máximo
 
@@ -27,33 +38,21 @@ interface ActivoNormalizado {
 }
 
 export default async function PaginaMercado() {
-  const [usuario, t] = await Promise.all([
-    obtenerUsuarioActual(),
-    obtenerDiccionario(),
-  ]);
+  const t = await obtenerDiccionario();
 
-  const [cripto, indices, favoritos, topCripto, topAcciones, topPerdedoresAcciones] =
+  const [cripto, accionesTokenizadas, topCripto, topAcciones, topPerdedoresAcciones] =
     await Promise.all([
       obtenerVariosPreciosCripto(PARES_CRIPTO),
-      obtenerVariosPreciosAcciones(SIMBOLOS_INDICES),
-      usuario
-        ? crearClienteSupabaseServidor().then((supabase) =>
-            supabase
-              .from("favoritos")
-              .select("activo")
-              .eq("usuario_id", usuario.id)
-          )
-        : Promise.resolve({ data: null }),
+      obtenerVariosPreciosCripto(ACCIONES_TOKENIZADAS.map((a) => a.simbolo)),
       obtenerTopGanadoresCripto(5),
       obtenerTopGanadoresAcciones(5),
       obtenerTopPerdedoresAcciones(5),
     ]);
-
-  const setFavoritos = new Set(
-    (favoritos.data ?? []).map((f) => f.activo as string)
+  const nombrePorSimbolo = new Map(
+    ACCIONES_TOKENIZADAS.map((a) => [a.simbolo, a.nombre])
   );
 
-  const sinDatos = cripto.length === 0 && indices.length === 0;
+  const sinDatos = cripto.length === 0 && accionesTokenizadas.length === 0;
 
   // Top ganadores del día mezclando cripto y acciones (no solo un tipo),
   // ordenado de mayor a menor subida.
@@ -82,11 +81,13 @@ export default async function PaginaMercado() {
     .sort((a, b) => b.cambioPorc - a.cambioPorc)
     .slice(0, 6);
 
-  // Mini-gráficos de tendencia: solo para cripto (Binance es gratis e
-  // ilimitado) — para acciones/índices costaría cuota extra de Twelve Data.
+  // Mini-gráficos de tendencia: cripto Y acciones tokenizadas, las dos son
+  // la misma API de MEXC (gratis e ilimitada) — antes esto solo alcanzaba
+  // para cripto porque las acciones salían de Twelve Data (cuota extra).
   const simbolosParaSparkline = [
     ...new Set([
       ...cripto.map((c) => c.simbolo),
+      ...accionesTokenizadas.map((a) => a.simbolo),
       ...topGanadores.filter((a) => a.tipo === "Cripto").map((a) => a.simbolo),
     ]),
   ];
@@ -125,8 +126,6 @@ export default async function PaginaMercado() {
                     ? t.mercado.criptoEtiqueta
                     : t.mercado.accionEtiqueta
                 }
-                mostrarFavorito={!!usuario && activo.tipo === "Cripto"}
-                esFavoritoInicial={setFavoritos.has(activo.simbolo)}
                 sparkline={sparklines[activo.simbolo]}
               />
             ))}
@@ -146,8 +145,6 @@ export default async function PaginaMercado() {
                 simbolo={activo.simbolo}
                 precio={activo.precio}
                 cambioPorc={activo.cambioPorc24h}
-                mostrarFavorito={!!usuario}
-                esFavoritoInicial={setFavoritos.has(activo.simbolo)}
                 sparkline={sparklines[activo.simbolo]}
               />
             ))}
@@ -155,33 +152,27 @@ export default async function PaginaMercado() {
         </>
       )}
 
-      {indices.length > 0 ? (
+      {accionesTokenizadas.length > 0 && (
         <>
-          <h2 className="text-[13px] font-semibold text-foreground-muted uppercase tracking-wide mb-3">
-            {t.mercado.indices}
+          <h2 className="text-[13px] font-semibold text-foreground-muted uppercase tracking-wide mb-1">
+            {t.mercado.accionesTokenizadas}
           </h2>
+          <p className="text-[12px] text-foreground-muted mb-3">
+            {t.mercado.accionesTokenizadasAviso}
+          </p>
           <div className="grid md:grid-cols-3 gap-4 mb-8">
-            {indices.map((activo) => (
+            {accionesTokenizadas.map((activo) => (
               <TarjetaActivo
                 key={activo.simbolo}
                 simbolo={activo.simbolo}
+                nombreMostrado={nombrePorSimbolo.get(activo.simbolo)}
                 precio={activo.precio}
-                cambioPorc={activo.cambioPorc}
+                cambioPorc={activo.cambioPorc24h}
+                sparkline={sparklines[activo.simbolo]}
               />
             ))}
           </div>
         </>
-      ) : (
-        <p className="text-xs text-foreground-muted mt-2 mb-8">
-          {process.env.MARKET_API_KEY
-            ? t.mercado.sinIndicesConKey
-            : (
-              <>
-                {t.mercado.sinIndicesSinKeyPre} <code>MARKET_API_KEY</code>{" "}
-                {t.mercado.sinIndicesSinKeyPost}
-              </>
-            )}
-        </p>
       )}
 
       {topAcciones.length > 0 && (

@@ -1,4 +1,22 @@
-// Precios de cripto en tiempo real - API pública de Binance (no requiere key)
+// Precios en tiempo real vía la API pública de MEXC (no requiere key).
+//
+// Antes esto era Binance — se cambió porque Railway corre en el Sudeste
+// Asiático (necesario para que Binance no bloquee la IP del servidor, ver
+// comentario histórico más abajo) y Supabase está en EE.UU.: cada consulta
+// a la base de datos cruza medio planeta y de ahí salía la lentitud real
+// al navegar. MEXC no bloquea por región igual que Binance, así que el
+// servidor puede volver a vivir cerca de la base de datos sin perder los
+// precios de cripto. El formato de respuesta de MEXC es casi idéntico al
+// de Binance (mismos nombres de campo, mismo símbolo "BTCUSDT", mismo
+// formato de velas) — la única diferencia real es que el % de cambio lo
+// da como fracción (0.0015) en vez de porcentaje (0.15), por eso se
+// multiplica por 100 abajo.
+//
+// De paso, MEXC también lista "xStock"/"Ondo" — acciones tokenizadas
+// reales (AAPLX, TSLAX, etc., respaldadas 1:1 por la acción de verdad, no
+// monedas meme) — así que la misma API sirve también para la sección de
+// Acciones en vez de depender de Twelve Data (que nunca llegó a
+// configurarse, ver acciones.ts).
 
 export interface PrecioCripto {
   simbolo: string;
@@ -6,14 +24,16 @@ export interface PrecioCripto {
   cambioPorc24h: number;
 }
 
+const BASE_URL = "https://api.mexc.com/api/v3";
+
 export async function obtenerPrecioCripto(
   simbolo: string
 ): Promise<PrecioCripto> {
   // Timeout explícito en todas las llamadas a APIs externas: fetch sin
-  // signal espera para siempre, y una página que depende de Binance se
+  // signal espera para siempre, y una página que depende de MEXC se
   // quedaría cargando indefinidamente si la API no responde.
   const res = await fetch(
-    `https://api.binance.com/api/v3/ticker/24hr?symbol=${encodeURIComponent(simbolo)}`,
+    `${BASE_URL}/ticker/24hr?symbol=${encodeURIComponent(simbolo)}`,
     { cache: "no-store", signal: AbortSignal.timeout(10_000) }
   );
 
@@ -23,14 +43,16 @@ export async function obtenerPrecioCripto(
 
   const data = await res.json();
   const precio = parseFloat(data?.lastPrice);
-  const cambio = parseFloat(data?.priceChangePercent);
+  // MEXC da el % de cambio como fracción (0.0015 = 0.15%), no como
+  // porcentaje ya multiplicado (Binance sí lo daba así).
+  const cambio = parseFloat(data?.priceChangePercent) * 100;
 
-  // Si Binance devuelve 200 con un cuerpo inesperado, parseFloat da NaN y
-  // ese NaN se propaga hasta la tarjeta ("$NaN") o, peor, hasta el precio
-  // de entrada de una operación. Mejor tratarlo como fallo del símbolo:
+  // Si MEXC devuelve 200 con un cuerpo inesperado, parseFloat da NaN y ese
+  // NaN se propaga hasta la tarjeta ("$NaN") o, peor, hasta el precio de
+  // entrada de una operación. Mejor tratarlo como fallo del símbolo:
   // obtenerVariosPreciosCripto ya sabe omitir los que fallan.
   if (!Number.isFinite(precio)) {
-    throw new Error(`Binance devolvió un precio inválido para ${simbolo}`);
+    throw new Error(`MEXC devolvió un precio inválido para ${simbolo}`);
   }
 
   return {
@@ -41,23 +63,13 @@ export async function obtenerPrecioCripto(
 }
 
 /**
- * Trae varios precios de cripto. Si alguno falla (símbolo inválido,
- * Binance caído, etc.) no tumba el resto — simplemente se omite de la
- * lista de resultados.
+ * Trae varios precios (cripto o acciones tokenizadas, es la misma API) de
+ * una sola vez cuando se puede, con fallback a llamadas individuales.
  *
- * Una SOLA petición con el parámetro `symbols`, no una por símbolo: en
- * /perfil esta función recibe la lista completa de favoritos del usuario,
- * que puede llegar a 50 (el tope que impone el trigger de la migración
- * 021). Con una llamada por símbolo, cada visita a /perfil disparaba
- * hasta 50 peticiones salientes a Binance, y el límite de peticiones de
- * Binance es POR IP: en un despliegue serverless lo comparten todos los
- * usuarios de la plataforma, así que unos pocos perfiles cargando a la
- * vez bastaban para que Binance empezara a responder 418/429 y se cayeran
- * los precios de TODA la app.
- *
- * Si la petición agrupada falla (basta con que UN símbolo no exista en
- * Binance para que devuelva 400), se recae en las llamadas individuales,
- * que sí toleran fallos sueltos.
+ * MEXC no soporta un parámetro "symbols" tipo Binance para pedir varios a
+ * la vez con un filtro — se prueba igual por si lo llegara a soportar en
+ * el futuro, pero en la práctica siempre cae al fallback de abajo, que sí
+ * tolera que un símbolo falle sin tumbar el resto.
  */
 export async function obtenerVariosPreciosCripto(
   simbolos: string[]
@@ -74,7 +86,7 @@ export async function obtenerVariosPreciosCripto(
 
   try {
     const res = await fetch(
-      "https://api.binance.com/api/v3/ticker/24hr?symbols=" +
+      `${BASE_URL}/ticker/24hr?symbols=` +
         encodeURIComponent(JSON.stringify(unicos)),
       { cache: "no-store", signal: AbortSignal.timeout(10_000) }
     );
@@ -85,7 +97,7 @@ export async function obtenerVariosPreciosCripto(
         const porSimbolo = new Map<string, PrecioCripto>();
         for (const t of cuerpo as Record<string, string>[]) {
           const precio = parseFloat(t?.lastPrice);
-          const cambio = parseFloat(t?.priceChangePercent);
+          const cambio = parseFloat(t?.priceChangePercent) * 100;
           if (typeof t?.symbol !== "string" || !Number.isFinite(precio)) continue;
           porSimbolo.set(t.symbol, {
             simbolo: t.symbol,
@@ -93,7 +105,7 @@ export async function obtenerVariosPreciosCripto(
             cambioPorc24h: Number.isFinite(cambio) ? cambio : 0,
           });
         }
-        // Se respeta el orden en que se pidieron, no el que devuelva Binance.
+        // Se respeta el orden en que se pidieron, no el que devuelva MEXC.
         const ordenados = unicos
           .map((s) => porSimbolo.get(s))
           .filter((p): p is PrecioCripto => p !== undefined);
@@ -123,25 +135,22 @@ const VOLUMEN_MINIMO_USDT = 1_000_000;
 /**
  * Caché en memoria del listado completo de tickers.
  *
- * Esa llamada devuelve los ~3000 pares de Binance (varios MB) y /mercado
- * es una ruta dinámica — lee la sesión del usuario, así que el
- * `export const revalidate = 30` de la página no aplica y se pedía en
- * CADA visita. Con varios usuarios eso es tráfico enorme y, sobre todo,
- * el límite de peticiones de Binance (418/429), que era justo lo que
- * hacía fallar la página.
+ * Esa llamada devuelve ~1900 pares de MEXC (varios MB) y /mercado es una
+ * ruta dinámica, así que sin este caché se pediría en CADA visita. Con
+ * varios usuarios eso es tráfico enorme y arriesga el límite de
+ * peticiones de MEXC.
  */
 let cacheTickers: { datos: unknown[]; expira: number } | null = null;
 const TTL_TICKERS_MS = 30_000;
 
 /**
- * Top ganadores del día entre TODOS los pares USDT de Binance (no solo el
- * watchlist fijo de la portada) — trae los ~2000+ tickers en una sola
+ * Top ganadores del día entre TODOS los pares USDT de MEXC (no solo el
+ * watchlist fijo de la portada) — trae los ~1900 tickers en una sola
  * llamada pública (sin key) y ordena por % de cambio en 24h.
  *
- * Nunca lanza: esta sección es un extra de /mercado, y si Binance falla,
+ * Nunca lanza: esta sección es un extra de /mercado, y si MEXC falla,
  * limita peticiones o tarda demasiado, la página tiene que seguir
- * mostrando el resto. Antes no tenía try/catch y un fallo de Binance
- * tumbaba /mercado entera con un error 500.
+ * mostrando el resto.
  */
 export async function obtenerTopGanadoresCripto(
   limite = 5
@@ -152,7 +161,7 @@ export async function obtenerTopGanadoresCripto(
     data = cacheTickers.datos;
   } else {
     try {
-      const res = await fetch("https://api.binance.com/api/v3/ticker/24hr", {
+      const res = await fetch(`${BASE_URL}/ticker/24hr`, {
         cache: "no-store",
         signal: AbortSignal.timeout(12_000),
       });
@@ -178,18 +187,19 @@ function procesarTickers(data: unknown[], limite: number): PrecioCripto[] {
     .filter(
       (t) =>
         typeof t?.symbol === "string" &&
-        // Binance lista pares con caracteres no ASCII (p. ej. "币安人生USDT",
-        // "牛来USDT") con volumen suficiente para entrar al top. Esos
-        // símbolos no pasan el formato que exigen favoritos, pick y señales
-        // (/^[A-Z0-9]{5,20}$/), así que la estrella de su tarjeta fallaba
-        // siempre con "Símbolo de activo inválido". Se excluyen del top.
+        // Excluye acciones tokenizadas (xStock/Ondo) y pares no-USDT del
+        // top de cripto — ese top es solo para cripto de verdad. También
+        // excluye símbolos con caracteres fuera del formato que exigen
+        // favoritos/pick/señales (/^[A-Z0-9]{5,20}$/).
         /^[A-Z0-9]{1,16}USDT$/.test(t.symbol) &&
+        !t.symbol.endsWith("XUSDT") &&
+        !t.symbol.endsWith("ONUSDT") &&
         parseFloat(t.quoteVolume) >= VOLUMEN_MINIMO_USDT
     )
     .map((t) => ({
       simbolo: t.symbol,
       precio: parseFloat(t.lastPrice),
-      cambioPorc24h: parseFloat(t.priceChangePercent),
+      cambioPorc24h: parseFloat(t.priceChangePercent) * 100,
     }))
     // Un par sin precio/porcentaje usable ensuciaría el top con "$NaN".
     .filter(
@@ -211,7 +221,7 @@ export async function obtenerSparklineCripto(
 ): Promise<number[]> {
   try {
     const res = await fetch(
-      `https://api.binance.com/api/v3/klines?symbol=${encodeURIComponent(simbolo)}&interval=1h&limit=${horas}`,
+      `${BASE_URL}/klines?symbol=${encodeURIComponent(simbolo)}&interval=60m&limit=${horas}`,
       { cache: "no-store", signal: AbortSignal.timeout(10_000) }
     );
     if (!res.ok) return [];

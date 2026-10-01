@@ -302,20 +302,18 @@ export const es = {
   mercado: {
     titulo: "Vista de mercado",
     subtitulo:
-      "Precios en tiempo real de cripto, índices y acciones. Toca cualquier tarjeta para ver el gráfico en TradingView.",
+      "Precios en tiempo real de cripto y acciones tokenizadas. Toca cualquier tarjeta para ver el gráfico en TradingView.",
     sinDatos:
       "No se pudieron cargar los precios en este momento. Si estás probando en local, revisa tu conexión a internet.",
     masSubioHoy: "🔥 Lo que más subió hoy",
     cripto: "Cripto",
-    indices: "Índices",
     topGanadorAcciones: "Top Gainer del día",
     topPerdedorAcciones: "Top Loser del día",
     criptoEtiqueta: "Cripto",
     accionEtiqueta: "Acción",
-    sinIndicesConKey:
-      "No se pudieron cargar los índices en este momento (verifica tu plan de Twelve Data o los símbolos usados).",
-    sinIndicesSinKeyPre: "Índices y acciones: falta configurar",
-    sinIndicesSinKeyPost: "con una key de Twelve Data (plan gratuito en twelvedata.com).",
+    accionesTokenizadas: "Acciones (tokenizadas)",
+    accionesTokenizadasAviso:
+      "Versión tokenizada de la acción real (xStock), respaldada 1:1 — el precio sigue muy de cerca al de la bolsa, pero no es el feed directo de Wall Street.",
   },
   senales: {
     titulo: "Señales",

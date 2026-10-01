@@ -294,20 +294,18 @@ export const en: typeof es = {
   mercado: {
     titulo: "Market view",
     subtitulo:
-      "Real-time prices for crypto, indices and stocks. Tap any card to see the chart on TradingView.",
+      "Real-time prices for crypto and tokenized stocks. Tap any card to see the chart on TradingView.",
     sinDatos:
       "Couldn't load prices right now. If you're testing locally, check your internet connection.",
     masSubioHoy: "🔥 Today's top gainers",
     cripto: "Crypto",
-    indices: "Indices",
     topGanadorAcciones: "Top Gainer of the day",
     topPerdedorAcciones: "Top Loser of the day",
     criptoEtiqueta: "Crypto",
     accionEtiqueta: "Stock",
-    sinIndicesConKey:
-      "Couldn't load indices right now (check your Twelve Data plan or the symbols used).",
-    sinIndicesSinKeyPre: "Indices and stocks: you need to set",
-    sinIndicesSinKeyPost: "with a Twelve Data key (free plan at twelvedata.com).",
+    accionesTokenizadas: "Stocks (tokenized)",
+    accionesTokenizadasAviso:
+      "Tokenized version of the real stock (xStock), backed 1:1 — the price tracks the real market closely, but it isn't a direct Wall Street feed.",
   },
   senales: {
     titulo: "Signals",

@@ -1,62 +1,15 @@
-// Precios de acciones/índices - API de Twelve Data (requiere API key gratuita)
-// Consigue una key gratis en https://twelvedata.com y ponla en MARKET_API_KEY (.env.local)
+// Top ganadores/perdedores de acciones vía Yahoo Finance (gratis, sin key).
+// Antes también había precios de índices (S&P 500/Nasdaq/Dow) vía Twelve
+// Data, pero esa key nunca se configuró (requiere plan pago para lo que se
+// necesitaba) — se quitó esa parte; los índices individuales ahora se
+// reemplazan en /mercado por acciones tokenizadas reales (AAPL, TSLA,
+// NVIDIA...) vía MEXC, ver src/lib/market/mexc.ts.
 
 export interface PrecioActivo {
   simbolo: string;
   nombre: string;
   precio: number;
   cambioPorc: number;
-}
-
-export async function obtenerPrecioAccion(
-  simbolo: string
-): Promise<PrecioActivo | null> {
-  const apiKey = process.env.MARKET_API_KEY;
-
-  if (!apiKey) {
-    // Sin key configurada todavía — se omite en vez de romper la página.
-    return null;
-  }
-
-  // Timeout explícito: sin signal, fetch espera indefinidamente y /mercado
-  // se quedaría cargando si Twelve Data no responde.
-  const res = await fetch(
-    `https://api.twelvedata.com/quote?symbol=${encodeURIComponent(simbolo)}&apikey=${apiKey}`,
-    { cache: "no-store", signal: AbortSignal.timeout(10_000) }
-  );
-
-  if (!res.ok) return null;
-
-  const data = await res.json();
-
-  if (data.status === "error" || !data.close) return null;
-
-  const precio = parseFloat(data.close);
-  const cambio = parseFloat(data.percent_change);
-  if (!Number.isFinite(precio)) return null;
-
-  return {
-    simbolo: data.symbol,
-    nombre: data.name ?? data.symbol,
-    precio,
-    cambioPorc: Number.isFinite(cambio) ? cambio : 0,
-  };
-}
-
-export async function obtenerVariosPreciosAcciones(
-  simbolos: string[]
-): Promise<PrecioActivo[]> {
-  const resultados = await Promise.allSettled(
-    simbolos.map(obtenerPrecioAccion)
-  );
-
-  return resultados
-    .filter(
-      (r): r is PromiseFulfilledResult<PrecioActivo | null> =>
-        r.status === "fulfilled"
-    )
-    .map((r) => r.value)
-    .filter((v): v is PrecioActivo => v !== null);
 }
 
 /**

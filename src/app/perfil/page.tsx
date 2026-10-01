@@ -2,7 +2,6 @@ import { redirect } from "next/navigation";
 import { esAdmin, obtenerUsuarioActual } from "@/lib/auth/sesion";
 import { crearClienteSupabaseServidor } from "@/lib/supabase/server";
 import { CerrarSesionBoton } from "@/components/auth/CerrarSesionBoton";
-import { BotonFavorito } from "@/components/mercado/BotonFavorito";
 import { WalletForm } from "@/components/perfil/WalletForm";
 import { DatosContactoForm } from "@/components/perfil/DatosContactoForm";
 import { BotonDepositarSimulado } from "@/components/perfil/BotonDepositarSimulado";
@@ -12,8 +11,7 @@ import { TarjetaTotalGanado } from "@/components/perfil/TarjetaTotalGanado";
 import { AdminSimulacionForm } from "@/components/admin/AdminSimulacionForm";
 import { TarjetaMenu } from "@/components/ui/TarjetaMenu";
 import { IconoUsuarios, IconoSoporte, IconoReportes, IconoWallet, IconoDeposito } from "@/components/ui/Iconos";
-import { obtenerVariosPreciosCripto } from "@/lib/market/binance";
-import { formatearDinero, formatearPrecio } from "@/lib/format";
+import { formatearDinero } from "@/lib/format";
 import { obtenerDiccionario, obtenerLocale } from "@/lib/i18n/servidor";
 import { inicioDelDiaNY, finDelDiaNY, fechaEnNY } from "@/lib/horarioMercado";
 import {
@@ -42,7 +40,6 @@ export default async function PaginaPerfil() {
   const supabase = await crearClienteSupabaseServidor();
   const [
     { data: saldo },
-    { data: favoritosGuardados },
     { count: noLeidos },
     { data: perfilExtra },
     { data: ganancias },
@@ -60,10 +57,6 @@ export default async function PaginaPerfil() {
       .select("saldo_usd")
       .eq("usuario_id", usuario.id)
       .single(),
-    supabase
-      .from("favoritos")
-      .select("activo")
-      .eq("usuario_id", usuario.id),
     esAdmin(usuario)
       ? supabase
           .from("mensajes_soporte")
@@ -181,9 +174,6 @@ export default async function PaginaPerfil() {
     0,
     Math.floor((pendienteGanancias - yaSolicitadoRetiro) * 100 + 1e-6) / 100
   );
-
-  const simbolosFavoritos = (favoritosGuardados ?? []).map((f) => f.activo);
-  const preciosFavoritos = await obtenerVariosPreciosCripto(simbolosFavoritos);
 
   return (
     <div className="py-10 max-w-[520px]">
@@ -432,49 +422,6 @@ export default async function PaginaPerfil() {
         )}
       </div>
       )}
-
-      <div className="border border-[var(--border)] rounded-2xl p-5 mb-4">
-        <div className="font-medium text-sm mb-3">{t.perfil.favoritos}</div>
-        {simbolosFavoritos.length === 0 ? (
-          <p className="text-[13px] text-foreground-muted">
-            {t.perfil.sinFavoritos1}{" "}
-            <span className="font-medium">{t.perfil.mercado}</span>{" "}
-            {t.perfil.sinFavoritos2}
-          </p>
-        ) : (
-          <div className="flex flex-col gap-2">
-            {preciosFavoritos.map((activo) => (
-              <div
-                key={activo.simbolo}
-                className="flex items-center justify-between py-1.5"
-              >
-                <div className="flex items-center gap-2">
-                  <BotonFavorito
-                    activo={activo.simbolo}
-                    esFavoritoInicial={true}
-                  />
-                  <span className="text-sm font-medium">
-                    {activo.simbolo}
-                  </span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <span className="text-sm tabular">
-                    ${formatearPrecio(activo.precio)}
-                  </span>
-                  <span
-                    className={`text-xs font-semibold ${
-                      activo.cambioPorc24h >= 0 ? "text-gain" : "text-loss"
-                    }`}
-                  >
-                    {activo.cambioPorc24h >= 0 ? "+" : ""}
-                    {activo.cambioPorc24h.toFixed(2)}%
-                  </span>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
 
       <div className="border border-[var(--border)] rounded-2xl p-5 flex justify-between items-center">
         <div>
