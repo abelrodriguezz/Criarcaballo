@@ -215,6 +215,7 @@ export const es = {
     retirarWalletLabel: "Se enviará a tu wallet registrada",
     retirarMontoLabel: "Monto a retirar (USDT)",
     retirarFeeAviso: "Fee ({p}%): -${fee} · Recibirás: ${neto}",
+    retirarRecibiras: "recibirás ${neto}",
     retirarEnviar: "Solicitar retiro",
     retirarEntendido: "Entendido",
     retirarEnviado:

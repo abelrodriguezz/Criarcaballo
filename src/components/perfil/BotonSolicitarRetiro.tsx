@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { crearClienteSupabase } from "@/lib/supabase/client";
 import { IconoWallet } from "@/components/ui/Iconos";
 import { formatearDinero, parsearMontoUsuario } from "@/lib/format";
+import { calcularFeeRetiro } from "@/lib/calculoFeeRetiro";
 import { rellenar, type Diccionario } from "@/lib/i18n";
 import type { SolicitudRetiro } from "@/lib/types";
 
@@ -106,6 +107,12 @@ export function BotonSolicitarRetiro({
           {solicitudPendiente ? (
             <div className="text-[12px] text-brand-secondary tabular">
               ${formatearDinero(solicitudPendiente.monto)} — {t.perfil.pendiente}
+              {solicitudPendiente.fee_porcentaje > 0 &&
+                ` · ${rellenar(t.perfil.retirarRecibiras, {
+                  neto: formatearDinero(
+                    calcularFeeRetiro(solicitudPendiente.monto, solicitudPendiente.fee_porcentaje).neto
+                  ),
+                })}`}
             </div>
           ) : disponible > 0 ? (
             <div className="text-[12px] text-foreground-muted tabular">
@@ -202,10 +209,12 @@ export function BotonSolicitarRetiro({
                 />
 
                 {feePorcentaje > 0 && (() => {
-                  const montoNum = parsearMontoUsuario(monto);
+                  // Redondeado a centavos igual que lo que se envía en
+                  // manejarEnviar (y guarda la RPC) — si no, con "33.335"
+                  // el aviso calculaba sobre 33.335 y el admin veía otro neto.
+                  const montoNum = Math.round(parsearMontoUsuario(monto) * 100) / 100;
                   if (!Number.isFinite(montoNum) || montoNum <= 0) return null;
-                  const fee = Math.round(montoNum * (feePorcentaje / 100) * 100) / 100;
-                  const neto = Math.round((montoNum - fee) * 100) / 100;
+                  const { fee, neto } = calcularFeeRetiro(montoNum, feePorcentaje);
                   return (
                     <p className="text-[12px] text-brand-primary mb-3 tabular">
                       {rellenar(t.perfil.retirarFeeAviso, {
@@ -255,7 +264,12 @@ export function BotonSolicitarRetiro({
                               : "text-brand-secondary"
                         }
                       >
-                        ${formatearDinero(s.monto)} ·{" "}
+                        ${formatearDinero(s.monto)}
+                        {s.fee_porcentaje > 0 &&
+                          ` (${rellenar(t.perfil.retirarRecibiras, {
+                            neto: formatearDinero(calcularFeeRetiro(s.monto, s.fee_porcentaje).neto),
+                          })})`}{" "}
+                        ·{" "}
                         {s.estado === "pagado"
                           ? t.perfil.pagado
                           : s.estado === "rechazado"

@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { formatearDinero } from "@/lib/format";
-import { compartirImagenTarjeta } from "@/lib/compartirTarjetaGanancia";
+import { compartirArchivoTarjeta, prepararArchivoTarjeta } from "@/lib/compartirTarjetaGanancia";
 import type { Diccionario } from "@/lib/i18n";
 
 interface TarjetaTotalGanadoProps {
@@ -186,16 +186,45 @@ export function TarjetaTotalGanado(props: TarjetaTotalGanadoProps) {
   const botonAbrir = useRef<HTMLButtonElement>(null);
   const botonCerrar = useRef<HTMLButtonElement>(null);
 
+  // La imagen se genera al ABRIR la tarjeta, no al tocar compartir: Safari
+  // en iOS exige que navigator.share() se llame sin trabajo asíncrono previo
+  // desde el toque (si no, NotAllowedError). Se guarda junto con la clave
+  // de los datos con los que se generó, por si cambian tras un refresh.
+  const claveImagen = `${props.monto}|${props.idCorto}|${t.perfil.totalGanado}`;
+  const imagen = useRef<{ clave: string; promesa: Promise<File>; archivo: File | null } | null>(
+    null
+  );
+
+  const prepararImagen = useCallback(() => {
+    if (imagen.current?.clave === claveImagen) return imagen.current.promesa;
+    const promesa = prepararArchivoTarjeta({
+      monto: props.monto,
+      idCorto: props.idCorto,
+      etiqueta: t.perfil.totalGanado,
+      formatearDinero,
+    });
+    const entrada = { clave: claveImagen, promesa, archivo: null as File | null };
+    imagen.current = entrada;
+    promesa.then(
+      (archivo) => {
+        entrada.archivo = archivo;
+      },
+      () => {
+        // Falló: se descarta para reintentar al tocar compartir.
+        if (imagen.current === entrada) imagen.current = null;
+      }
+    );
+    return promesa;
+  }, [claveImagen, props.monto, props.idCorto, t.perfil.totalGanado]);
+
   async function compartir() {
     setErrorCompartir(false);
     setCompartiendo(true);
     try {
-      await compartirImagenTarjeta({
-        monto: props.monto,
-        idCorto: props.idCorto,
-        etiqueta: t.perfil.totalGanado,
-        formatearDinero,
-      });
+      const listo =
+        imagen.current?.clave === claveImagen ? imagen.current.archivo : null;
+      // Camino normal: el archivo ya estaba listo, share() sin await previo.
+      await compartirArchivoTarjeta(listo ?? (await prepararImagen()));
     } catch (e) {
       // AbortError: la persona cerró el panel nativo de compartir sin
       // elegir nada -- cancelar no es un error, no hay nada que avisar.
@@ -210,6 +239,7 @@ export function TarjetaTotalGanado(props: TarjetaTotalGanadoProps) {
   }
 
   function abrir() {
+    setErrorCompartir(false);
     setCerrando(false);
     setExpandida(true);
   }
@@ -226,6 +256,13 @@ export function TarjetaTotalGanado(props: TarjetaTotalGanadoProps) {
       setCerrando(false);
     }, DURACION_CIERRE_MS);
   }, []);
+
+  useEffect(() => {
+    if (!expandida) return;
+    prepararImagen().catch(() => {
+      // Se reintenta (y se avisa el error) al tocar compartir.
+    });
+  }, [expandida, prepararImagen]);
 
   useEffect(() => {
     if (!expandida) return;

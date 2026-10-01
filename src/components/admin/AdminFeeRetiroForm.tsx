@@ -3,7 +3,7 @@
 import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { crearClienteSupabase } from "@/lib/supabase/client";
-import { parsearNumero } from "@/lib/format";
+import { parsearMontoUsuario } from "@/lib/format";
 
 // Literal duplicado a propósito, no importado de "@/lib/config-retiros":
 // ese módulo usa crearClienteSupabaseServidor() (next/headers), que rompe
@@ -22,7 +22,14 @@ export function AdminFeeRetiroForm({ feeActual }: { feeActual: number }) {
     e.preventDefault();
     setError(null);
 
-    const porcentajeNum = parsearNumero(porcentaje);
+    // parsearMontoUsuario y no parsearNumero: este último borra TODAS las
+    // comas (las trata como separador de miles), así que "2,5" (como se
+    // escribe en español) se guardaba como 25% en vez de 2.5%, y además
+    // aceptaba basura con prefijo numérico ("10abc" → 10) por parseFloat.
+    const leido = parsearMontoUsuario(porcentaje.replace(/%\s*$/, ""));
+    // Máximo 2 decimales (ej. 2.75%): más precisión no tiene sentido y
+    // ensucia el desglose que ven el usuario y el admin.
+    const porcentajeNum = Math.round(leido * 100) / 100;
     if (!Number.isFinite(porcentajeNum) || porcentajeNum < 0 || porcentajeNum > 100) {
       setError("Ingresa un porcentaje entre 0 y 100.");
       return;

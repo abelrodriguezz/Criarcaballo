@@ -4,27 +4,13 @@ import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { crearClienteSupabase } from "@/lib/supabase/client";
 import { IconoPerfil } from "@/components/ui/Iconos";
+import { CEDULA_VALIDA, useCampoCedula } from "@/lib/useCampoCedula";
 import type { Diccionario } from "@/lib/i18n";
 
 // Permisivo a propósito: solo descarta basura obvia, no intenta validar
 // formatos internacionales de verdad (hay demasiados). Acepta dígitos,
 // espacios y los símbolos comunes en números de teléfono.
 const TELEFONO_VALIDO = /^[0-9+\-\s()]{6,30}$/;
-
-// Duplicado a propósito de RegistroForm.tsx: cédula dominicana (3 dígitos,
-// guion, 7 dígitos, guion, 1 dígito), mismo formato que exige la base de
-// datos (migración 084, constraint usuarios_cedula_formato).
-const CEDULA_VALIDA = /^[0-9]{3}-[0-9]{7}-[0-9]$/;
-
-function formatearCedula(valor: string): string {
-  const digitos = valor.replace(/\D/g, "").slice(0, 11);
-  const p1 = digitos.slice(0, 3);
-  const p2 = digitos.slice(3, 10);
-  const p3 = digitos.slice(10, 11);
-  if (digitos.length <= 3) return p1;
-  if (digitos.length <= 10) return `${p1}-${p2}`;
-  return `${p1}-${p2}-${p3}`;
-}
 
 export function DatosContactoForm({
   usuarioId,
@@ -45,7 +31,14 @@ export function DatosContactoForm({
   const [editando, setEditando] = useState(false);
   const [nombre, setNombre] = useState(nombreActual ?? "");
   const [apellido, setApellido] = useState(apellidoActual ?? "");
-  const [cedula, setCedula] = useState(cedulaActual ?? "");
+  // Mismo autoformato (y mismo manejo del cursor/Backspace sobre guiones)
+  // que el registro.
+  const {
+    cedula,
+    setCedula,
+    inputRef: inputCedula,
+    alCambiarCedula,
+  } = useCampoCedula(cedulaActual ?? "");
   const [telefono, setTelefono] = useState(telefonoActual ?? "");
   const [error, setError] = useState<string | null>(null);
   const [guardando, setGuardando] = useState(false);
@@ -171,8 +164,9 @@ export function DatosContactoForm({
         />
       </div>
       <input
+        ref={inputCedula}
         value={cedula}
-        onChange={(e) => setCedula(formatearCedula(e.target.value))}
+        onChange={alCambiarCedula}
         placeholder={t.datosContacto.cedulaPlaceholder}
         inputMode="numeric"
         maxLength={13}

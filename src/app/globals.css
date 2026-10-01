@@ -338,4 +338,12 @@ body {
   .barrido-franja {
     opacity: 0;
   }
+
+  /* Tarjeta "Total Ganado": sin zoom ni giro 3D, solo un fundido. */
+  .tarjeta-ganancia-entrando {
+    animation-name: overlayGananciaEntra;
+  }
+  .tarjeta-ganancia-saliendo {
+    animation-name: overlayGananciaSale;
+  }
 }

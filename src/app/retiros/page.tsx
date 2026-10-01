@@ -5,6 +5,7 @@ import { crearClienteSupabaseServidor } from "@/lib/supabase/server";
 import { BotonProcesarRetiro } from "@/components/admin/BotonProcesarRetiro";
 import { AdminFeeRetiroForm } from "@/components/admin/AdminFeeRetiroForm";
 import { obtenerFeeRetiro } from "@/lib/config-retiros";
+import { calcularFeeRetiro } from "@/lib/calculoFeeRetiro";
 import { formatearDinero } from "@/lib/format";
 import type { SolicitudRetiro } from "@/lib/types";
 
@@ -38,8 +39,7 @@ export default async function PaginaRetiros() {
   const resueltas = solicitudes.filter((s) => s.estado !== "pendiente");
 
   function Fila({ s }: { s: SolicitudConUsuario }) {
-    const feeMonto = Math.round(s.monto * (s.fee_porcentaje / 100) * 100) / 100;
-    const neto = Math.round((s.monto - feeMonto) * 100) / 100;
+    const { fee: feeMonto, neto } = calcularFeeRetiro(s.monto, s.fee_porcentaje);
     return (
       <div className="border border-[var(--border)] rounded-xl p-4 flex justify-between items-center gap-3">
         <div className="min-w-0">

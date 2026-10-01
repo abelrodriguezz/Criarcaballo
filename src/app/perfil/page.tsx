@@ -199,11 +199,14 @@ export default async function PaginaPerfil() {
                 ID: {perfilExtra.id_corto}
               </div>
             )}
-            {perfilExtra?.nombre && (
+            {/* nombre O apellido: desde Datos de contacto se puede vaciar
+                el nombre y dejar solo el apellido, y antes eso escondía
+                también el apellido. */}
+            {(perfilExtra?.nombre || perfilExtra?.apellido) && (
               <>
                 <div className="text-[13px] text-foreground-muted">{t.perfil.nombre}</div>
                 <div className="font-medium text-sm mb-1.5">
-                  {[perfilExtra.nombre, perfilExtra.apellido].filter(Boolean).join(" ")}
+                  {[perfilExtra?.nombre, perfilExtra?.apellido].filter(Boolean).join(" ")}
                 </div>
               </>
             )}

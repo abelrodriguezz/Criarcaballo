@@ -54,7 +54,19 @@ async function dibujarTarjeta(ctx: CanvasRenderingContext2D, datos: DatosTarjeta
   // esperar a que el navegador termine de cargarlas antes de medir/dibujar
   // texto con ellas — si no, canvas dibuja con la fuente de respaldo y el
   // ajuste de tamaño del monto queda mal calculado.
-  if (document.fonts?.ready) {
+  // document.fonts.ready solo espera las fuentes que YA se están bajando:
+  // una cara que la página todavía no usó no se pide nunca y canvas
+  // dibujaría con la de respaldo. Se piden explícitamente las que usa la
+  // imagen (si falla alguna, se sigue con la de respaldo, no se aborta).
+  if (document.fonts) {
+    await Promise.all(
+      [
+        "700 24px 'Space Grotesk'",
+        "700 32px 'Space Grotesk'",
+        "700 92px 'JetBrains Mono'",
+        "500 28px 'JetBrains Mono'",
+      ].map((f) => document.fonts.load(f).catch(() => []))
+    );
     await document.fonts.ready;
   }
 
@@ -134,8 +146,16 @@ async function dibujarTarjeta(ctx: CanvasRenderingContext2D, datos: DatosTarjeta
     tamanoMonto -= 4;
     ctx.font = `700 ${tamanoMonto}px 'JetBrains Mono', monospace`;
   }
-  ctx.fillStyle = "#eafff3";
-  ctx.fillText(textoMonto, 56, 300);
+  // El "+" en verde, igual que en la tarjeta en pantalla.
+  if (textoMonto.startsWith("+")) {
+    ctx.fillStyle = "#35e58f";
+    ctx.fillText("+", 56, 300);
+    ctx.fillStyle = "#eafff3";
+    ctx.fillText(textoMonto.slice(1), 56 + ctx.measureText("+").width, 300);
+  } else {
+    ctx.fillStyle = "#eafff3";
+    ctx.fillText(textoMonto, 56, 300);
+  }
 
   // Número enmascarado + marca, abajo.
   const ultimoGrupo = datos.idCorto ? String(datos.idCorto).padStart(4, "0") : "••••";
@@ -170,33 +190,65 @@ export async function generarImagenTarjeta(datos: DatosTarjetaCompartir): Promis
   });
 }
 
+const NOMBRE_ARCHIVO = "trade4u-ganancias.png";
+
+/** Genera el PNG ya envuelto en un File listo para compartir. Conviene
+ * llamarlo ANTES del toque en el botón (al abrir la tarjeta): ver
+ * compartirArchivoTarjeta. */
+export async function prepararArchivoTarjeta(datos: DatosTarjetaCompartir): Promise<File> {
+  const blob = await generarImagenTarjeta(datos);
+  return new File([blob], NOMBRE_ARCHIVO, { type: "image/png" });
+}
+
+function descargarArchivo(archivo: File) {
+  const url = URL.createObjectURL(archivo);
+  const enlace = document.createElement("a");
+  enlace.href = url;
+  enlace.download = NOMBRE_ARCHIVO;
+  document.body.appendChild(enlace);
+  enlace.click();
+  enlace.remove();
+  // Revocar en el mismo tick puede cancelar la descarga en algunos
+  // navegadores (Safari/Firefox) — se le da un margen.
+  window.setTimeout(() => URL.revokeObjectURL(url), 10_000);
+}
+
 /**
  * Comparte SOLO la imagen (sin título/texto/url -- así WhatsApp y el resto
  * de apps no agregan nada de texto). Si el navegador no soporta compartir
  * archivos (la mayoría de los de escritorio), descarga el PNG directo.
+ *
+ * navigator.share() exige "activación de usuario" vigente: Safari en iOS
+ * la pierde si antes del share hubo trabajo asíncrono (cargar fuentes,
+ * canvas.toBlob) y rechaza con NotAllowedError. Por eso el archivo se
+ * prepara aparte (prepararArchivoTarjeta) y aquí se llama a share() sin
+ * ningún await previo. Si aun así el navegador lo rechaza por eso, se
+ * descarga el PNG en vez de mostrar un error.
  */
+export async function compartirArchivoTarjeta(
+  archivo: File
+): Promise<"compartido" | "descargado"> {
+  if (
+    typeof navigator.canShare === "function" &&
+    typeof navigator.share === "function" &&
+    navigator.canShare({ files: [archivo] })
+  ) {
+    try {
+      await navigator.share({ files: [archivo] });
+      return "compartido";
+    } catch (e) {
+      // AbortError (la persona cerró el panel) se propaga: el componente
+      // lo trata como no-op. NotAllowedError → descarga como respaldo.
+      if (!(e instanceof DOMException && e.name === "NotAllowedError")) throw e;
+    }
+  }
+
+  descargarArchivo(archivo);
+  return "descargado";
+}
+
 export async function compartirImagenTarjeta(
   datos: DatosTarjetaCompartir
 ): Promise<"compartido" | "descargado"> {
-  const blob = await generarImagenTarjeta(datos);
-  const archivo = new File([blob], "trade4u-ganancias.png", { type: "image/png" });
-
-  if (
-    typeof navigator.canShare === "function" &&
-    navigator.canShare({ files: [archivo] }) &&
-    typeof navigator.share === "function"
-  ) {
-    await navigator.share({ files: [archivo] });
-    return "compartido";
-  }
-
-  const url = URL.createObjectURL(blob);
-  const enlace = document.createElement("a");
-  enlace.href = url;
-  enlace.download = "trade4u-ganancias.png";
-  document.body.appendChild(enlace);
-  enlace.click();
-  enlace.remove();
-  URL.revokeObjectURL(url);
-  return "descargado";
+  return compartirArchivoTarjeta(await prepararArchivoTarjeta(datos));
 }
