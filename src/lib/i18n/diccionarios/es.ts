@@ -167,6 +167,8 @@ export const es = {
     reportesSub: "Ganancias/pérdidas y quién operó por fecha",
     ganancias: "Ganancias",
     totalGanado: "Total ganado",
+    agrandarTarjeta: "Ver la tarjeta en grande",
+    cerrarTarjeta: "Cerrar",
     pendientePorRecibir: "Pendiente por recibir",
     sinGanancias:
       "Todavía no has ganado ningún concurso. Cuando ganes uno, el premio se pagará a tu wallet y quedará reflejado aquí.",

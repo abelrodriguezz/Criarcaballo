@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useLayoutEffect, useReducer, useRef, useState, type ChangeEvent, type FormEvent } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { crearClienteSupabase } from "@/lib/supabase/client";
@@ -34,6 +34,22 @@ function formatearCedula(valor: string): string {
   return `${p1}-${p2}-${p3}`;
 }
 
+/** Posición en el texto formateado justo después del dígito número
+ * `cantDigitos` (contando desde 1). Sirve para devolver el cursor a donde
+ * estaba después de reformatear, en vez de mandarlo siempre al final. */
+function posicionTrasDigitos(formateado: string, cantDigitos: number): number {
+  if (cantDigitos <= 0) return 0;
+  let vistos = 0;
+  for (let i = 0; i < formateado.length; i++) {
+    if (/\d/.test(formateado[i]) && ++vistos === cantDigitos) return i + 1;
+  }
+  return formateado.length;
+}
+
+// Mismo criterio laxo que usa el navegador para type="email": algo@algo.algo.
+// Se valida aquí porque el formulario va con noValidate (ver más abajo).
+const CORREO_VALIDO = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 export function RegistroForm({ t, locale }: { t: Diccionario; locale: Locale }) {
   const searchParams = useSearchParams();
   const codigoRefUrl = searchParams.get("ref");
@@ -44,6 +60,9 @@ export function RegistroForm({ t, locale }: { t: Diccionario; locale: Locale }) 
   const [nombre, setNombre] = useState("");
   const [apellido, setApellido] = useState("");
   const [cedula, setCedula] = useState("");
+  const inputCedula = useRef<HTMLInputElement>(null);
+  const cursorCedula = useRef<number | null>(null);
+  const [renderCedula, forzarRenderCedula] = useReducer((n: number) => n + 1, 0);
   // Se guarda el NOMBRE del país, no el dial: varios países comparten el
   // mismo código (+1 es República Dominicana, Puerto Rico, EE.UU. y
   // Canadá a la vez) — un <select> con value=dial no puede distinguir
@@ -57,10 +76,59 @@ export function RegistroForm({ t, locale }: { t: Diccionario; locale: Locale }) 
   const [exito, setExito] = useState(false);
   const [cargando, setCargando] = useState(false);
 
+  // Reformatear en cada tecla sin más mandaba el cursor al final (editar un
+  // dígito del medio obligaba a reescribir todo lo que seguía) y hacía
+  // imposible borrar "a través" de un guion: Backspace justo después de un
+  // guion lo quitaba, se volvía a insertar al reformatear y no pasaba nada.
+  function alCambiarCedula(e: ChangeEvent<HTMLInputElement>) {
+    const input = e.target;
+    const crudo = input.value;
+    const cursor = input.selectionStart ?? crudo.length;
+    let digitos = crudo.replace(/\D/g, "");
+    let digitosAntesDelCursor = crudo.slice(0, cursor).replace(/\D/g, "").length;
+
+    const soloSeBorroUnGuion =
+      crudo.length < cedula.length && digitos === cedula.replace(/\D/g, "");
+    if (soloSeBorroUnGuion) {
+      const tipo = (e.nativeEvent as InputEvent).inputType;
+      if (tipo === "deleteContentBackward" && digitosAntesDelCursor > 0) {
+        digitos =
+          digitos.slice(0, digitosAntesDelCursor - 1) + digitos.slice(digitosAntesDelCursor);
+        digitosAntesDelCursor -= 1;
+      } else if (tipo === "deleteContentForward") {
+        digitos =
+          digitos.slice(0, digitosAntesDelCursor) + digitos.slice(digitosAntesDelCursor + 1);
+      }
+    }
+
+    const formateado = formatearCedula(digitos);
+    const nuevoCursor = posicionTrasDigitos(formateado, Math.min(digitosAntesDelCursor, 11));
+    // El cursor se aplica en el useLayoutEffect de abajo, en el mismo commit
+    // en que React escribe el valor (un requestAnimationFrame llegaba tarde
+    // si se tecleaba rápido y mandaba los dígitos siguientes a otro lado).
+    // Si el valor no cambia (ej. tecleó una letra) igual se fuerza un render
+    // para que el efecto corra y el cursor no salte al final.
+    cursorCedula.current = nuevoCursor;
+    setCedula(formateado);
+    if (formateado === cedula) forzarRenderCedula();
+  }
+
+  useLayoutEffect(() => {
+    const pos = cursorCedula.current;
+    const el = inputCedula.current;
+    cursorCedula.current = null;
+    if (pos !== null && el && document.activeElement === el) el.setSelectionRange(pos, pos);
+  }, [cedula, renderCedula]);
+
   async function manejarEnvio(e: FormEvent) {
     e.preventDefault();
     setError(null);
 
+    const emailLimpio = email.trim();
+    if (!CORREO_VALIDO.test(emailLimpio)) {
+      setError(t.errores.correoInvalido);
+      return;
+    }
     const nombreLimpio = nombre.trim();
     if (!nombreLimpio) {
       setError(t.auth.nombreRequerido);
@@ -136,7 +204,7 @@ export function RegistroForm({ t, locale }: { t: Diccionario; locale: Locale }) 
     }
 
     const { data, error } = await supabase.auth.signUp({
-      email,
+      email: emailLimpio,
       password,
       options: {
         ...(captchaToken ? { captchaToken } : {}),
@@ -196,8 +264,16 @@ export function RegistroForm({ t, locale }: { t: Diccionario; locale: Locale }) 
   }
 
   return (
+    // noValidate: sin esto, el `required` nativo frena el envío ANTES de
+    // manejarEnvio y muestra la burbuja del navegador ("Please fill out this
+    // field.", en el idioma del navegador y no en el elegido en la app), y
+    // además deja a la vista el error anterior de la app, que ya no
+    // corresponde. Toda la validación (incluido el correo) se hace en
+    // manejarEnvio con los mensajes traducidos; `required` se queda por
+    // accesibilidad (aria-required).
     <form
       onSubmit={manejarEnvio}
+      noValidate
       className="bg-surface border border-[var(--border)] rounded-2xl p-6 max-w-[400px] w-full mx-auto"
     >
       <h1 className="font-display font-semibold text-lg mb-5">
@@ -253,10 +329,11 @@ export function RegistroForm({ t, locale }: { t: Diccionario; locale: Locale }) 
       </label>
       <input
         id="registro-cedula"
+        ref={inputCedula}
         required
         inputMode="numeric"
         value={cedula}
-        onChange={(e) => setCedula(formatearCedula(e.target.value))}
+        onChange={alCambiarCedula}
         maxLength={13}
         className="w-full px-3.5 py-2.5 mb-3 rounded-lg border border-[var(--border)] bg-background text-base md:text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary"
         placeholder={t.auth.cedulaPlaceholder}

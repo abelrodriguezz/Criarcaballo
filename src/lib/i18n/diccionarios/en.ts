@@ -162,6 +162,8 @@ export const en: typeof es = {
     reportesSub: "Profits/losses and who traded, by date",
     ganancias: "Earnings",
     totalGanado: "Total earned",
+    agrandarTarjeta: "View the card enlarged",
+    cerrarTarjeta: "Close",
     pendientePorRecibir: "Pending to receive",
     sinGanancias:
       "You haven't won any contest yet. When you win one, the prize will be paid to your wallet and reflected here.",

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { formatearDinero } from "@/lib/format";
 import type { Diccionario } from "@/lib/i18n";
 
@@ -24,16 +24,34 @@ function CuerpoTarjeta({ monto, idCorto, t, escala }: TarjetaTotalGanadoProps & 
   const tamanoMonto = `min(${capMonto}px, ${(100 / (0.66 * textoMonto.length)).toFixed(2)}cqw)`;
 
   // El id_corto real tiene 6 dígitos (100145...), así que el último grupo
-  // es más largo que en una tarjeta de verdad; en pantallas de <360px el
-  // número completo no entraba junto a la marca y saltaba de línea, por eso
-  // el primer grupo de puntos se oculta ahí.
+  // es más largo que en una tarjeta de verdad y "•••• •••• •••• 100145" +
+  // la marca no entran en todos los anchos. Antes se ocultaba el primer
+  // grupo con un breakpoint de VIEWPORT (<360px), pero eso no sirve para la
+  // versión agrandada (escala 1.7): ahí la fila medía ~400px dentro de una
+  // tarjeta de ~250px y "Trade4U" quedaba fuera, cortado por overflow-hidden.
+  // Ahora la fila se adapta al ancho real de la tarjeta:
+  //  - los grupos de puntos van en un flex row-reverse + wrap con alto de
+  //    una sola línea: los que no caben saltan a una 2a línea invisible,
+  //    siempre grupos enteros y siempre los de más a la izquierda;
+  //  - la letra se limita (cqw) para que al menos "•••• <id>" + la marca
+  //    entren completos aun en la tarjeta más angosta.
   const ultimoGrupo = idCorto ? String(idCorto).padStart(4, "0") : "••••";
+  // Ancho en em (de la letra del número) de "•••• <id>" + la marca: 0.67em
+  // por carácter mono (0.6 + 0.07 de letter-spacing) y ~4.2em la marca
+  // (que va a 13/12.5 del tamaño del número). 12px de gap entre ambos.
+  const emMinimos = (5 + ultimoGrupo.length) * 0.67 + 4.2;
+  const tamanoNumero = `min(${12.5 * escala}px, calc((100cqw - 12px) / ${emMinimos.toFixed(2)}))`;
+  const tamanoMarca = `calc(${tamanoNumero} * 1.04)`;
 
   return (
     <div
       className="relative overflow-hidden rounded-2xl"
       style={{
-        padding: `${20 * escala}px ${22 * escala}px ${16 * escala}px`,
+        // El relleno lateral NO crece con toda la escala: a 1.7 se comía
+        // ~75px del ancho en un cel de 320px y el monto de la versión
+        // agrandada quedaba casi del mismo tamaño que en la chica (el monto
+        // se limita al ancho disponible, ver tamanoMonto).
+        padding: `${20 * escala}px ${22 * Math.min(escala, 1.3)}px ${16 * escala}px`,
         background:
           "radial-gradient(120% 150% at 100% -10%, #2c3c58 0%, #141b2e 42%, #090c14 100%)",
         boxShadow:
@@ -122,13 +140,25 @@ function CuerpoTarjeta({ monto, idCorto, t, escala }: TarjetaTotalGanadoProps & 
 
       <div className="relative flex items-end justify-between gap-3" style={{ zIndex: 1, marginTop: 18 * escala }}>
         <div
-          className="font-mono whitespace-nowrap"
-          style={{ fontSize: 12.5 * escala, letterSpacing: "0.07em", color: "rgba(244,245,247,0.5)" }}
+          className="font-mono flex flex-row-reverse flex-wrap justify-end overflow-hidden min-w-0 flex-1"
+          style={{
+            fontSize: tamanoNumero,
+            lineHeight: 1.3,
+            height: "1.3em",
+            columnGap: "0.6em",
+            letterSpacing: "0.07em",
+            color: "rgba(244,245,247,0.5)",
+          }}
         >
-          <span className="hidden min-[360px]:inline">•••• </span>
-          •••• •••• {ultimoGrupo}
+          {/* row-reverse: en el DOM van de derecha a izquierda; justify-end
+              (= izquierda en row-reverse) deja el número alineado a la
+              izquierda como en una tarjeta real. */}
+          <span className="whitespace-nowrap">{ultimoGrupo}</span>
+          <span className="whitespace-nowrap" aria-hidden="true">••••</span>
+          <span className="whitespace-nowrap" aria-hidden="true">••••</span>
+          <span className="whitespace-nowrap" aria-hidden="true">••••</span>
         </div>
-        <div className="font-display font-bold whitespace-nowrap" style={{ fontSize: 13 * escala, color: "rgba(244,245,247,0.92)" }}>
+        <div className="font-display font-bold whitespace-nowrap shrink-0" style={{ fontSize: tamanoMarca, color: "rgba(244,245,247,0.92)" }}>
           Trade<span style={{ color: "#f5a623" }}>4U</span>
         </div>
       </div>
@@ -143,12 +173,19 @@ function CuerpoTarjeta({ monto, idCorto, t, escala }: TarjetaTotalGanadoProps & 
 // completa para leerla mejor; se cierra tocándola de nuevo, el fondo, la
 // X o Esc.
 export function TarjetaTotalGanado(props: TarjetaTotalGanadoProps) {
+  const { t } = props;
   const [expandida, setExpandida] = useState(false);
+  const botonAbrir = useRef<HTMLButtonElement>(null);
+  const botonCerrar = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     if (!expandida) return;
     const overflowOriginal = document.body.style.overflow;
     document.body.style.overflow = "hidden";
+    // Foco a la X al abrir (teclado/lector de pantalla) y de vuelta a la
+    // tarjeta chica al cerrar, en vez de dejarlo perdido en el <body>.
+    botonCerrar.current?.focus();
+    const abrir = botonAbrir.current;
     function alSoltarTecla(e: KeyboardEvent) {
       if (e.key === "Escape") setExpandida(false);
     }
@@ -156,29 +193,40 @@ export function TarjetaTotalGanado(props: TarjetaTotalGanadoProps) {
     return () => {
       document.body.style.overflow = overflowOriginal;
       window.removeEventListener("keydown", alSoltarTecla);
+      abrir?.focus({ preventScroll: true });
     };
   }, [expandida]);
 
   return (
     <>
       <button
+        ref={botonAbrir}
         type="button"
         onClick={() => setExpandida(true)}
+        aria-haspopup="dialog"
+        aria-expanded={expandida}
         className="w-full text-left appearance-none bg-transparent border-0 p-0 m-0 mb-3 block cursor-pointer"
       >
+        {/* Sin aria-label en el botón: taparía el monto para los lectores
+            de pantalla; la acción va como texto oculto al final. */}
         <CuerpoTarjeta {...props} escala={1} />
+        <span className="sr-only">{t.perfil.agrandarTarjeta}</span>
       </button>
 
       {expandida && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-black/80 backdrop-blur-sm"
+          role="dialog"
+          aria-modal="true"
+          aria-label={t.perfil.totalGanado}
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/80 backdrop-blur-sm"
           onClick={() => setExpandida(false)}
         >
           <div className="relative w-full max-w-[380px]" onClick={(e) => e.stopPropagation()}>
             <button
+              ref={botonCerrar}
               type="button"
               onClick={() => setExpandida(false)}
-              aria-label="×"
+              aria-label={t.perfil.cerrarTarjeta}
               className="absolute -top-3 -right-3 z-10 w-9 h-9 rounded-full bg-surface border border-[var(--border)] flex items-center justify-center text-foreground shadow-lg"
             >
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -191,6 +239,7 @@ export function TarjetaTotalGanado(props: TarjetaTotalGanadoProps) {
               className="w-full text-left appearance-none bg-transparent border-0 p-0 m-0 block cursor-pointer"
             >
               <CuerpoTarjeta {...props} escala={1.7} />
+              <span className="sr-only">{t.perfil.cerrarTarjeta}</span>
             </button>
           </div>
         </div>
