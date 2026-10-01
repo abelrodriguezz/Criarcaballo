@@ -17,6 +17,23 @@ const TURNSTILE_CONFIGURADO = !!process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
 // sin dependencias, y así este formulario no gana un import extra.
 const TELEFONO_VALIDO = /^[0-9+\-\s()]{6,30}$/;
 
+// Cédula dominicana: 3 dígitos, guion, 7 dígitos, guion, 1 dígito
+// (001-1234567-8). El mismo formato se exige en la base de datos
+// (migración 084, constraint usuarios_cedula_formato).
+const CEDULA_VALIDA = /^[0-9]{3}-[0-9]{7}-[0-9]$/;
+
+/** Inserta los guiones automáticamente mientras se escribe, sin que la
+ * persona tenga que teclearlos ella misma. */
+function formatearCedula(valor: string): string {
+  const digitos = valor.replace(/\D/g, "").slice(0, 11);
+  const p1 = digitos.slice(0, 3);
+  const p2 = digitos.slice(3, 10);
+  const p3 = digitos.slice(10, 11);
+  if (digitos.length <= 3) return p1;
+  if (digitos.length <= 10) return `${p1}-${p2}`;
+  return `${p1}-${p2}-${p3}`;
+}
+
 export function RegistroForm({ t, locale }: { t: Diccionario; locale: Locale }) {
   const searchParams = useSearchParams();
   const codigoRefUrl = searchParams.get("ref");
@@ -25,6 +42,8 @@ export function RegistroForm({ t, locale }: { t: Diccionario; locale: Locale }) 
   const [password, setPassword] = useState("");
   const [confirmar, setConfirmar] = useState("");
   const [nombre, setNombre] = useState("");
+  const [apellido, setApellido] = useState("");
+  const [cedula, setCedula] = useState("");
   // Se guarda el NOMBRE del país, no el dial: varios países comparten el
   // mismo código (+1 es República Dominicana, Puerto Rico, EE.UU. y
   // Canadá a la vez) — un <select> con value=dial no puede distinguir
@@ -45,6 +64,20 @@ export function RegistroForm({ t, locale }: { t: Diccionario; locale: Locale }) 
     const nombreLimpio = nombre.trim();
     if (!nombreLimpio) {
       setError(t.auth.nombreRequerido);
+      return;
+    }
+    const apellidoLimpio = apellido.trim();
+    if (!apellidoLimpio) {
+      setError(t.auth.apellidoRequerido);
+      return;
+    }
+    const cedulaLimpia = cedula.trim();
+    if (!cedulaLimpia) {
+      setError(t.auth.cedulaRequerido);
+      return;
+    }
+    if (!CEDULA_VALIDA.test(cedulaLimpia)) {
+      setError(t.auth.cedulaFormatoInvalido);
       return;
     }
     const telefonoLimpio = telefono.trim();
@@ -110,6 +143,8 @@ export function RegistroForm({ t, locale }: { t: Diccionario; locale: Locale }) 
         data: {
           ...(codigoLimpio ? { ref: codigoLimpio } : {}),
           nombre: nombreLimpio,
+          apellido: apellidoLimpio,
+          cedula: cedulaLimpia,
           telefono: telefonoConPais,
         },
       },
@@ -182,17 +217,49 @@ export function RegistroForm({ t, locale }: { t: Diccionario; locale: Locale }) 
         placeholder={t.auth.correoPlaceholder}
       />
 
-      <label htmlFor="registro-nombre" className="block text-[13px] font-medium mb-1.5">
-        {t.auth.nombreLabel}
+      <div className="grid grid-cols-2 gap-2.5 mb-3">
+        <div>
+          <label htmlFor="registro-nombre" className="block text-[13px] font-medium mb-1.5">
+            {t.auth.nombreLabel}
+          </label>
+          <input
+            id="registro-nombre"
+            required
+            value={nombre}
+            onChange={(e) => setNombre(e.target.value)}
+            maxLength={100}
+            className="w-full px-3.5 py-2.5 rounded-lg border border-[var(--border)] bg-background text-base md:text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary"
+            placeholder={t.auth.nombrePlaceholder}
+          />
+        </div>
+        <div>
+          <label htmlFor="registro-apellido" className="block text-[13px] font-medium mb-1.5">
+            {t.auth.apellidoLabel}
+          </label>
+          <input
+            id="registro-apellido"
+            required
+            value={apellido}
+            onChange={(e) => setApellido(e.target.value)}
+            maxLength={100}
+            className="w-full px-3.5 py-2.5 rounded-lg border border-[var(--border)] bg-background text-base md:text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary"
+            placeholder={t.auth.apellidoPlaceholder}
+          />
+        </div>
+      </div>
+
+      <label htmlFor="registro-cedula" className="block text-[13px] font-medium mb-1.5">
+        {t.auth.cedulaLabel}
       </label>
       <input
-        id="registro-nombre"
+        id="registro-cedula"
         required
-        value={nombre}
-        onChange={(e) => setNombre(e.target.value)}
-        maxLength={100}
+        inputMode="numeric"
+        value={cedula}
+        onChange={(e) => setCedula(formatearCedula(e.target.value))}
+        maxLength={13}
         className="w-full px-3.5 py-2.5 mb-3 rounded-lg border border-[var(--border)] bg-background text-base md:text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary"
-        placeholder={t.auth.nombrePlaceholder}
+        placeholder={t.auth.cedulaPlaceholder}
       />
 
       <label htmlFor="registro-telefono" className="block text-[13px] font-medium mb-1.5">
