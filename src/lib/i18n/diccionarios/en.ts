@@ -159,6 +159,7 @@ export const en: typeof es = {
     sinConcepto: "No description",
     pagado: "Paid",
     pendiente: "Pending",
+    restoDeRetiroParcial: "Remaining part of a gain already partly paid out",
     favoritos: "Favorites",
     sinFavoritos1: "You haven't marked any asset as a favorite yet. Do it from",
     sinFavoritos2: "by tapping the star next to the price.",

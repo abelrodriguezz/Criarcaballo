@@ -387,15 +387,31 @@ export default async function PaginaPerfil() {
           </p>
         ) : (
           <div className="flex flex-col gap-2">
-            {ganancias.map((g) => (
+            {/* admin_marcar_retiro_pagado (migración 072/075) parte una
+                ganancia en dos filas cuando un retiro no la cubre completa,
+                y le pega " (resto tras retiro)" al concepto de la fila
+                nueva -- un usuario normal lo lee como si fueran dos trades
+                distintos. Se oculta el sufijo técnico y se explica aparte. */}
+            {ganancias.map((g) => {
+              const SUFIJO_RESTO = " (resto tras retiro)";
+              const esResto = g.concepto?.endsWith(SUFIJO_RESTO) ?? false;
+              const concepto = esResto
+                ? g.concepto!.slice(0, -SUFIJO_RESTO.length)
+                : g.concepto;
+              return (
               <div
                 key={g.id}
                 className="flex items-center justify-between py-1"
               >
                 <div>
                   <div className="text-sm font-medium">
-                    {g.concepto || t.perfil.sinConcepto}
+                    {concepto || t.perfil.sinConcepto}
                   </div>
+                  {esResto && (
+                    <div className="text-[11px] text-foreground-muted italic">
+                      {t.perfil.restoDeRetiroParcial}
+                    </div>
+                  )}
                   <div className="text-[12px] text-foreground-muted">
                     {new Date(g.created_at).toLocaleDateString(locale === "en" ? "en-US" : "es-DO", {
                       day: "numeric",
@@ -409,7 +425,8 @@ export default async function PaginaPerfil() {
                   +${formatearDinero(g.monto)}
                 </span>
               </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>
