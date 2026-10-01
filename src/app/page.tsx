@@ -77,6 +77,7 @@ export default async function PaginaInicio() {
       fuente: n.fuente,
       esCripto: n.fuente === "Cointelegraph",
       url: urlSeguraParaEnlace(n.url),
+      imagen: n.imagen,
     }))
     .filter((n): n is typeof n & { url: string } => n.url !== null);
 
@@ -195,57 +196,88 @@ export default async function PaginaInicio() {
                   href={n.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="group relative border-l-4 bg-surface p-5 overflow-hidden flex flex-col gap-3 transition-transform hover:-translate-y-0.5"
-                  style={{
-                    borderColor: colorAcento,
-                    background: `radial-gradient(120% 100% at 100% 0%, color-mix(in srgb, ${colorAcento} 10%, var(--surface)) 0%, var(--surface) 60%)`,
-                  }}
+                  className="group relative border-l-4 bg-surface overflow-hidden flex flex-col transition-transform hover:-translate-y-0.5"
+                  style={{ borderColor: colorAcento }}
                 >
-                  {/* Fondo decorativo tipo velas de trading — puramente
-                      estético, apenas visible, para que la tarjeta se
-                      sienta "de mercado" y no un recuadro de texto suelto. */}
-                  <div
-                    className="absolute inset-x-0 bottom-0 h-16 flex items-end justify-end gap-[3px] px-4 opacity-[0.14] pointer-events-none"
-                    aria-hidden
-                  >
-                    {velasDecorativas(i).map((alto, idx) => (
-                      <div
-                        key={idx}
-                        className="w-[5px] rounded-t-[1px]"
-                        style={{ height: `${alto}%`, background: colorAcento }}
+                  {n.imagen ? (
+                    // Foto real del artículo (Cointelegraph/MarketWatch
+                    // traen <enclosure>/<media:content> en su RSS — ver
+                    // lib/noticias/feedExterno.ts). Dominio arbitrario del
+                    // medio externo, por eso <img> y no next/image.
+                    <div className="relative h-36 overflow-hidden">
+                      {/* eslint-disable-next-line @next/next/no-img-element -- foto de un medio externo, dominio arbitrario */}
+                      <img
+                        src={n.imagen}
+                        alt=""
+                        loading="lazy"
+                        className="absolute inset-0 w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                       />
-                    ))}
-                  </div>
-
-                  <div className="relative z-10 flex items-center justify-between">
-                    <div
-                      className="w-9 h-9 rounded-[4px] flex items-center justify-center text-white shrink-0"
-                      style={{ background: colorAcento }}
-                    >
-                      <IconoTendenciaSubida className="w-4 h-4" />
+                      <span
+                        className={`absolute top-2.5 right-2.5 text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded text-white ${
+                          n.esCripto ? "bg-brand-secondary" : "bg-brand-primary"
+                        }`}
+                      >
+                        {n.esCripto
+                          ? t.home.noticiasCriptoEtiqueta
+                          : t.home.noticiasStocksEtiqueta}
+                      </span>
                     </div>
-                    <span
-                      className={`text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 ${
-                        n.esCripto
-                          ? "bg-brand-secondary/15 text-brand-secondary"
-                          : "bg-brand-primary/15 text-brand-primary"
-                      }`}
+                  ) : (
+                    // Sin foto en el feed: se mantiene la decoración de
+                    // velas de trading para que la tarjeta no se sienta
+                    // vacía.
+                    <div
+                      className="relative px-5 pt-5 pb-1 overflow-hidden"
+                      style={{
+                        background: `radial-gradient(120% 100% at 100% 0%, color-mix(in srgb, ${colorAcento} 10%, var(--surface)) 0%, var(--surface) 60%)`,
+                      }}
                     >
-                      {n.esCripto
-                        ? t.home.noticiasCriptoEtiqueta
-                        : t.home.noticiasStocksEtiqueta}
-                    </span>
-                  </div>
-                  <p className="relative z-10 text-[15px] font-semibold leading-snug group-hover:text-brand-primary transition-colors">
-                    {n.titulo}
-                  </p>
-                  <div className="relative z-10 flex items-center justify-between mt-auto pt-1">
-                    <span className="text-[12px] text-foreground-muted">
-                      {n.fuente}
-                    </span>
-                    <span className="text-sm font-bold text-brand-primary opacity-0 -translate-x-1 group-hover:opacity-100 group-hover:translate-x-0 transition-all">
-                      →
-                    </span>
+                      <div
+                        className="absolute inset-x-0 bottom-0 h-16 flex items-end justify-end gap-[3px] px-4 opacity-[0.14] pointer-events-none"
+                        aria-hidden
+                      >
+                        {velasDecorativas(i).map((alto, idx) => (
+                          <div
+                            key={idx}
+                            className="w-[5px] rounded-t-[1px]"
+                            style={{ height: `${alto}%`, background: colorAcento }}
+                          />
+                        ))}
+                      </div>
+                      <div className="relative z-10 flex items-center justify-between">
+                        <div
+                          className="w-9 h-9 rounded-[4px] flex items-center justify-center text-white shrink-0"
+                          style={{ background: colorAcento }}
+                        >
+                          <IconoTendenciaSubida className="w-4 h-4" />
+                        </div>
+                        <span
+                          className={`text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 ${
+                            n.esCripto
+                              ? "bg-brand-secondary/15 text-brand-secondary"
+                              : "bg-brand-primary/15 text-brand-primary"
+                          }`}
+                        >
+                          {n.esCripto
+                            ? t.home.noticiasCriptoEtiqueta
+                            : t.home.noticiasStocksEtiqueta}
+                        </span>
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="relative z-10 p-5 pt-4 flex flex-col gap-3 flex-1">
+                    <p className="text-[15px] font-semibold leading-snug group-hover:text-brand-primary transition-colors">
+                      {n.titulo}
+                    </p>
+                    <div className="flex items-center justify-between mt-auto pt-1">
+                      <span className="text-[12px] text-foreground-muted">
+                        {n.fuente}
+                      </span>
+                      <span className="text-sm font-bold text-brand-primary opacity-0 -translate-x-1 group-hover:opacity-100 group-hover:translate-x-0 transition-all">
+                        →
+                      </span>
+                    </div>
                   </div>
                 </a>
               );

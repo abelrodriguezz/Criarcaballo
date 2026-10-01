@@ -9,6 +9,7 @@ export interface NoticiaExterna {
   titulo: string;
   url: string;
   fuente: string;
+  imagen: string | null;
 }
 
 /**
@@ -63,6 +64,21 @@ function extraerCampo(bloque: string, etiqueta: "title" | "link"): string {
   if (!match) return "";
   const crudo = match[1].replace(/<!\[CDATA\[([\s\S]*?)\]\]>/, "$1");
   return decodificarEntidades(crudo).trim();
+}
+
+/**
+ * Foto de portada del artículo, si el feed la trae — Cointelegraph usa
+ * <enclosure url="...">, MarketWatch (Dow Jones) solo <media:content
+ * url="...">. Se prueba primero <enclosure> (más simple y específico de
+ * imagen) y se cae a <media:content> si no está. Nunca se inventa una
+ * imagen: sin ninguna de las dos, la noticia simplemente no trae foto.
+ */
+function extraerImagen(bloque: string): string | null {
+  const enclosure = bloque.match(/<enclosure\b[^>]*\burl="([^"]*)"/i);
+  const media = bloque.match(/<media:content\b[^>]*\burl="([^"]*)"/i);
+  const crudo = enclosure?.[1] || media?.[1] || "";
+  if (!crudo) return null;
+  return urlSeguraParaEnlace(decodificarEntidades(crudo));
 }
 
 /** Lee el cuerpo de la respuesta hasta MAX_BYTES_FEED y corta ahí. */
@@ -129,6 +145,7 @@ async function obtenerFeedRSS(
         // es http/https se descarta la noticia entera (ver src/lib/url.ts).
         url: urlSeguraParaEnlace(extraerCampo(bloque, "link")),
         fuente,
+        imagen: extraerImagen(bloque),
       }))
       .filter((n): n is NoticiaExterna => !!n.titulo && n.url !== null);
   } catch {

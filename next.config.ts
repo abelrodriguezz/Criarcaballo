@@ -24,7 +24,14 @@ const csp = [
   // supabaseOrigin: las imágenes de comprobante del chat de soporte se
   // muestran con URLs firmadas de Supabase Storage. Sin esto el navegador
   // las bloqueaba y nunca se veían (encontrado en QA 2026-09-25).
-  `img-src 'self' data: ${supabaseOrigin}`,
+  // https: genérico: las fotos de portada de las noticias externas
+  // (Cointelegraph/MarketWatch, lib/noticias/feedExterno.ts) vienen de
+  // dominios de CDN que cambian por artículo (s3-images.ctmedia.io,
+  // images.mktw.net, etc.) -- no hay una lista fija que mantener. La URL ya
+  // se valida como http/https antes de renderizarse (urlSeguraParaEnlace),
+  // así que esto no abre ningún esquema peligroso, solo amplía qué host
+  // https puede servir una imagen.
+  `img-src 'self' data: https: ${supabaseOrigin}`,
   "font-src 'self' data:",
   // challenges.cloudflare.com también en connect-src: el widget de
   // Turnstile hace sus propias peticiones a ese origen, y sin esto el
