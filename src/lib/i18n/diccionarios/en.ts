@@ -318,7 +318,7 @@ export const en: typeof es = {
     enlaceInvitacion: "Invitation link",
     codigoInvitacion: "Invitation code",
     miembrosInvitados: "members invited by you",
-    comisionesInvitar: "referral commissions — not applicable",
+    comisionesInvitar: "commissions earned from referrals",
   },
   noticias: {
     titulo: "News",

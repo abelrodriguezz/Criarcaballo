@@ -326,7 +326,7 @@ export const es = {
     enlaceInvitacion: "Enlace de invitación",
     codigoInvitacion: "Código de invitación",
     miembrosInvitados: "miembros invitados por ti",
-    comisionesInvitar: "comisiones por invitar — no aplica",
+    comisionesInvitar: "comisiones ganadas por invitar",
   },
   noticias: {
     titulo: "Noticias",

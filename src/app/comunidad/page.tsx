@@ -5,6 +5,7 @@ import { CopiarBoton } from "@/components/ui/CopiarBoton";
 import { obtenerUsuarioActual } from "@/lib/auth/sesion";
 import { crearClienteSupabaseServidor } from "@/lib/supabase/server";
 import { obtenerDiccionario } from "@/lib/i18n/servidor";
+import { formatearDinero } from "@/lib/format";
 
 export default async function PaginaComunidad() {
   const usuario = await obtenerUsuarioActual();
@@ -13,15 +14,26 @@ export default async function PaginaComunidad() {
 
   const supabase = await crearClienteSupabaseServidor();
 
-  const [{ data: perfil }, { data: totalInvitados }, t] = await Promise.all([
-    supabase
-      .from("usuarios")
-      .select("codigo_invitacion")
-      .eq("id", usuario.id)
-      .single(),
-    supabase.rpc("contar_invitados"),
-    obtenerDiccionario(),
-  ]);
+  const [{ data: perfil }, { data: totalInvitados }, { data: comisiones }, t] =
+    await Promise.all([
+      supabase
+        .from("usuarios")
+        .select("codigo_invitacion")
+        .eq("id", usuario.id)
+        .single(),
+      supabase.rpc("contar_invitados"),
+      supabase
+        .from("ganancias_concursos")
+        .select("monto")
+        .eq("usuario_id", usuario.id)
+        .eq("origen", "referido"),
+      obtenerDiccionario(),
+    ]);
+
+  const totalComisiones = (comisiones ?? []).reduce(
+    (suma, c) => suma + c.monto,
+    0
+  );
 
   const headersList = await headers();
   const host = headersList.get("host") ?? "";
@@ -83,7 +95,9 @@ export default async function PaginaComunidad() {
           </div>
         </div>
         <div className="border border-[var(--border)] rounded-2xl p-4.5 text-center">
-          <div className="font-display font-bold text-2xl">$0.00</div>
+          <div className="font-display font-bold text-2xl">
+            ${formatearDinero(totalComisiones)}
+          </div>
           <div className="text-[13px] text-foreground-muted">
             {t.comunidad.comisionesInvitar}
           </div>
