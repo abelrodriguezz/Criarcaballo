@@ -164,7 +164,6 @@ export const es = {
     sinConcepto: "Sin concepto",
     pagado: "Pagado",
     pendiente: "Pendiente",
-    restoDeRetiroParcial: "Parte restante de una ganancia ya cobrada en parte",
     favoritos: "Favoritos",
     sinFavoritos1: "Aún no marcaste ningún activo como favorito. Hazlo desde",
     sinFavoritos2: "tocando la estrella junto al precio.",

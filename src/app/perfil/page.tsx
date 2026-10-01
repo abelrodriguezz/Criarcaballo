@@ -154,6 +154,7 @@ export default async function PaginaPerfil() {
   const pendienteGanancias = (ganancias ?? [])
     .filter((g) => !g.pagado)
     .reduce((suma, g) => suma + g.monto, 0);
+  const historialGananciasPagadas = (ganancias ?? []).filter((g) => g.pagado);
 
   const historialRetiros = solicitudesRetiro ?? [];
   const solicitudRetiroPendiente =
@@ -381,52 +382,40 @@ export default async function PaginaPerfil() {
             </span>
           </div>
         )}
-        {!ganancias || ganancias.length === 0 ? (
+        {/* El historial de abajo solo muestra lo YA PAGADO -- lo pendiente
+            ya se resume arriba en "Pendiente por recibir". Así la fila que
+            admin_marcar_retiro_pagado (migración 072/075) deja sin pagar al
+            partir una ganancia que un retiro no cubrió completa (con
+            " (resto tras retiro)" en el concepto) no aparece aquí hasta que
+            de verdad se pague -- sin notas ni badges que explicar. */}
+        {historialGananciasPagadas.length === 0 ? (
           <p className="text-[13px] text-foreground-muted">
             {t.perfil.sinGanancias}
           </p>
         ) : (
           <div className="flex flex-col gap-2">
-            {/* admin_marcar_retiro_pagado (migración 072/075) parte una
-                ganancia en dos filas cuando un retiro no la cubre completa,
-                y le pega " (resto tras retiro)" al concepto de la fila
-                nueva -- un usuario normal lo lee como si fueran dos trades
-                distintos. Se oculta el sufijo técnico y se explica aparte. */}
-            {ganancias.map((g) => {
-              const SUFIJO_RESTO = " (resto tras retiro)";
-              const esResto = g.concepto?.endsWith(SUFIJO_RESTO) ?? false;
-              const concepto = esResto
-                ? g.concepto!.slice(0, -SUFIJO_RESTO.length)
-                : g.concepto;
-              return (
+            {historialGananciasPagadas.map((g) => (
               <div
                 key={g.id}
                 className="flex items-center justify-between py-1"
               >
                 <div>
                   <div className="text-sm font-medium">
-                    {concepto || t.perfil.sinConcepto}
+                    {g.concepto || t.perfil.sinConcepto}
                   </div>
-                  {esResto && (
-                    <div className="text-[11px] text-foreground-muted italic">
-                      {t.perfil.restoDeRetiroParcial}
-                    </div>
-                  )}
                   <div className="text-[12px] text-foreground-muted">
                     {new Date(g.created_at).toLocaleDateString(locale === "en" ? "en-US" : "es-DO", {
                       day: "numeric",
                       month: "short",
                       year: "numeric",
-                    })}{" "}
-                    · {g.pagado ? t.perfil.pagado : t.perfil.pendiente}
+                    })}
                   </div>
                 </div>
                 <span className="font-display font-bold text-sm text-gain tabular">
                   +${formatearDinero(g.monto)}
                 </span>
               </div>
-              );
-            })}
+            ))}
           </div>
         )}
       </div>
