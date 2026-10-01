@@ -22,6 +22,8 @@ const MAPA_ES_A_CLAVE: Record<string, keyof typeof es.errores> = {
   "Ya tienes una operación abierta. Podrás abrir otra cuando el admin cierre la sesión.":
     "operacionYaAbierta",
   "Un administrador deshabilitó el trading para tu cuenta.": "tradingDeshabilitado",
+  "Ya operaste el pick de hoy. Espera a que el admin publique uno nuevo.": "pickYaOperado",
+  "El mercado está cerrado en este momento.": "mercadoCerrado",
   "No se pudo abrir la operación.": "noPudoAbrirOperacion",
   "Llegaste al máximo de 50 activos favoritos. Quita alguno antes de agregar otro.":
     "topeFavoritos",

@@ -11,9 +11,19 @@ interface TarjetaTotalGanadoProps {
 // dueño del proyecto se rediseñó como una tarjeta de crédito/débito —
 // chip, número enmascarado con el id_corto del usuario, marca Trade4U.
 export function TarjetaTotalGanado({ monto, idCorto, t }: TarjetaTotalGanadoProps) {
-  const numeroEnmascarado = idCorto
-    ? `•••• •••• •••• ${String(idCorto).padStart(4, "0")}`
-    : "•••• •••• •••• ••••";
+  // A 32px fijos el monto se salía de la tarjeta en pantallas angostas
+  // (overflow-hidden lo cortaba sin aviso: "+$98,777,777.7") o se partía en
+  // dos líneas. Se limita a lo que entra en el ancho real de la tarjeta
+  // (cqw, la tarjeta es container) según la cantidad de caracteres:
+  // ~0.66em por carácter en la fuente del monto.
+  const textoMonto = `${monto > 0 ? "+" : ""}$${formatearDinero(monto)}`;
+  const tamanoMonto = `min(32px, ${(100 / (0.66 * textoMonto.length)).toFixed(2)}cqw)`;
+
+  // El id_corto real tiene 6 dígitos (100145...), así que el último grupo
+  // es más largo que en una tarjeta de verdad; en pantallas de <360px el
+  // número completo no entraba junto a la marca y saltaba de línea, por eso
+  // el primer grupo de puntos se oculta ahí.
+  const ultimoGrupo = idCorto ? String(idCorto).padStart(4, "0") : "••••";
 
   return (
     <div
@@ -25,6 +35,7 @@ export function TarjetaTotalGanado({ monto, idCorto, t }: TarjetaTotalGanadoProp
         boxShadow:
           "0 18px 36px -14px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.07)",
         isolation: "isolate",
+        containerType: "inline-size",
       }}
     >
       <div
@@ -92,20 +103,27 @@ export function TarjetaTotalGanado({ monto, idCorto, t }: TarjetaTotalGanadoProp
       </div>
       <div
         className="relative font-display font-bold tabular mt-1"
-        style={{ zIndex: 1, fontSize: 32, lineHeight: 1.15, color: "#eafff3" }}
+        style={{
+          zIndex: 1,
+          fontSize: tamanoMonto,
+          lineHeight: 1.15,
+          color: "#eafff3",
+          whiteSpace: "nowrap",
+        }}
       >
         {monto > 0 && <span style={{ color: "#35e58f" }}>+</span>}
-        ${formatearDinero(monto)}
+        {textoMonto.replace(/^\+/, "")}
       </div>
 
-      <div className="relative flex items-end justify-between mt-4.5" style={{ zIndex: 1 }}>
+      <div className="relative flex items-end justify-between gap-3 mt-4.5" style={{ zIndex: 1 }}>
         <div
-          className="font-mono"
+          className="font-mono whitespace-nowrap"
           style={{ fontSize: 12.5, letterSpacing: "0.07em", color: "rgba(244,245,247,0.5)" }}
         >
-          {numeroEnmascarado}
+          <span className="hidden min-[360px]:inline">•••• </span>
+          •••• •••• {ultimoGrupo}
         </div>
-        <div className="font-display font-bold" style={{ fontSize: 13, color: "rgba(244,245,247,0.92)" }}>
+        <div className="font-display font-bold whitespace-nowrap" style={{ fontSize: 13, color: "rgba(244,245,247,0.92)" }}>
           Trade<span style={{ color: "#f5a623" }}>4U</span>
         </div>
       </div>

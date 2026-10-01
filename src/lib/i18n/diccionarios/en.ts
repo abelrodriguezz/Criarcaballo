@@ -124,6 +124,8 @@ export const en: typeof es = {
     operacionYaAbierta:
       "You already have an open operation. You can open another once the admin closes it.",
     tradingDeshabilitado: "An administrator disabled trading for your account.",
+    pickYaOperado: "You already traded today's pick. Wait for the admin to publish a new one.",
+    mercadoCerrado: "The market is closed right now.",
     noPudoAbrirOperacion: "Couldn't open the operation.",
     topeFavoritos:
       "You reached the limit of 50 favorite assets. Remove one before adding another.",
@@ -156,6 +158,8 @@ export const en: typeof es = {
     pendientePorRecibir: "Pending to receive",
     sinGanancias:
       "You haven't won any contest yet. When you win one, the prize will be paid to your wallet and reflected here.",
+    sinGananciasPagadas:
+      "No earnings have been paid to you yet. What you're owed is shown above under \"Pending to receive\" and will move to this list once it's paid.",
     sinConcepto: "No description",
     pagado: "Paid",
     pendiente: "Pending",
@@ -312,7 +316,7 @@ export const en: typeof es = {
   comunidad: {
     titulo: "Community",
     subtitulo:
-      "Invite more people to the platform — no commissions or referral payouts, just community growth.",
+      "Invite more people to the platform and earn a commission when your invitees make their deposit.",
     sinCodigo:
       "You don't have an invitation code assigned yet. If your account predates this feature, ask the admin to generate one for you.",
     enlaceInvitacion: "Invitation link",

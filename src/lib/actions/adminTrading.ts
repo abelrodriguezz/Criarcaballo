@@ -20,7 +20,16 @@ export async function eliminarPickDelDia(pickId: string): Promise<Resultado<null
   const { error } = await supabase.from("pick_del_dia").delete().eq("id", pickId);
 
   if (error) {
-    return fallo("No se pudo eliminar el pick.");
+    // P0001 = RAISE EXCEPTION de un trigger nuestro: el de la migración 083
+    // (proteger_borrado_pick_del_dia) bloquea borrar un pick que todavía
+    // tiene operaciones abiertas. Su mensaje ya está redactado para el
+    // admin ("Ciérralas primero desde..."); con el genérico de antes el
+    // admin no tenía forma de saber por qué no se borraba.
+    return fallo(
+      error.code === "P0001" && error.message
+        ? error.message
+        : "No se pudo eliminar el pick."
+    );
   }
 
   revalidatePath("/trade-del-dia");

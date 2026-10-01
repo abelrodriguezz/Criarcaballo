@@ -380,7 +380,12 @@ export default async function PaginaPerfil() {
             de verdad se pague -- sin notas ni badges que explicar. */}
         {historialGananciasPagadas.length === 0 ? (
           <p className="text-[13px] text-foreground-muted">
-            {t.perfil.sinGanancias}
+            {/* Con el historial filtrado a solo lo pagado, el texto de
+                "todavía no has ganado nada" contradecía la tarjeta de
+                arriba cuando ya hay ganancias pendientes de pago. */}
+            {pendienteGanancias > 0
+              ? t.perfil.sinGananciasPagadas
+              : t.perfil.sinGanancias}
           </p>
         ) : (
           <div className="flex flex-col gap-2">

@@ -78,7 +78,11 @@ function extraerImagen(bloque: string): string | null {
   const media = bloque.match(/<media:content\b[^>]*\burl="([^"]*)"/i);
   const crudo = enclosure?.[1] || media?.[1] || "";
   if (!crudo) return null;
-  return urlSeguraParaEnlace(decodificarEntidades(crudo));
+  const url = urlSeguraParaEnlace(decodificarEntidades(crudo));
+  // Solo https: el CSP (next.config.ts) permite img-src https: pero no
+  // http:, así que una foto http quedaría como imagen rota en vez de caer
+  // al fondo de velas. Sin foto válida, la tarjeta usa ese fondo.
+  return url?.startsWith("https://") ? url : null;
 }
 
 /** Lee el cuerpo de la respuesta hasta MAX_BYTES_FEED y corta ahí. */

@@ -129,6 +129,8 @@ export const es = {
     operacionYaAbierta:
       "Ya tienes una operación abierta. Podrás abrir otra cuando el admin cierre la sesión.",
     tradingDeshabilitado: "Un administrador deshabilitó el trading para tu cuenta.",
+    pickYaOperado: "Ya operaste el pick de hoy. Espera a que el admin publique uno nuevo.",
+    mercadoCerrado: "El mercado está cerrado en este momento.",
     noPudoAbrirOperacion: "No se pudo abrir la operación.",
     topeFavoritos:
       "Llegaste al máximo de 50 activos favoritos. Quita alguno antes de agregar otro.",
@@ -161,6 +163,8 @@ export const es = {
     pendientePorRecibir: "Pendiente por recibir",
     sinGanancias:
       "Todavía no has ganado ningún concurso. Cuando ganes uno, el premio se pagará a tu wallet y quedará reflejado aquí.",
+    sinGananciasPagadas:
+      "Todavía no se te ha pagado ninguna ganancia. Lo que tienes por cobrar aparece arriba en «Pendiente por recibir» y pasará a esta lista cuando se te pague.",
     sinConcepto: "Sin concepto",
     pagado: "Pagado",
     pendiente: "Pendiente",
@@ -320,7 +324,7 @@ export const es = {
   comunidad: {
     titulo: "Comunidad",
     subtitulo:
-      "Invita a más personas a la plataforma — sin comisiones ni pagos por referidos, solo crecimiento de la comunidad.",
+      "Invita a más personas a la plataforma y gana una comisión cuando tus invitados hagan su depósito.",
     sinCodigo:
       "Todavía no tienes un código de invitación asignado. Si tu cuenta es anterior a esta función, pide al admin que te genere uno.",
     enlaceInvitacion: "Enlace de invitación",
