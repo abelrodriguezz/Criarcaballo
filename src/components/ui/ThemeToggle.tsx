@@ -11,7 +11,7 @@ export function ThemeToggle({
   etiquetaClaro: string;
   etiquetaOscuro: string;
 }) {
-  const [esOscuro, setEsOscuro] = useState(true);
+  const [esOscuro, setEsOscuro] = useState(false);
 
   useEffect(() => {
     // El tema real ya se aplicó al <html> antes de pintar (ver el script
@@ -20,7 +20,7 @@ export function ThemeToggle({
     // externo (localStorage/preferencia del SO) tras montar, el patrón
     // estándar para evitar un hydration mismatch entre servidor y cliente.
     // Debe coincidir exactamente con la lógica del script inline de
-    // layout.tsx: oscuro por defecto salvo que ya se haya elegido claro.
+    // layout.tsx: claro por defecto salvo que ya se haya elegido oscuro.
     // Si localStorage no está disponible (modo incógnito estricto, storage
     // bloqueado, etc.) esto lanzaría sin capturar y tumbaría toda la app a
     // la pantalla de error de Next para CUALQUIER visitante (el botón de
@@ -30,9 +30,9 @@ export function ThemeToggle({
     try {
       guardado = localStorage.getItem("trade4u-theme");
     } catch {
-      // sin storage, seguimos con el valor por defecto (oscuro).
+      // sin storage, seguimos con el valor por defecto (claro).
     }
-    const prefiereOscuro = guardado ? guardado === "dark" : true;
+    const prefiereOscuro = guardado ? guardado === "dark" : false;
 
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setEsOscuro(prefiereOscuro);

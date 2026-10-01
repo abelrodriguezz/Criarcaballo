@@ -229,6 +229,64 @@ body {
 }
 
 /* ============================================================
+   Tarjeta "Total Ganado" (perfil) al agrandarse a pantalla completa —
+   zoom + giro 3D, como una transición de diapositiva, no un simple
+   aparecer/desaparecer.
+   ============================================================ */
+.overlay-ganancia-entrando {
+  animation: overlayGananciaEntra 0.25s ease both;
+}
+.overlay-ganancia-saliendo {
+  animation: overlayGananciaSale 0.35s ease both;
+}
+@keyframes overlayGananciaEntra {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes overlayGananciaSale {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+.tarjeta-ganancia-entrando {
+  animation: tarjetaGananciaAbrir 0.55s cubic-bezier(0.19, 1, 0.22, 1) both;
+}
+.tarjeta-ganancia-saliendo {
+  animation: tarjetaGananciaCerrar 0.35s cubic-bezier(0.6, 0, 0.8, 0.2) both;
+}
+@keyframes tarjetaGananciaAbrir {
+  from {
+    opacity: 0;
+    transform: perspective(1400px) scale(0.55) rotateY(-35deg) translateY(30px);
+  }
+  60% {
+    opacity: 1;
+  }
+  to {
+    opacity: 1;
+    transform: perspective(1400px) scale(1) rotateY(0deg) translateY(0);
+  }
+}
+@keyframes tarjetaGananciaCerrar {
+  from {
+    opacity: 1;
+    transform: perspective(1400px) scale(1) rotateY(0deg) translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: perspective(1400px) scale(0.55) rotateY(35deg) translateY(30px);
+  }
+}
+
+/* ============================================================
    Banner de noticias en la portada — cinta corrida tipo ticker
    ============================================================ */
 @keyframes tickerScroll {

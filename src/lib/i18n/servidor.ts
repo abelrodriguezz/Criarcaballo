@@ -7,10 +7,11 @@ import { COOKIE_IDIOMA, diccionarios, type Diccionario, type Locale } from "./in
 // next/headers... in the Pages Router" (en realidad ocurre en App Router
 // también cuando el import se cuela dentro del bundle de cliente).
 
-/** Español por defecto — solo cambia si la persona ya eligió inglés antes. */
+/** Inglés por defecto (pedido del dueño del proyecto, 2026-10-01) — solo
+ * cambia si la persona ya eligió español antes. */
 export async function obtenerLocale(): Promise<Locale> {
   const store = await cookies();
-  return store.get(COOKIE_IDIOMA)?.value === "en" ? "en" : "es";
+  return store.get(COOKIE_IDIOMA)?.value === "es" ? "es" : "en";
 }
 
 export async function obtenerDiccionario(): Promise<Diccionario> {

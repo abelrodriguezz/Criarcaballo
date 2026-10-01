@@ -44,9 +44,9 @@ const SCRIPT_TEMA_INICIAL = `
 (function () {
   try {
     var guardado = localStorage.getItem('trade4u-theme');
-    // Oscuro por defecto (look de terminal de trading) salvo que la
-    // persona ya haya elegido claro explícitamente antes.
-    var oscuro = guardado ? guardado === 'dark' : true;
+    // Claro por defecto (pedido del dueño del proyecto, 2026-10-01) salvo
+    // que la persona ya haya elegido oscuro explícitamente antes.
+    var oscuro = guardado ? guardado === 'dark' : false;
     document.documentElement.setAttribute('data-theme', oscuro ? 'dark' : 'light');
   } catch (e) {}
 })();

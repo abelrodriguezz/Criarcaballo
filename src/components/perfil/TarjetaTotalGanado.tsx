@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { formatearDinero } from "@/lib/format";
 import type { Diccionario } from "@/lib/i18n";
 
@@ -172,11 +172,34 @@ function CuerpoTarjeta({ monto, idCorto, t, escala }: TarjetaTotalGanadoProps & 
 // Al tocarla (sobre todo pensado para el cel) se agranda a pantalla
 // completa para leerla mejor; se cierra tocándola de nuevo, el fondo, la
 // X o Esc.
+// Duración de tarjeta-ganancia-saliendo (globals.css) — hay que esperarla
+// antes de desmontar o el cierre se corta en seco a mitad de la animación.
+const DURACION_CIERRE_MS = 350;
+
 export function TarjetaTotalGanado(props: TarjetaTotalGanadoProps) {
   const { t } = props;
   const [expandida, setExpandida] = useState(false);
+  const [cerrando, setCerrando] = useState(false);
   const botonAbrir = useRef<HTMLButtonElement>(null);
   const botonCerrar = useRef<HTMLButtonElement>(null);
+
+  function abrir() {
+    setCerrando(false);
+    setExpandida(true);
+  }
+
+  // useCallback: referencia estable para poder listarla en las deps del
+  // efecto de abajo sin que el listener de Escape quede con una versión
+  // vieja de la función ni se tenga que reinstalar en cada render.
+  const cerrar = useCallback(() => {
+    // No se desmonta de una: primero corre la animación de salida
+    // (tarjeta-ganancia-saliendo) y recién al terminar se quita del DOM.
+    setCerrando(true);
+    window.setTimeout(() => {
+      setExpandida(false);
+      setCerrando(false);
+    }, DURACION_CIERRE_MS);
+  }, []);
 
   useEffect(() => {
     if (!expandida) return;
@@ -187,7 +210,7 @@ export function TarjetaTotalGanado(props: TarjetaTotalGanadoProps) {
     botonCerrar.current?.focus();
     const abrir = botonAbrir.current;
     function alSoltarTecla(e: KeyboardEvent) {
-      if (e.key === "Escape") setExpandida(false);
+      if (e.key === "Escape") cerrar();
     }
     window.addEventListener("keydown", alSoltarTecla);
     return () => {
@@ -195,14 +218,14 @@ export function TarjetaTotalGanado(props: TarjetaTotalGanadoProps) {
       window.removeEventListener("keydown", alSoltarTecla);
       abrir?.focus({ preventScroll: true });
     };
-  }, [expandida]);
+  }, [expandida, cerrar]);
 
   return (
     <>
       <button
         ref={botonAbrir}
         type="button"
-        onClick={() => setExpandida(true)}
+        onClick={abrir}
         aria-haspopup="dialog"
         aria-expanded={expandida}
         className="w-full text-left appearance-none bg-transparent border-0 p-0 m-0 mb-3 block cursor-pointer"
@@ -218,14 +241,22 @@ export function TarjetaTotalGanado(props: TarjetaTotalGanadoProps) {
           role="dialog"
           aria-modal="true"
           aria-label={t.perfil.totalGanado}
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/80 backdrop-blur-sm"
-          onClick={() => setExpandida(false)}
+          className={`fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/80 backdrop-blur-sm ${
+            cerrando ? "overlay-ganancia-saliendo" : "overlay-ganancia-entrando"
+          }`}
+          onClick={cerrar}
         >
-          <div className="relative w-full max-w-[380px]" onClick={(e) => e.stopPropagation()}>
+          <div
+            className={`relative w-full max-w-[380px] ${
+              cerrando ? "tarjeta-ganancia-saliendo" : "tarjeta-ganancia-entrando"
+            }`}
+            style={{ transformStyle: "preserve-3d" }}
+            onClick={(e) => e.stopPropagation()}
+          >
             <button
               ref={botonCerrar}
               type="button"
-              onClick={() => setExpandida(false)}
+              onClick={cerrar}
               aria-label={t.perfil.cerrarTarjeta}
               className="absolute -top-3 -right-3 z-10 w-9 h-9 rounded-full bg-surface border border-[var(--border)] flex items-center justify-center text-foreground shadow-lg"
             >
@@ -235,7 +266,7 @@ export function TarjetaTotalGanado(props: TarjetaTotalGanadoProps) {
             </button>
             <button
               type="button"
-              onClick={() => setExpandida(false)}
+              onClick={cerrar}
               className="w-full text-left appearance-none bg-transparent border-0 p-0 m-0 block cursor-pointer"
             >
               <CuerpoTarjeta {...props} escala={1.7} />
