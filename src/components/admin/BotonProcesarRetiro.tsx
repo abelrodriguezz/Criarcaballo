@@ -3,8 +3,17 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { crearClienteSupabase } from "@/lib/supabase/client";
+import { formatearDinero } from "@/lib/format";
 
-export function BotonProcesarRetiro({ solicitudId }: { solicitudId: string }) {
+export function BotonProcesarRetiro({
+  solicitudId,
+  montoNeto,
+}: {
+  solicitudId: string;
+  /** Lo que de verdad hay que transferir (monto pedido menos el fee) —
+   * se muestra en el confirm para que el admin no transfiera el bruto. */
+  montoNeto: number;
+}) {
   const router = useRouter();
   const [guardando, setGuardando] = useState(false);
   const [refrescando, startTransition] = useTransition();
@@ -12,7 +21,9 @@ export function BotonProcesarRetiro({ solicitudId }: { solicitudId: string }) {
 
   async function marcarPagado() {
     if (
-      !window.confirm("¿Confirmas que ya transferiste el USDT a la wallet del usuario?")
+      !window.confirm(
+        `¿Confirmas que ya transferiste $${formatearDinero(montoNeto)} USDT a la wallet del usuario?`
+      )
     ) {
       return;
     }

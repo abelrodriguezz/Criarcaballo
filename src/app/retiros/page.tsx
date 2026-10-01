@@ -3,6 +3,8 @@ import Link from "next/link";
 import { esAdmin, obtenerUsuarioActual } from "@/lib/auth/sesion";
 import { crearClienteSupabaseServidor } from "@/lib/supabase/server";
 import { BotonProcesarRetiro } from "@/components/admin/BotonProcesarRetiro";
+import { AdminFeeRetiroForm } from "@/components/admin/AdminFeeRetiroForm";
+import { obtenerFeeRetiro } from "@/lib/config-retiros";
 import { formatearDinero } from "@/lib/format";
 import type { SolicitudRetiro } from "@/lib/types";
 
@@ -22,17 +24,22 @@ export default async function PaginaRetiros() {
   // usuarios (usuario_id y procesado_por) — sin el hint, PostgREST no
   // sabe cuál usar (mismo problema ya resuelto antes en Reportes con
   // ganancias_concursos).
-  const { data: solicitudesRaw } = await supabase
-    .from("solicitudes_retiro")
-    .select("*, usuarios!usuario_id(email, id_corto, nombre)")
-    .order("created_at", { ascending: false })
-    .returns<SolicitudConUsuario[]>();
+  const [{ data: solicitudesRaw }, feeActual] = await Promise.all([
+    supabase
+      .from("solicitudes_retiro")
+      .select("*, usuarios!usuario_id(email, id_corto, nombre)")
+      .order("created_at", { ascending: false })
+      .returns<SolicitudConUsuario[]>(),
+    obtenerFeeRetiro(),
+  ]);
 
   const solicitudes = solicitudesRaw ?? [];
   const pendientes = solicitudes.filter((s) => s.estado === "pendiente");
   const resueltas = solicitudes.filter((s) => s.estado !== "pendiente");
 
   function Fila({ s }: { s: SolicitudConUsuario }) {
+    const feeMonto = Math.round(s.monto * (s.fee_porcentaje / 100) * 100) / 100;
+    const neto = Math.round((s.monto - feeMonto) * 100) / 100;
     return (
       <div className="border border-[var(--border)] rounded-xl p-4 flex justify-between items-center gap-3">
         <div className="min-w-0">
@@ -52,6 +59,12 @@ export default async function PaginaRetiros() {
               {s.estado === "pagado" ? "Pagado" : s.estado === "rechazado" ? "Rechazado" : "Pendiente"}
             </span>
           </div>
+          {s.fee_porcentaje > 0 && (
+            <div className="text-[12px] text-brand-primary tabular">
+              Fee ({s.fee_porcentaje}%): -${formatearDinero(feeMonto)} · Transferir: $
+              {formatearDinero(neto)}
+            </div>
+          )}
           <div className="text-[12px] text-foreground-muted truncate">
             {s.usuarios?.nombre || s.usuarios?.email || "Usuario eliminado"}
             {s.usuarios?.id_corto ? ` · ID ${s.usuarios.id_corto}` : ""} ·{" "}
@@ -68,7 +81,9 @@ export default async function PaginaRetiros() {
             <div className="text-[12px] text-loss mt-0.5">Motivo: {s.nota_admin}</div>
           )}
         </div>
-        {s.estado === "pendiente" && <BotonProcesarRetiro solicitudId={s.id} />}
+        {s.estado === "pendiente" && (
+          <BotonProcesarRetiro solicitudId={s.id} montoNeto={neto} />
+        )}
       </div>
     );
   }
@@ -90,6 +105,8 @@ export default async function PaginaRetiros() {
         USDT vía la wallet que el usuario tenía registrada al momento de
         pedirlo. Márcala como pagada aquí cuando ya le hayas transferido.
       </p>
+
+      <AdminFeeRetiroForm feeActual={feeActual} />
 
       <h2 className="font-display font-semibold text-lg mb-3">
         Pendientes {pendientes.length > 0 && `(${pendientes.length})`}

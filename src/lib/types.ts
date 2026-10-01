@@ -114,6 +114,7 @@ export interface SolicitudRetiro {
   created_at: string;
   procesado_en: string | null;
   procesado_por: string | null;
+  fee_porcentaje: number;
 }
 
 export interface MensajeSoporte {

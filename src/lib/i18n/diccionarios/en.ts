@@ -208,6 +208,7 @@ export const en: typeof es = {
     retirarDisponibleLabel: "Available to withdraw",
     retirarWalletLabel: "Will be sent to your registered wallet",
     retirarMontoLabel: "Amount to withdraw (USDT)",
+    retirarFeeAviso: "Fee ({p}%): -${fee} · You'll receive: ${neto}",
     retirarEnviar: "Request withdrawal",
     retirarEntendido: "Got it",
     retirarEnviado:

@@ -7,6 +7,7 @@ import { WalletForm } from "@/components/perfil/WalletForm";
 import { DatosContactoForm } from "@/components/perfil/DatosContactoForm";
 import { BotonDepositarSimulado } from "@/components/perfil/BotonDepositarSimulado";
 import { BotonSolicitarRetiro } from "@/components/perfil/BotonSolicitarRetiro";
+import { obtenerFeeRetiro } from "@/lib/config-retiros";
 import { TarjetaTotalGanado } from "@/components/perfil/TarjetaTotalGanado";
 import { AdminSimulacionForm } from "@/components/admin/AdminSimulacionForm";
 import { TarjetaMenu } from "@/components/ui/TarjetaMenu";
@@ -52,6 +53,7 @@ export default async function PaginaPerfil() {
     { count: retirosPendientesCount },
     { count: depositosPendientesCount },
     { data: totalesAdmin },
+    feeRetiro,
   ] = await Promise.all([
     supabase
       .from("saldo_virtual")
@@ -141,6 +143,7 @@ export default async function PaginaPerfil() {
       : Promise.resolve({
           data: null as { total_cuentas: number; total_a_pagar_hoy: number } | null,
         }),
+    obtenerFeeRetiro(),
   ]);
   const walletsAdmin = walletsAdminRaw.data ?? [];
   const depositoSimulado = depositoSimuladoRaw.data ?? null;
@@ -282,6 +285,7 @@ export default async function PaginaPerfil() {
             walletActual={perfilExtra?.wallet_usdt_erc20 ?? null}
             solicitudPendiente={solicitudRetiroPendiente}
             historial={historialRetiros}
+            feePorcentaje={feeRetiro}
             t={t}
           />
         </>

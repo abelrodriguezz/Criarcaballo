@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { crearClienteSupabase } from "@/lib/supabase/client";
 import { IconoWallet } from "@/components/ui/Iconos";
 import { formatearDinero, parsearMontoUsuario } from "@/lib/format";
-import type { Diccionario } from "@/lib/i18n";
+import { rellenar, type Diccionario } from "@/lib/i18n";
 import type { SolicitudRetiro } from "@/lib/types";
 
 export function BotonSolicitarRetiro({
@@ -13,12 +13,15 @@ export function BotonSolicitarRetiro({
   walletActual,
   solicitudPendiente,
   historial,
+  feePorcentaje,
   t,
 }: {
   disponible: number;
   walletActual: string | null;
   solicitudPendiente: SolicitudRetiro | null;
   historial: SolicitudRetiro[];
+  /** % que se descuenta del monto pedido (config-retiros.ts) — 0 = sin fee. */
+  feePorcentaje: number;
   t: Diccionario;
 }) {
   const router = useRouter();
@@ -195,8 +198,24 @@ export function BotonSolicitarRetiro({
                   onChange={(e) => setMonto(e.target.value)}
                   inputMode="decimal"
                   placeholder="0.00"
-                  className="w-full px-3.5 py-2.5 mb-3 rounded-lg border border-[var(--border)] bg-background text-sm font-mono"
+                  className="w-full px-3.5 py-2.5 mb-1.5 rounded-lg border border-[var(--border)] bg-background text-sm font-mono"
                 />
+
+                {feePorcentaje > 0 && (() => {
+                  const montoNum = parsearMontoUsuario(monto);
+                  if (!Number.isFinite(montoNum) || montoNum <= 0) return null;
+                  const fee = Math.round(montoNum * (feePorcentaje / 100) * 100) / 100;
+                  const neto = Math.round((montoNum - fee) * 100) / 100;
+                  return (
+                    <p className="text-[12px] text-brand-primary mb-3 tabular">
+                      {rellenar(t.perfil.retirarFeeAviso, {
+                        p: feePorcentaje,
+                        fee: formatearDinero(fee),
+                        neto: formatearDinero(neto),
+                      })}
+                    </p>
+                  );
+                })()}
 
                 {error && <p className="text-loss text-[13px] mb-3">{error}</p>}
 
