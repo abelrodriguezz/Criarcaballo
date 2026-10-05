@@ -6,9 +6,37 @@ import { obtenerUsuarioActual, esAdmin } from "@/lib/auth/sesion";
 import { exito, fallo, type Resultado } from "@/lib/actions/resultado";
 
 /**
- * Elimina el pick del día indicado (solo admin). No hay "editar": para
- * cambiarlo, se borra el actual y se define uno nuevo — así queda un solo
- * pick vigente a la vez en vez de acumular filas sin fin en la tabla.
+ * Cambia solo el NOMBRE del pick vigente (solo admin) — la migración 088
+ * también renombra en cascada las operaciones que sigan abiertas de ese
+ * pick (las ya cerradas conservan su nombre histórico), así que el
+ * formulario de "cerrar todas las operaciones" no termina con dos grupos
+ * distintos (nombre viejo / nombre nuevo) para la misma señal.
+ */
+export async function editarPickDelDia(
+  pickId: string,
+  nuevoActivo: string
+): Promise<Resultado<null>> {
+  const usuario = await obtenerUsuarioActual();
+  if (!usuario || !esAdmin(usuario)) {
+    return fallo("Solo un admin puede hacer esto.");
+  }
+
+  const supabase = await crearClienteSupabaseServidor();
+  const { error } = await supabase.rpc("admin_editar_pick_del_dia", {
+    p_pick_id: pickId,
+    p_nuevo_activo: nuevoActivo,
+  });
+
+  if (error) {
+    return fallo(error.message || "No se pudo editar el pick.");
+  }
+
+  revalidatePath("/trade-del-dia");
+  return exito(null);
+}
+
+/**
+ * Elimina el pick del día indicado (solo admin).
  */
 export async function eliminarPickDelDia(pickId: string): Promise<Resultado<null>> {
   const usuario = await obtenerUsuarioActual();

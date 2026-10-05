@@ -4,7 +4,7 @@ import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { crearClienteSupabase } from "@/lib/supabase/client";
 import { fechaEnNY } from "@/lib/horarioMercado";
-import { eliminarPickDelDia } from "@/lib/actions/adminTrading";
+import { eliminarPickDelDia, editarPickDelDia } from "@/lib/actions/adminTrading";
 import type { PickDelDia } from "@/lib/types";
 
 const MAX_LARGO_ACTIVO = 30;
@@ -21,6 +21,10 @@ export function AdminPickForm({
   const [guardando, setGuardando] = useState(false);
   const [abierto, setAbierto] = useState(false);
   const [eliminando, setEliminando] = useState(false);
+  const [editando, setEditando] = useState(false);
+  const [activoEditado, setActivoEditado] = useState("");
+  const [errorEdicion, setErrorEdicion] = useState<string | null>(null);
+  const [guardandoEdicion, setGuardandoEdicion] = useState(false);
 
   async function manejarEliminar() {
     if (
@@ -38,6 +42,39 @@ export function AdminPickForm({
       window.alert(resultado.error);
       return;
     }
+    router.refresh();
+  }
+
+  function abrirEdicion() {
+    setActivoEditado(pickVigente?.activo ?? "");
+    setErrorEdicion(null);
+    setEditando(true);
+  }
+
+  async function manejarGuardarEdicion() {
+    if (!pickVigente) return;
+    setErrorEdicion(null);
+
+    const nuevo = activoEditado.trim().toUpperCase();
+    if (!nuevo) {
+      setErrorEdicion("Ingresa el nombre del activo.");
+      return;
+    }
+    if (nuevo.length > MAX_LARGO_ACTIVO) {
+      setErrorEdicion(`El nombre del activo no puede tener más de ${MAX_LARGO_ACTIVO} caracteres.`);
+      return;
+    }
+
+    setGuardandoEdicion(true);
+    const resultado = await editarPickDelDia(pickVigente.id, nuevo);
+    setGuardandoEdicion(false);
+
+    if (!resultado.ok) {
+      setErrorEdicion(resultado.error);
+      return;
+    }
+
+    setEditando(false);
     router.refresh();
   }
 
@@ -90,10 +127,50 @@ export function AdminPickForm({
   }
 
   // Con un pick ya vigente hoy, se muestra ese en vez del botón de
-  // "definir" — para cambiarlo, primero hay que eliminarlo. Así queda un
-  // solo pick a la vez en vez de ir acumulando filas sin fin en la tabla
-  // (lo que reportó el usuario: "el pick no vence, siempre está el pick").
+  // "definir" — solo queda un pick a la vez en vez de ir acumulando filas
+  // sin fin en la tabla (lo que reportó el usuario: "el pick no vence,
+  // siempre está el pick"). Para cambiar el ACTIVO sin perder el pick (y
+  // sin afectar a quien ya operó), "Editar" renombra en el sitio; "Eliminar"
+  // sigue existiendo para cuando de verdad se quiere cerrar el día sin
+  // publicar otro todavía.
   if (!abierto && pickVigente) {
+    if (editando) {
+      return (
+        <div className="border border-[var(--brand-primary)] bg-[var(--brand-primary)]/5 rounded-2xl p-4 mb-6">
+          <div className="text-[12px] text-foreground-muted mb-1.5">
+            Editar nombre del pick de hoy
+          </div>
+          <input
+            autoFocus
+            value={activoEditado}
+            onChange={(e) => setActivoEditado(e.target.value)}
+            maxLength={MAX_LARGO_ACTIVO}
+            aria-label="Nuevo nombre del activo"
+            className="w-full px-3 py-2 mb-2.5 rounded-lg border border-[var(--border)] bg-background text-sm"
+          />
+          {errorEdicion && (
+            <p className="text-loss text-[13px] mb-2">{errorEdicion}</p>
+          )}
+          <div className="flex gap-2">
+            <button
+              onClick={manejarGuardarEdicion}
+              disabled={guardandoEdicion}
+              className="bg-brand-primary hover:bg-brand-primary-hover disabled:opacity-60 text-white font-semibold text-sm px-4 py-2 rounded-xl transition-colors"
+            >
+              {guardandoEdicion ? "Guardando..." : "Guardar"}
+            </button>
+            <button
+              type="button"
+              onClick={() => setEditando(false)}
+              className="text-xs text-foreground-muted"
+            >
+              Cancelar
+            </button>
+          </div>
+        </div>
+      );
+    }
+
     return (
       <div className="border border-[var(--brand-primary)] bg-[var(--brand-primary)]/5 rounded-2xl p-4 mb-6 flex justify-between items-center gap-3">
         <div className="min-w-0">
@@ -102,13 +179,21 @@ export function AdminPickForm({
             {pickVigente.activo}
           </div>
         </div>
-        <button
-          onClick={manejarEliminar}
-          disabled={eliminando}
-          className="shrink-0 border border-loss text-loss text-sm font-semibold px-4 py-2 rounded-xl hover:bg-loss/5 disabled:opacity-60 transition-colors"
-        >
-          {eliminando ? "Eliminando..." : "Eliminar"}
-        </button>
+        <div className="shrink-0 flex gap-2">
+          <button
+            onClick={abrirEdicion}
+            className="border border-[var(--border)] text-foreground text-sm font-semibold px-4 py-2 rounded-xl hover:bg-surface-hover transition-colors"
+          >
+            Editar
+          </button>
+          <button
+            onClick={manejarEliminar}
+            disabled={eliminando}
+            className="border border-loss text-loss text-sm font-semibold px-4 py-2 rounded-xl hover:bg-loss/5 disabled:opacity-60 transition-colors"
+          >
+            {eliminando ? "Eliminando..." : "Eliminar"}
+          </button>
+        </div>
       </div>
     );
   }
