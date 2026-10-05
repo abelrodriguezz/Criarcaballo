@@ -36,8 +36,15 @@ export function AdminPickForm({
     }
     if (!pickVigente) return;
     setEliminando(true);
-    const resultado = await eliminarPickDelDia(pickVigente.id);
-    setEliminando(false);
+    let resultado: Awaited<ReturnType<typeof eliminarPickDelDia>>;
+    try {
+      resultado = await eliminarPickDelDia(pickVigente.id);
+    } catch {
+      window.alert("No se pudo eliminar. Revisa tu conexión e inténtalo de nuevo.");
+      return;
+    } finally {
+      setEliminando(false);
+    }
     if (!resultado.ok) {
       window.alert(resultado.error);
       return;
@@ -66,8 +73,18 @@ export function AdminPickForm({
     }
 
     setGuardandoEdicion(true);
-    const resultado = await editarPickDelDia(pickVigente.id, nuevo);
-    setGuardandoEdicion(false);
+    // try/finally: si la llamada al Server Action falla a nivel de red (o
+    // el servidor lanza en vez de devolver fallo()), el botón quedaba
+    // pegado en "Guardando..." para siempre y sin ningún mensaje.
+    let resultado: Awaited<ReturnType<typeof editarPickDelDia>>;
+    try {
+      resultado = await editarPickDelDia(pickVigente.id, nuevo);
+    } catch {
+      setErrorEdicion("No se pudo guardar. Revisa tu conexión e inténtalo de nuevo.");
+      return;
+    } finally {
+      setGuardandoEdicion(false);
+    }
 
     if (!resultado.ok) {
       setErrorEdicion(resultado.error);
@@ -172,10 +189,13 @@ export function AdminPickForm({
     }
 
     return (
-      <div className="border border-[var(--brand-primary)] bg-[var(--brand-primary)]/5 rounded-2xl p-4 mb-6 flex justify-between items-center gap-3">
+      // flex-wrap + break-words (no truncate): con los DOS botones (Editar y
+      // Eliminar) al lado, en un celular de 360px el nombre quedaba cortado
+      // en ~96px ("OPERACION D…") — ahora los botones bajan de línea.
+      <div className="border border-[var(--brand-primary)] bg-[var(--brand-primary)]/5 rounded-2xl p-4 mb-6 flex flex-wrap justify-between items-center gap-3">
         <div className="min-w-0">
           <div className="text-[12px] text-foreground-muted">Pick de hoy</div>
-          <div className="font-display font-semibold text-base truncate">
+          <div className="font-display font-semibold text-base break-words">
             {pickVigente.activo}
           </div>
         </div>
