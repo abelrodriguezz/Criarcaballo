@@ -4,6 +4,7 @@ import { esAdmin, obtenerUsuarioActual } from "@/lib/auth/sesion";
 import { crearClienteSupabaseServidor } from "@/lib/supabase/server";
 import { marcarDepositosRevisados } from "@/lib/actions/depositos";
 import { BotonPagoDeposito } from "@/components/admin/BotonPagoDeposito";
+import { BotonEliminarAdmin } from "@/components/admin/BotonEliminarAdmin";
 import { formatearDinero } from "@/lib/format";
 import type { DepositoSimulado } from "@/lib/types";
 
@@ -107,12 +108,27 @@ export default async function PaginaDepositos() {
             </a>
           )}
         </div>
-        <BotonPagoDeposito
-          depositoId={d.id}
-          pagado={d.pagado}
-          monto={Number(d.monto)}
-          saldoActual={saldoPorUsuario.get(d.usuario_id) ?? 0}
-        />
+        <div className="flex flex-col items-end gap-1.5 shrink-0">
+          <BotonPagoDeposito
+            depositoId={d.id}
+            pagado={d.pagado}
+            monto={Number(d.monto)}
+            saldoActual={saldoPorUsuario.get(d.usuario_id) ?? 0}
+          />
+          {/* Solo para pendientes: tras revisar el comprobante, si el pago
+              NO llegó de verdad, esto borra el depósito registrado (mismo
+              botón/acción que "Eliminar" en Gestión de usuarios) en vez de
+              dejarlo colgado en Pendientes para siempre. */}
+          {!d.pagado && (
+            <BotonEliminarAdmin
+              tabla="depositos_simulados"
+              id={d.id}
+              textoBoton="Pago no realizado"
+              textoEliminando="Eliminando..."
+              textoConfirmacion="¿Confirmas que este pago NO se realizó? Se eliminará el depósito registrado por el usuario y podrá volver a intentar depositar."
+            />
+          )}
+        </div>
       </div>
     );
   }
