@@ -125,6 +125,7 @@ export default async function PaginaDepositos() {
               id={d.id}
               textoBoton="Pago no realizado"
               textoEliminando="Eliminando..."
+              soloSiPendiente
               textoConfirmacion="¿Confirmas que este pago NO se realizó? Se eliminará el depósito registrado por el usuario y podrá volver a intentar depositar."
             />
           )}
