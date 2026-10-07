@@ -42,6 +42,7 @@ export function RegistroForm({ t, locale }: { t: Diccionario; locale: Locale }) 
   const [telefono, setTelefono] = useState("");
   const [codigoInvitacion, setCodigoInvitacion] = useState(codigoRefUrl ?? "");
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+  const [aceptaTerminos, setAceptaTerminos] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [exito, setExito] = useState(false);
   const [cargando, setCargando] = useState(false);
@@ -96,6 +97,10 @@ export function RegistroForm({ t, locale }: { t: Diccionario; locale: Locale }) 
       setError(t.auth.contrasenaCorta);
       return;
     }
+    if (!aceptaTerminos) {
+      setError(t.auth.debesAceptarTerminos);
+      return;
+    }
     if (TURNSTILE_CONFIGURADO && !captchaToken) {
       setError(t.auth.completaVerificacion);
       return;
@@ -140,6 +145,10 @@ export function RegistroForm({ t, locale }: { t: Diccionario; locale: Locale }) 
           apellido: apellidoLimpio,
           cedula: cedulaLimpia,
           telefono: telefonoConPais,
+          // El trigger handle_new_user() (migración 090) estampa el
+          // timestamp real con su propio now() — nunca se confía en un
+          // timestamp que mande el cliente.
+          acepto_terminos: "true",
         },
       },
     });
@@ -342,9 +351,28 @@ export function RegistroForm({ t, locale }: { t: Diccionario; locale: Locale }) 
         <Turnstile onVerify={setCaptchaToken} onExpire={() => setCaptchaToken(null)} />
       </div>
 
+      <label className="flex items-start gap-2 mb-4 text-[13px] text-foreground-muted cursor-pointer">
+        <input
+          type="checkbox"
+          checked={aceptaTerminos}
+          onChange={(e) => setAceptaTerminos(e.target.checked)}
+          className="mt-0.5 shrink-0"
+        />
+        <span>
+          {t.auth.aceptoLosPrefijo}
+          <Link
+            href="/terminos"
+            target="_blank"
+            className="text-brand-primary font-semibold underline"
+          >
+            {t.auth.terminosYCondiciones}
+          </Link>
+        </span>
+      </label>
+
       <button
         type="submit"
-        disabled={cargando || (TURNSTILE_CONFIGURADO && !captchaToken)}
+        disabled={cargando || !aceptaTerminos || (TURNSTILE_CONFIGURADO && !captchaToken)}
         className="w-full bg-brand-primary hover:bg-brand-primary-hover disabled:opacity-60 text-white font-semibold text-sm py-3 rounded-xl transition-colors"
       >
         {cargando ? t.auth.creandoCuenta : t.auth.crearCuenta}

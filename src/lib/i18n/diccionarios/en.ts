@@ -109,6 +109,9 @@ export const en: typeof es = {
     codigoInvitacionLabel: "Invitation code (optional)",
     codigoInvitacionPlaceholder: "If someone invited you, enter it here",
     codigoInvitacionInvalido: "That invitation code doesn't exist. Check it or leave it blank.",
+    aceptoLosPrefijo: "I agree to the ",
+    terminosYCondiciones: "Terms and Conditions",
+    debesAceptarTerminos: "You must accept the Terms and Conditions to continue.",
   },
   errores: {
     limiteCorreo:

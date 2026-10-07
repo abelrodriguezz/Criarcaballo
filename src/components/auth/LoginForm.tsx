@@ -27,6 +27,7 @@ export function LoginForm({
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+  const [aceptaTerminos, setAceptaTerminos] = useState(false);
   const [error, setError] = useState<string | null>(
     cerradaPorInactividad ? t.auth.sesionCerradaPorInactividad : null
   );
@@ -35,6 +36,11 @@ export function LoginForm({
   async function manejarEnvio(e: FormEvent) {
     e.preventDefault();
     setError(null);
+
+    if (!aceptaTerminos) {
+      setError(t.auth.debesAceptarTerminos);
+      return;
+    }
 
     if (TURNSTILE_CONFIGURADO && !captchaToken) {
       setError(t.auth.completaVerificacion);
@@ -133,9 +139,28 @@ export function LoginForm({
         <Turnstile onVerify={setCaptchaToken} onExpire={() => setCaptchaToken(null)} />
       </div>
 
+      <label className="flex items-start gap-2 mb-4 text-[13px] text-foreground-muted cursor-pointer">
+        <input
+          type="checkbox"
+          checked={aceptaTerminos}
+          onChange={(e) => setAceptaTerminos(e.target.checked)}
+          className="mt-0.5 shrink-0"
+        />
+        <span>
+          {t.auth.aceptoLosPrefijo}
+          <Link
+            href="/terminos"
+            target="_blank"
+            className="text-brand-primary font-semibold underline"
+          >
+            {t.auth.terminosYCondiciones}
+          </Link>
+        </span>
+      </label>
+
       <button
         type="submit"
-        disabled={cargando || (TURNSTILE_CONFIGURADO && !captchaToken)}
+        disabled={cargando || !aceptaTerminos || (TURNSTILE_CONFIGURADO && !captchaToken)}
         className="w-full bg-brand-primary hover:bg-brand-primary-hover disabled:opacity-60 text-white font-semibold text-sm py-3 rounded-xl transition-colors"
       >
         {cargando ? t.auth.ingresando : t.auth.iniciarSesionTitulo}

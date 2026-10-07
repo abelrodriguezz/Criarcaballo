@@ -109,6 +109,9 @@ export const es = {
     codigoInvitacionLabel: "Código de invitación (opcional)",
     codigoInvitacionPlaceholder: "Si alguien te invitó, ponlo aquí",
     codigoInvitacionInvalido: "Ese código de invitación no existe. Revísalo o déjalo vacío.",
+    aceptoLosPrefijo: "Acepto los ",
+    terminosYCondiciones: "Términos y Condiciones",
+    debesAceptarTerminos: "Debes aceptar los Términos y Condiciones para continuar.",
   },
   errores: {
     limiteCorreo:
