@@ -69,11 +69,27 @@ export function AdminNosotrosForm({
   // mismo tema en los dos idiomas), aunque solo se esté viendo uno.
   const titulo = idioma === "en" ? nosotros.titulo_en : nosotros.titulo;
   const parrafos = idioma === "en" ? nosotros.parrafos_en : nosotros.parrafos;
+  const avisoTitulo = idioma === "en" ? nosotros.disclaimerTitulo_en : nosotros.disclaimerTitulo;
+  const avisoTexto = idioma === "en" ? nosotros.disclaimer_en : nosotros.disclaimer;
 
   function cambiarTitulo(valor: string) {
     setNosotros((n) => ({
       ...n,
       [idioma === "en" ? "titulo_en" : "titulo"]: valor,
+    }));
+  }
+
+  function cambiarAvisoTitulo(valor: string) {
+    setNosotros((n) => ({
+      ...n,
+      [idioma === "en" ? "disclaimerTitulo_en" : "disclaimerTitulo"]: valor,
+    }));
+  }
+
+  function cambiarAvisoTexto(valor: string) {
+    setNosotros((n) => ({
+      ...n,
+      [idioma === "en" ? "disclaimer_en" : "disclaimer"]: valor,
     }));
   }
 
@@ -185,6 +201,25 @@ export function AdminNosotrosForm({
       >
         {ta.agregarParrafo}
       </button>
+
+      <label className="block text-[12px] font-medium text-foreground-muted mb-1">
+        {ta.nosotrosAvisoTitulo}
+      </label>
+      <input
+        value={avisoTitulo}
+        onChange={(e) => cambiarAvisoTitulo(e.target.value)}
+        className="w-full px-3 py-2 mb-3 rounded-lg border border-[var(--border)] bg-background text-sm"
+      />
+
+      <label className="block text-[12px] font-medium text-foreground-muted mb-1">
+        {ta.nosotrosAvisoTexto}
+      </label>
+      <textarea
+        value={avisoTexto}
+        onChange={(e) => cambiarAvisoTexto(e.target.value)}
+        rows={3}
+        className="w-full px-3 py-2 mb-4 rounded-lg border border-[var(--border)] bg-background text-sm resize-none"
+      />
 
       {error && <p className="text-loss text-[13px] mb-2">{error}</p>}
 

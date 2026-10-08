@@ -355,11 +355,6 @@ export const en: typeof es = {
     copiar: "Copy",
     copiado: "Copied!",
   },
-  nosotros: {
-    disclaimerTitulo: "Important notice",
-    disclaimer:
-      "Trade4U is an educational and practice tool. Nothing on this platform constitutes financial advice, and no past figure or result guarantees future results.",
-  },
   admin: {
     volverAPerfil: "← Back to profile",
     cancelar: "Cancel",
@@ -472,6 +467,8 @@ export const en: typeof es = {
     parrafos: "Paragraphs",
     sinParrafos: "No paragraphs. The page will show only the title.",
     agregarParrafo: "+ Add paragraph",
+    nosotrosAvisoTitulo: "Important notice title",
+    nosotrosAvisoTexto: "Important notice text",
 
     publicarNoticiaBoton: "+ Publish news (admin)",
     publicarNoticia: "Publish news",

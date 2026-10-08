@@ -43,10 +43,10 @@ export default async function PaginaNosotros() {
         <IconoInfo className="w-4 h-4 shrink-0 mt-0.5 text-foreground-muted" />
         <div>
           <div className="font-semibold text-sm mb-1">
-            {t.nosotros.disclaimerTitulo}
+            {nosotros.disclaimerTitulo}
           </div>
           <p className="text-[13px] text-foreground-muted leading-relaxed">
-            {t.nosotros.disclaimer}
+            {nosotros.disclaimer}
           </p>
         </div>
       </div>

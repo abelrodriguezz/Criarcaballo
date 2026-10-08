@@ -363,14 +363,6 @@ export const es = {
     copiar: "Copiar",
     copiado: "¡Copiado!",
   },
-  nosotros: {
-    // Título y párrafos ya no viven aquí — son editables por el admin
-    // desde /nosotros, ver src/lib/config-nosotros.ts. Solo el aviso legal
-    // se queda fijo en el diccionario (no es contenido de marketing).
-    disclaimerTitulo: "Aviso importante",
-    disclaimer:
-      "Trade4U es una herramienta educativa y de práctica. Nada en esta plataforma constituye asesoría financiera, y ninguna cifra o resultado pasado garantiza resultados futuros.",
-  },
   // Paneles que solo ve el admin. Todo string plano (sin funciones): se
   // pasa de páginas de servidor a componentes cliente, y una función no
   // cruza esa frontera. Los {marcadores} se reemplazan con `rellenar()`.
@@ -488,6 +480,8 @@ export const es = {
     parrafos: "Párrafos",
     sinParrafos: "Sin párrafos — la página no mostrará texto aparte del título.",
     agregarParrafo: "+ Agregar párrafo",
+    nosotrosAvisoTitulo: "Título del aviso importante",
+    nosotrosAvisoTexto: "Texto del aviso importante",
 
     publicarNoticiaBoton: "+ Publicar noticia (admin)",
     publicarNoticia: "Publicar noticia",
