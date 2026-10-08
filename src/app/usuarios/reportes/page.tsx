@@ -9,7 +9,6 @@ import {
   finDelDiaNY,
 } from "@/lib/horarioMercado";
 import { formatearDinero } from "@/lib/format";
-import { BotonPagoGanancia } from "@/components/admin/BotonPagoGanancia";
 import type { GananciaConcurso } from "@/lib/types";
 
 interface FilaAgregado {
@@ -164,6 +163,10 @@ export default async function PaginaReportes({
           </span>
         )}
       </h2>
+      <p className="text-[12px] text-foreground-muted mb-3">
+        Solo de lectura — el pago se procesa desde /retiros, con la
+        solicitud que haga cada usuario.
+      </p>
 
       {pendientes.length === 0 ? (
         <p className="text-foreground-muted text-sm border border-dashed border-[var(--border)] p-6 text-center mb-8">
@@ -215,7 +218,20 @@ export default async function PaginaReportes({
                   <span className="font-display font-bold text-sm tabular text-brand-secondary">
                     ${formatearDinero(p.monto)}
                   </span>
-                  <BotonPagoGanancia gananciaId={p.id} pagado={false} />
+                  {/* El pago directo desde Reportes se deshabilitó a
+                      propósito (pedido del dueño, 2026-10-08): con el
+                      módulo de retiros ya en producción, pagar una
+                      ganancia aquí directo podía quedar desincronizado
+                      con una solicitud de retiro que el usuario ya
+                      hubiera hecho contra ese mismo dinero. */}
+                  <button
+                    type="button"
+                    disabled
+                    title="El pago se procesa desde /retiros"
+                    className="text-xs font-semibold text-foreground-muted opacity-50 cursor-not-allowed"
+                  >
+                    Marcar como pagado
+                  </button>
                 </div>
               </div>
             ))}

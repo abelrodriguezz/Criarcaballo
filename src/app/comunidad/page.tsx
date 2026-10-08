@@ -2,33 +2,65 @@ import { redirect } from "next/navigation";
 import { headers } from "next/headers";
 import { IconoComunidad } from "@/components/ui/Iconos";
 import { CopiarBoton } from "@/components/ui/CopiarBoton";
-import { obtenerUsuarioActual } from "@/lib/auth/sesion";
+import { AdminTextosModuloForm } from "@/components/admin/AdminTextosModuloForm";
+import { esAdmin, obtenerUsuarioActual } from "@/lib/auth/sesion";
 import { crearClienteSupabaseServidor } from "@/lib/supabase/server";
-import { obtenerDiccionario } from "@/lib/i18n/servidor";
+import {
+  claveConfigTextosModulo,
+  obtenerTextosModulo,
+  obtenerTextosModuloCompleto,
+} from "@/lib/config-textos-modulo";
+import { obtenerDiccionario, obtenerLocale } from "@/lib/i18n/servidor";
 import { formatearDinero } from "@/lib/format";
 
+const CLAVE_TEXTOS = claveConfigTextosModulo("comunidad");
+const TEXTOS_POR_DEFECTO = {
+  titulo: "Comunidad",
+  subtitulo:
+    "Invita a más personas a la plataforma y gana una comisión cuando tus invitados hagan su depósito.",
+};
+const TEXTOS_POR_DEFECTO_EN = {
+  titulo: "Community",
+  subtitulo:
+    "Invite more people to the platform and earn a commission when your invitees make their deposit.",
+};
+
 export default async function PaginaComunidad() {
-  const usuario = await obtenerUsuarioActual();
+  const [usuario, locale] = await Promise.all([
+    obtenerUsuarioActual(),
+    obtenerLocale(),
+  ]);
   if (!usuario) redirect("/login");
   if (!usuario.activo) redirect("/cuenta-desactivada");
 
+  const usuarioEsAdmin = esAdmin(usuario);
   const supabase = await crearClienteSupabaseServidor();
 
-  const [{ data: perfil }, { data: totalInvitados }, { data: comisiones }, t] =
-    await Promise.all([
-      supabase
-        .from("usuarios")
-        .select("codigo_invitacion")
-        .eq("id", usuario.id)
-        .single(),
-      supabase.rpc("contar_invitados"),
-      supabase
-        .from("ganancias_concursos")
-        .select("monto")
-        .eq("usuario_id", usuario.id)
-        .eq("origen", "referido"),
-      obtenerDiccionario(),
-    ]);
+  const [
+    { data: perfil },
+    { data: totalInvitados },
+    { data: comisiones },
+    t,
+    textos,
+    textosCompleto,
+  ] = await Promise.all([
+    supabase
+      .from("usuarios")
+      .select("codigo_invitacion")
+      .eq("id", usuario.id)
+      .single(),
+    supabase.rpc("contar_invitados"),
+    supabase
+      .from("ganancias_concursos")
+      .select("monto")
+      .eq("usuario_id", usuario.id)
+      .eq("origen", "referido"),
+    obtenerDiccionario(),
+    obtenerTextosModulo(CLAVE_TEXTOS, TEXTOS_POR_DEFECTO, TEXTOS_POR_DEFECTO_EN, locale),
+    usuarioEsAdmin
+      ? obtenerTextosModuloCompleto(CLAVE_TEXTOS, TEXTOS_POR_DEFECTO, TEXTOS_POR_DEFECTO_EN)
+      : Promise.resolve(null),
+  ]);
 
   const totalComisiones = (comisiones ?? []).reduce(
     (suma, c) => suma + c.monto,
@@ -47,11 +79,19 @@ export default async function PaginaComunidad() {
     <div className="py-10">
       <h1 className="font-display font-semibold text-[26px] flex items-center gap-2.5 mb-1.5">
         <IconoComunidad className="w-6 h-6 text-brand-primary" />
-        {t.comunidad.titulo}
+        {textos.titulo}
       </h1>
       <p className="text-foreground-muted text-[15px] mb-7">
-        {t.comunidad.subtitulo}
+        {textos.subtitulo}
       </p>
+
+      {usuarioEsAdmin && textosCompleto && (
+        <AdminTextosModuloForm
+          claveConfig={CLAVE_TEXTOS}
+          textosActuales={textosCompleto}
+          ta={t.admin}
+        />
+      )}
 
       {!codigo ? (
         <p className="text-foreground-muted text-sm border border-dashed border-[var(--border)] rounded-2xl p-6 text-center mb-4">

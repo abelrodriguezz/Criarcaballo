@@ -1,5 +1,7 @@
 import { IconoMercado } from "@/components/ui/Iconos";
 import { TarjetaActivo } from "@/components/mercado/TarjetaActivo";
+import { AdminTextosModuloForm } from "@/components/admin/AdminTextosModuloForm";
+import { esAdmin, obtenerUsuarioActual } from "@/lib/auth/sesion";
 import {
   obtenerVariosPreciosCripto,
   obtenerTopGanadoresCripto,
@@ -9,7 +11,24 @@ import {
   obtenerTopGanadoresAcciones,
   obtenerTopPerdedoresAcciones,
 } from "@/lib/market/acciones";
-import { obtenerDiccionario } from "@/lib/i18n/servidor";
+import {
+  claveConfigTextosModulo,
+  obtenerTextosModulo,
+  obtenerTextosModuloCompleto,
+} from "@/lib/config-textos-modulo";
+import { obtenerDiccionario, obtenerLocale } from "@/lib/i18n/servidor";
+
+const CLAVE_TEXTOS = claveConfigTextosModulo("mercado");
+const TEXTOS_POR_DEFECTO = {
+  titulo: "Vista de mercado",
+  subtitulo:
+    "Precios en tiempo real de cripto y acciones tokenizadas. Toca cualquier tarjeta para ver el gráfico en TradingView.",
+};
+const TEXTOS_POR_DEFECTO_EN = {
+  titulo: "Market view",
+  subtitulo:
+    "Real-time prices for crypto and tokenized stocks. Tap any card to see the chart on TradingView.",
+};
 
 const PARES_CRIPTO = ["BTCUSDT", "ETHUSDT", "SOLUSDT", "XRPUSDT", "HBARUSDT"];
 
@@ -38,16 +57,32 @@ interface ActivoNormalizado {
 }
 
 export default async function PaginaMercado() {
-  const t = await obtenerDiccionario();
+  const [usuario, t, locale] = await Promise.all([
+    obtenerUsuarioActual(),
+    obtenerDiccionario(),
+    obtenerLocale(),
+  ]);
+  const usuarioEsAdmin = esAdmin(usuario);
 
-  const [cripto, accionesTokenizadas, topCripto, topAcciones, topPerdedoresAcciones] =
-    await Promise.all([
-      obtenerVariosPreciosCripto(PARES_CRIPTO),
-      obtenerVariosPreciosCripto(ACCIONES_TOKENIZADAS.map((a) => a.simbolo)),
-      obtenerTopGanadoresCripto(5),
-      obtenerTopGanadoresAcciones(5),
-      obtenerTopPerdedoresAcciones(5),
-    ]);
+  const [
+    cripto,
+    accionesTokenizadas,
+    topCripto,
+    topAcciones,
+    topPerdedoresAcciones,
+    textos,
+    textosCompleto,
+  ] = await Promise.all([
+    obtenerVariosPreciosCripto(PARES_CRIPTO),
+    obtenerVariosPreciosCripto(ACCIONES_TOKENIZADAS.map((a) => a.simbolo)),
+    obtenerTopGanadoresCripto(5),
+    obtenerTopGanadoresAcciones(5),
+    obtenerTopPerdedoresAcciones(5),
+    obtenerTextosModulo(CLAVE_TEXTOS, TEXTOS_POR_DEFECTO, TEXTOS_POR_DEFECTO_EN, locale),
+    usuarioEsAdmin
+      ? obtenerTextosModuloCompleto(CLAVE_TEXTOS, TEXTOS_POR_DEFECTO, TEXTOS_POR_DEFECTO_EN)
+      : Promise.resolve(null),
+  ]);
   const nombrePorSimbolo = new Map(
     ACCIONES_TOKENIZADAS.map((a) => [a.simbolo, a.nombre])
   );
@@ -97,11 +132,19 @@ export default async function PaginaMercado() {
     <div className="py-10">
       <h1 className="font-display font-semibold text-[26px] flex items-center gap-2.5 mb-1.5">
         <IconoMercado className="w-6 h-6 text-brand-primary" />
-        {t.mercado.titulo}
+        {textos.titulo}
       </h1>
       <p className="text-foreground-muted text-[15px] mb-7">
-        {t.mercado.subtitulo}
+        {textos.subtitulo}
       </p>
+
+      {usuarioEsAdmin && textosCompleto && (
+        <AdminTextosModuloForm
+          claveConfig={CLAVE_TEXTOS}
+          textosActuales={textosCompleto}
+          ta={t.admin}
+        />
+      )}
 
       {sinDatos && (
         <p className="text-foreground-muted text-sm border border-dashed border-[var(--border)] rounded-2xl p-6 text-center mb-6">

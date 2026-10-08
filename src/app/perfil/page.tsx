@@ -132,9 +132,17 @@ export default async function PaginaPerfil() {
             p_inicio: inicioDelDiaNY(hoyNY).toISOString(),
             p_fin: finDelDiaNY(hoyNY).toISOString(),
           })
-          .single<{ total_cuentas: number; total_a_pagar_hoy: number }>()
+          .single<{
+            total_cuentas: number;
+            total_a_pagar_hoy: number;
+            total_retiros_solicitados: number;
+          }>()
       : Promise.resolve({
-          data: null as { total_cuentas: number; total_a_pagar_hoy: number } | null,
+          data: null as {
+            total_cuentas: number;
+            total_a_pagar_hoy: number;
+            total_retiros_solicitados: number;
+          } | null,
         }),
     obtenerFeeRetiro(),
   ]);
@@ -143,6 +151,9 @@ export default async function PaginaPerfil() {
 
   const totalTodasLasCuentas = Number(totalesAdmin?.total_cuentas ?? 0);
   const totalAPagarHoy = Number(totalesAdmin?.total_a_pagar_hoy ?? 0);
+  const totalRetirosSolicitados = Number(
+    totalesAdmin?.total_retiros_solicitados ?? 0
+  );
 
   const totalGanancias = (ganancias ?? []).reduce(
     (suma, g) => suma + g.monto,
@@ -242,6 +253,18 @@ export default async function PaginaPerfil() {
                 }`}
               >
                 ${formatearDinero(totalAPagarHoy)}
+              </div>
+            </div>
+            <div className="border-t border-[var(--border)] pt-4">
+              <div className="text-[13px] text-foreground-muted mb-1">
+                {t.admin.totalRetirosSolicitados}
+              </div>
+              <div
+                className={`font-display font-bold text-2xl tabular ${
+                  totalRetirosSolicitados > 0 ? "text-brand-secondary" : ""
+                }`}
+              >
+                ${formatearDinero(totalRetirosSolicitados)}
               </div>
             </div>
           </>

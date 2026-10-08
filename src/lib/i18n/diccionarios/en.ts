@@ -228,8 +228,6 @@ export const en: typeof es = {
     retirarHistorialTitulo: "Your requests",
   },
   tradeDelDia: {
-    titulo: "Trade of the day",
-    subtitulo: "Practice with virtual balance on today's pick.",
     sinPick: "The admin hasn't set today's pick yet.",
     saldoDeInversion: "Investment Balance",
     pickDeHoy: "Today's pick",
@@ -295,9 +293,6 @@ export const en: typeof es = {
     descripcion: "All fields here are optional. Only used to contact you if needed — never shown to other users.",
   },
   mercado: {
-    titulo: "Market view",
-    subtitulo:
-      "Real-time prices for crypto and tokenized stocks. Tap any card to see the chart on TradingView.",
     sinDatos:
       "Couldn't load prices right now. If you're testing locally, check your internet connection.",
     masSubioHoy: "🔥 Today's top gainers",
@@ -311,9 +306,6 @@ export const en: typeof es = {
       "Tokenized version of the real stock (xStock), backed 1:1 — the price tracks the real market closely, but it isn't a direct Wall Street feed.",
   },
   senales: {
-    titulo: "Signals",
-    subtitulo:
-      "Published from the admin panel, reasoning included. Tap any signal to see its chart on TradingView.",
     recientes: "Recent signals",
     sinRecientes: "No recent signals yet.",
     tocaronTpSl: "Signals that hit TP or SL",
@@ -334,9 +326,6 @@ export const en: typeof es = {
     sinResultadoSinFiltro: "No signal has hit take profit or stop loss yet.",
   },
   comunidad: {
-    titulo: "Community",
-    subtitulo:
-      "Invite more people to the platform and earn a commission when your invitees make their deposit.",
     sinCodigo:
       "You don't have an invitation code assigned yet. If your account predates this feature, ask the admin to generate one for you.",
     enlaceInvitacion: "Invitation link",
@@ -377,7 +366,8 @@ export const en: typeof es = {
       "This payment was already updated by another admin. The page will refresh.",
 
     totalCuentas: "Total in investment accounts (all users)",
-    totalPagarHoy: "Total to pay today (today's unpaid earnings)",
+    totalPagarHoy: "Today's unpaid earnings",
+    totalRetirosSolicitados: "Requested withdrawals",
     menuUsuarios: "User management",
     menuUsuariosSub: "Change roles and activate/deactivate accounts",
     menuSoporte: "Support inbox",
@@ -469,6 +459,9 @@ export const en: typeof es = {
     agregarParrafo: "+ Add paragraph",
     nosotrosAvisoTitulo: "Important notice title",
     nosotrosAvisoTexto: "Important notice text",
+    editarTextosBoton: "✎ Edit page text (admin)",
+    editarTextosTitulo: "Edit page text",
+    subtitulo: "Subtitle",
 
     publicarNoticiaBoton: "+ Publish news (admin)",
     publicarNoticia: "Publish news",

@@ -235,8 +235,8 @@ export const es = {
     retirarHistorialTitulo: "Tus solicitudes",
   },
   tradeDelDia: {
-    titulo: "Trade del día",
-    subtitulo: "Practica con saldo virtual sobre el pick de hoy.",
+    // titulo/subtitulo ya no viven aquí — son editables por el admin desde
+    // la página, ver src/lib/config-textos-modulo.ts.
     sinPick: "El admin todavía no ha definido el pick de hoy.",
     saldoDeInversion: "Saldo de Inversión",
     pickDeHoy: "Pick de hoy",
@@ -303,9 +303,7 @@ export const es = {
     descripcion: "Todos los campos son opcionales aquí. Solo se usan para contactarte si hace falta — no se muestran a otros usuarios.",
   },
   mercado: {
-    titulo: "Vista de mercado",
-    subtitulo:
-      "Precios en tiempo real de cripto y acciones tokenizadas. Toca cualquier tarjeta para ver el gráfico en TradingView.",
+    // titulo/subtitulo ya no viven aquí — ver src/lib/config-textos-modulo.ts.
     sinDatos:
       "No se pudieron cargar los precios en este momento. Si estás probando en local, revisa tu conexión a internet.",
     masSubioHoy: "🔥 Lo que más subió hoy",
@@ -319,9 +317,7 @@ export const es = {
       "Versión tokenizada de la acción real (xStock), respaldada 1:1 — el precio sigue muy de cerca al de la bolsa, pero no es el feed directo de Wall Street.",
   },
   senales: {
-    titulo: "Señales",
-    subtitulo:
-      "Publicadas desde el panel admin, con razón incluida. Toca cualquier señal para ver su gráfico en TradingView.",
+    // titulo/subtitulo ya no viven aquí — ver src/lib/config-textos-modulo.ts.
     recientes: "Señales recientes",
     sinRecientes: "Todavía no hay señales recientes.",
     tocaronTpSl: "Señales que tocaron TP o SL",
@@ -342,9 +338,7 @@ export const es = {
     sinResultadoSinFiltro: "Todavía ninguna señal tocó take profit o stop loss.",
   },
   comunidad: {
-    titulo: "Comunidad",
-    subtitulo:
-      "Invita a más personas a la plataforma y gana una comisión cuando tus invitados hagan su depósito.",
+    // titulo/subtitulo ya no viven aquí — ver src/lib/config-textos-modulo.ts.
     sinCodigo:
       "Todavía no tienes un código de invitación asignado. Si tu cuenta es anterior a esta función, pide al admin que te genere uno.",
     enlaceInvitacion: "Enlace de invitación",
@@ -388,7 +382,8 @@ export const es = {
       "Este pago ya fue actualizado por otro admin, se refrescará la página.",
 
     totalCuentas: "Total en cuentas de inversión (todos los usuarios)",
-    totalPagarHoy: "Total a pagar hoy (ganancias de hoy sin pagar)",
+    totalPagarHoy: "Ganancias de hoy sin pagar",
+    totalRetirosSolicitados: "Retiros solicitados",
     menuUsuarios: "Gestión de usuarios",
     menuUsuariosSub: "Cambiar roles y activar/desactivar cuentas",
     menuSoporte: "Bandeja de soporte",
@@ -482,6 +477,9 @@ export const es = {
     agregarParrafo: "+ Agregar párrafo",
     nosotrosAvisoTitulo: "Título del aviso importante",
     nosotrosAvisoTexto: "Texto del aviso importante",
+    editarTextosBoton: "✎ Editar textos de la página (admin)",
+    editarTextosTitulo: "Editar textos de la página",
+    subtitulo: "Subtítulo",
 
     publicarNoticiaBoton: "+ Publicar noticia (admin)",
     publicarNoticia: "Publicar noticia",

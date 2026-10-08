@@ -4,14 +4,30 @@ import { esAdmin, obtenerUsuarioActual } from "@/lib/auth/sesion";
 import { crearClienteSupabaseServidor } from "@/lib/supabase/server";
 import { AdminPickForm } from "@/components/admin/AdminPickForm";
 import { AdminHorarioMercadoForm } from "@/components/admin/AdminHorarioMercadoForm";
+import { AdminTextosModuloForm } from "@/components/admin/AdminTextosModuloForm";
 import { AbrirOperacionForm } from "@/components/reto/AbrirOperacionForm";
 import { BotonCerrarTodasOperaciones } from "@/components/admin/BotonCerrarTodasOperaciones";
 import { formatearDinero, formatearPrecio } from "@/lib/format";
 import { estaAbiertaBolsaNY, fechaEnNY } from "@/lib/horarioMercado";
 import { obtenerHorarioMercado, formatearHorarioMercado } from "@/lib/config-horario-mercado";
+import {
+  claveConfigTextosModulo,
+  obtenerTextosModulo,
+  obtenerTextosModuloCompleto,
+} from "@/lib/config-textos-modulo";
 import { obtenerDiccionario, obtenerLocale } from "@/lib/i18n/servidor";
 import { rellenar } from "@/lib/i18n";
 import type { OperacionSimulada, PickDelDia } from "@/lib/types";
+
+const CLAVE_TEXTOS = claveConfigTextosModulo("trade_del_dia");
+const TEXTOS_POR_DEFECTO = {
+  titulo: "Trade del día",
+  subtitulo: "Practica con saldo virtual sobre el pick de hoy.",
+};
+const TEXTOS_POR_DEFECTO_EN = {
+  titulo: "Trade of the day",
+  subtitulo: "Practice with virtual balance on today's pick.",
+};
 
 export default async function PaginaTradeDelDia() {
   const [usuario, t, locale] = await Promise.all([
@@ -22,6 +38,7 @@ export default async function PaginaTradeDelDia() {
   if (!usuario) redirect("/login");
   if (!usuario.activo) redirect("/cuenta-desactivada");
 
+  const usuarioEsAdmin = esAdmin(usuario);
   const supabase = await crearClienteSupabaseServidor();
 
   const [
@@ -32,6 +49,8 @@ export default async function PaginaTradeDelDia() {
     { data: historial },
     { data: simbolosAbiertosRaw },
     { data: perfilTrading },
+    textos,
+    textosCompleto,
   ] = await Promise.all([
     obtenerHorarioMercado(),
     // Solo cuenta como "vigente" si es de HOY (hora de Nueva York) — antes
@@ -64,7 +83,7 @@ export default async function PaginaTradeDelDia() {
       .order("cerrado_en", { ascending: false })
       .limit(5)
       .returns<OperacionSimulada[]>(),
-    esAdmin(usuario)
+    usuarioEsAdmin
       ? supabase
           .from("operaciones_simuladas")
           .select("activo")
@@ -75,6 +94,10 @@ export default async function PaginaTradeDelDia() {
       .select("trading_habilitado")
       .eq("id", usuario.id)
       .single(),
+    obtenerTextosModulo(CLAVE_TEXTOS, TEXTOS_POR_DEFECTO, TEXTOS_POR_DEFECTO_EN, locale),
+    usuarioEsAdmin
+      ? obtenerTextosModuloCompleto(CLAVE_TEXTOS, TEXTOS_POR_DEFECTO, TEXTOS_POR_DEFECTO_EN)
+      : Promise.resolve(null),
   ]);
 
   // Antes solo se enteraba al intentar abrir (mensaje de la server action);
@@ -132,14 +155,19 @@ export default async function PaginaTradeDelDia() {
     <div className="py-10">
       <h1 className="font-display font-semibold text-[26px] flex items-center gap-2.5 mb-1.5">
         <IconoReto className="w-6 h-6 text-brand-primary" />
-        {t.tradeDelDia.titulo}
+        {textos.titulo}
       </h1>
       <p className="text-foreground-muted text-[15px] mb-7">
-        {t.tradeDelDia.subtitulo}
+        {textos.subtitulo}
       </p>
 
-      {esAdmin(usuario) && (
+      {usuarioEsAdmin && textosCompleto && (
         <>
+          <AdminTextosModuloForm
+            claveConfig={CLAVE_TEXTOS}
+            textosActuales={textosCompleto}
+            ta={t.admin}
+          />
           <AdminPickForm pickVigente={pick ?? null} />
           <AdminHorarioMercadoForm horarioActual={horarioMercado} />
           <BotonCerrarTodasOperaciones simbolos={simbolosAbiertos} />

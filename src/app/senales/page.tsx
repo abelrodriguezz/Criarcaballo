@@ -2,11 +2,29 @@ import { IconoSenales } from "@/components/ui/Iconos";
 import { esAdmin, obtenerUsuarioActual } from "@/lib/auth/sesion";
 import { crearClienteSupabaseServidor } from "@/lib/supabase/server";
 import { AdminSenalForm } from "@/components/admin/AdminSenalForm";
+import { AdminTextosModuloForm } from "@/components/admin/AdminTextosModuloForm";
 import { TarjetaSenalAdmin } from "@/components/admin/TarjetaSenalAdmin";
 import { AutoRefresco } from "@/components/ui/AutoRefresco";
 import { revisarYCerrarSenalesActivas } from "@/lib/senales/verificarTpSl";
+import {
+  claveConfigTextosModulo,
+  obtenerTextosModulo,
+  obtenerTextosModuloCompleto,
+} from "@/lib/config-textos-modulo";
 import { obtenerDiccionario, obtenerLocale } from "@/lib/i18n/servidor";
 import type { Senal } from "@/lib/types";
+
+const CLAVE_TEXTOS = claveConfigTextosModulo("senales");
+const TEXTOS_POR_DEFECTO = {
+  titulo: "Señales",
+  subtitulo:
+    "Publicadas desde el panel admin, con razón incluida. Toca cualquier señal para ver su gráfico en TradingView.",
+};
+const TEXTOS_POR_DEFECTO_EN = {
+  titulo: "Signals",
+  subtitulo:
+    "Published from the admin panel, reasoning included. Tap any signal to see its chart on TradingView.",
+};
 
 export default async function PaginaSenales({
   searchParams,
@@ -28,11 +46,17 @@ export default async function PaginaSenales({
 
   const supabase = await crearClienteSupabaseServidor();
 
-  const { data: senales } = await supabase
-    .from("senales")
-    .select("*")
-    .order("created_at", { ascending: false })
-    .returns<Senal[]>();
+  const [{ data: senales }, textos, textosCompleto] = await Promise.all([
+    supabase
+      .from("senales")
+      .select("*")
+      .order("created_at", { ascending: false })
+      .returns<Senal[]>(),
+    obtenerTextosModulo(CLAVE_TEXTOS, TEXTOS_POR_DEFECTO, TEXTOS_POR_DEFECTO_EN, locale),
+    usuarioEsAdmin
+      ? obtenerTextosModuloCompleto(CLAVE_TEXTOS, TEXTOS_POR_DEFECTO, TEXTOS_POR_DEFECTO_EN)
+      : Promise.resolve(null),
+  ]);
 
   const recientes = (senales ?? []).filter((s) => !s.resultado);
 
@@ -55,11 +79,19 @@ export default async function PaginaSenales({
       <AutoRefresco />
       <h1 className="font-display font-semibold text-[26px] flex items-center gap-2.5 mb-1.5">
         <IconoSenales className="w-6 h-6 text-brand-primary" />
-        {t.senales.titulo}
+        {textos.titulo}
       </h1>
       <p className="text-foreground-muted text-[15px] mb-7">
-        {t.senales.subtitulo}
+        {textos.subtitulo}
       </p>
+
+      {usuarioEsAdmin && textosCompleto && (
+        <AdminTextosModuloForm
+          claveConfig={CLAVE_TEXTOS}
+          textosActuales={textosCompleto}
+          ta={t.admin}
+        />
+      )}
 
       {usuarioEsAdmin && <AdminSenalForm />}
 
