@@ -3,7 +3,7 @@
 import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { crearClienteSupabase } from "@/lib/supabase/client";
-import { parsearNumero } from "@/lib/format";
+import { parsearMontoUsuario } from "@/lib/format";
 import type { GananciaConcurso } from "@/lib/types";
 
 interface AdminGananciaFormProps {
@@ -39,7 +39,9 @@ export function AdminGananciaForm({
     e.preventDefault();
     setError(null);
 
-    const montoNum = parsearNumero(monto);
+    // parsearMontoUsuario, no parsearNumero: "33,5" (coma decimal) se
+    // guardaba como 335.
+    const montoNum = parsearMontoUsuario(monto);
     if (isNaN(montoNum) || montoNum <= 0) {
       setError("El monto debe ser un número mayor a cero.");
       return;

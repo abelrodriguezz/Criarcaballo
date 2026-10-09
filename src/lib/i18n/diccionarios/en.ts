@@ -385,7 +385,7 @@ export const en: typeof es = {
     referidosInvitadosUno: "{n} person signed up with an invitation.",
     referidosInvitadosVarios: "{n} people signed up with an invitation.",
     referidosIntro:
-      "When you confirm an invitee's simulated deposit as paid (in Deposits), a pending commission is automatically created for whoever invited them (an unconfirmed deposit doesn't create anything yet). It's paid in USDT via gift card, outside the platform. Mark it as paid here once you've sent it.",
+      "When you confirm an invitee's simulated deposit as paid (in Deposits), a pending commission is automatically created for whoever invited them (an unconfirmed deposit doesn't create anything yet). It's added to their pending earnings and paid when they request a withdrawal, which is processed in Withdrawals (it's no longer marked as paid by hand here).",
     configuracion: "Settings",
 
     premioResumen:
@@ -412,7 +412,7 @@ export const en: typeof es = {
     sinCadenas: "There are no referral chains yet.",
     comisionesTitulo: "Referral commissions",
     comisionesAyuda:
-      "One row per invited person. \"No commission yet\" means that person hasn't made their simulated deposit, or you haven't confirmed it as paid yet. As soon as you confirm it, the pending amount and the button to mark it paid show up here.",
+      "One row per invited person. \"No commission yet\" means that person hasn't made their simulated deposit, or you haven't confirmed it as paid yet. As soon as you confirm it, the amount and whether it's been paid show up here (payment is processed in Withdrawals).",
     sinRegistrosInvitacion: "Nobody has signed up with an invitation code yet.",
     invitadoPor: "Invited by",
     depositoSimulado: "Simulated deposit: ${m}",

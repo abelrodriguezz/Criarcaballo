@@ -401,7 +401,7 @@ export const es = {
     referidosInvitadosUno: "{n} persona se registró por invitación.",
     referidosInvitadosVarios: "{n} personas se registraron por invitación.",
     referidosIntro:
-      "Cuando confirmas como pagado el depósito simulado de un invitado (en Depósitos), se le genera automáticamente a quien lo invitó una comisión pendiente de pago (un depósito sin confirmar no genera nada todavía) — se paga en USDT vía tarjeta de regalo (gift card), fuera de la plataforma. Márcala como pagada aquí cuando ya se la hayas enviado.",
+      "Cuando confirmas como pagado el depósito simulado de un invitado (en Depósitos), se le genera automáticamente a quien lo invitó una comisión pendiente de pago (un depósito sin confirmar no genera nada todavía) — se suma a sus ganancias pendientes y se le paga cuando pide un retiro, que se procesa en Retiros (aquí ya no se marca como pagada a mano).",
     configuracion: "Configuración",
 
     premioResumen:
@@ -429,7 +429,7 @@ export const es = {
     sinCadenas: "Todavía no hay ninguna cadena de referidos.",
     comisionesTitulo: "Comisiones por referido",
     comisionesAyuda:
-      "Una fila por cada persona invitada. \"Sin comisión todavía\" significa que esa persona no ha hecho su depósito simulado o que todavía no lo confirmaste como pagado — en cuanto lo confirmes, aparece aquí el monto pendiente y el botón para marcarlo pagado.",
+      "Una fila por cada persona invitada. \"Sin comisión todavía\" significa que esa persona no ha hecho su depósito simulado o que todavía no lo confirmaste como pagado — en cuanto lo confirmes, aparece aquí el monto y si ya se pagó (el pago se procesa en Retiros).",
     sinRegistrosInvitacion: "Todavía nadie se ha registrado con un código de invitación.",
     invitadoPor: "Invitado por",
     depositoSimulado: "Depósito simulado: ${m}",

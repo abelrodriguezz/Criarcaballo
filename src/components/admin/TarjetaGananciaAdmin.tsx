@@ -26,8 +26,11 @@ export function TarjetaGananciaAdmin({
   }
 
   return (
-    <div className="border border-[var(--border)] rounded-xl p-4 flex justify-between items-center">
-      <div>
+    // flex-wrap: en mobile (360px) los 3 botones no caben al lado del
+    // monto+concepto y "Eliminar" quedaba fuera de pantalla; así bajan a
+    // su propia línea en vez de desbordarse.
+    <div className="border border-[var(--border)] rounded-xl p-4 flex flex-wrap justify-between items-center gap-x-3 gap-y-2">
+      <div className="min-w-0">
         <div className="flex items-center gap-2">
           <div className="font-display font-bold text-base tabular text-gain">
             +${formatearDinero(ganancia.monto)}
