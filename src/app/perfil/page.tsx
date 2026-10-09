@@ -243,7 +243,7 @@ export default async function PaginaPerfil() {
                 ${formatearDinero(totalTodasLasCuentas)}
               </div>
             </div>
-            <div className="border-t border-[var(--border)] pt-4">
+            <div className="border-t border-[var(--border)] pt-4 mb-4">
               <div className="text-[13px] text-foreground-muted mb-1">
                 {t.admin.totalPagarHoy}
               </div>
