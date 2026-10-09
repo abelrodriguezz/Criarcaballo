@@ -4,7 +4,6 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import { ArbolReferidos, type NodoArbolReferido } from "@/components/admin/ArbolReferidos";
 import { BotonExportarArbolReferidos } from "@/components/admin/BotonExportarArbolReferidos";
-import { BotonPagoGanancia } from "@/components/admin/BotonPagoGanancia";
 import { formatearDinero } from "@/lib/format";
 import { rellenar, type TextosAdmin, type Locale } from "@/lib/i18n";
 import type { GananciaConcurso } from "@/lib/types";
@@ -254,11 +253,16 @@ export function BuscadorReferidos({
                         {comision.pagado ? ta.pagado : ta.pendiente} · $
                         {formatearDinero(comision.monto)}
                       </span>
-                      <BotonPagoGanancia
-                        gananciaId={comision.id}
-                        pagado={comision.pagado}
-                        ta={ta}
-                      />
+                      {/* Pago directo deshabilitado (2026-10-09): se
+                          procesa desde /retiros, ver TarjetaGananciaAdmin.tsx. */}
+                      <button
+                        type="button"
+                        disabled
+                        title="El pago se procesa desde /retiros"
+                        className="text-xs font-semibold text-foreground-muted opacity-50 cursor-not-allowed"
+                      >
+                        {comision.pagado ? ta.marcarPendiente : ta.marcarPagado}
+                      </button>
                     </div>
                   )}
                 </div>
@@ -310,7 +314,14 @@ export function BuscadorReferidos({
                   {b.pagado ? ta.pagado : ta.pendiente} · $
                   {formatearDinero(b.monto)}
                 </span>
-                <BotonPagoGanancia gananciaId={b.id} pagado={b.pagado} ta={ta} />
+                <button
+                  type="button"
+                  disabled
+                  title="El pago se procesa desde /retiros"
+                  className="text-xs font-semibold text-foreground-muted opacity-50 cursor-not-allowed"
+                >
+                  {b.pagado ? ta.marcarPendiente : ta.marcarPagado}
+                </button>
               </div>
             </div>
           ))}

@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { AdminGananciaForm } from "@/components/admin/AdminGananciaForm";
 import { BotonEliminarAdmin } from "@/components/admin/BotonEliminarAdmin";
-import { BotonPagoGanancia } from "@/components/admin/BotonPagoGanancia";
 import { formatearDinero } from "@/lib/format";
 import type { GananciaConcurso } from "@/lib/types";
 
@@ -53,7 +52,19 @@ export function TarjetaGananciaAdmin({
         </div>
       </div>
       <div className="flex gap-3 shrink-0">
-        <BotonPagoGanancia gananciaId={ganancia.id} pagado={ganancia.pagado} />
+        {/* Pagar/revertir una ganancia a mano se deshabilitó (pedido del
+            dueño, 2026-10-09): con el módulo de retiros, admin_marcar_
+            retiro_pagado ya marca pagado=true automáticamente al procesar
+            la solicitud del usuario (migración 043) — hacerlo aquí también
+            podía terminar pagando el mismo dinero dos veces. */}
+        <button
+          type="button"
+          disabled
+          title="El pago se procesa desde /retiros"
+          className="text-xs font-semibold text-foreground-muted opacity-50 cursor-not-allowed"
+        >
+          {ganancia.pagado ? "Marcar como pendiente" : "Marcar como pagado"}
+        </button>
         <button
           onClick={() => setEditando(true)}
           className="text-xs font-semibold text-brand-primary hover:underline"
