@@ -5,10 +5,24 @@ import { useRouter } from "next/navigation";
 import { crearClienteSupabase } from "@/lib/supabase/client";
 
 const LIMITE_INACTIVIDAD_MS = 10 * 60 * 1000;
-// Exportada: LoginForm.tsx estampa esta misma clave justo al iniciar
-// sesión (ver ahí el porqué).
-export const CLAVE_ULTIMA_ACTIVIDAD = "trade4u-ultima-actividad";
+const CLAVE_ULTIMA_ACTIVIDAD = "trade4u-ultima-actividad";
 const INTERVALO_CHEQUEO_MS = 15 * 1000;
+
+/**
+ * Estampa "ahora" como última actividad. La llama TODA puerta de entrada que
+ * deja al usuario con una sesión nueva (LoginForm al iniciar sesión,
+ * RestablecerForm al guardar la contraseña nueva): como el montaje de
+ * CierreInactividad ya no pisa un timestamp existente, sin esto una sesión
+ * nueva heredaba el timestamp viejo de una sesión anterior en el mismo
+ * navegador y se cerraba sola a los ~15 s de haber entrado.
+ */
+export function estamparActividadAhora() {
+  try {
+    localStorage.setItem(CLAVE_ULTIMA_ACTIVIDAD, String(Date.now()));
+  } catch {
+    // Storage no disponible — CierreInactividad ya maneja ese caso.
+  }
+}
 
 const EVENTOS_ACTIVIDAD = [
   "mousedown",
@@ -30,14 +44,7 @@ export function CierreInactividad() {
   const cerrandoRef = useRef(false);
 
   useEffect(() => {
-    function marcarActividad() {
-      try {
-        localStorage.setItem(CLAVE_ULTIMA_ACTIVIDAD, String(Date.now()));
-      } catch {
-        // Storage no disponible (modo privado, etc.) — sin memoria entre
-        // pestañas la sesión igual se cierra por el temporizador local.
-      }
-    }
+    const marcarActividad = estamparActividadAhora;
 
     // NO se llama marcarActividad() aquí a secas: este efecto vuelve a
     // correr en cada montaje, incluida una recarga completa de la página

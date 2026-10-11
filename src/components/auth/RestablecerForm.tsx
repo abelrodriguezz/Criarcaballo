@@ -4,6 +4,7 @@ import { useEffect, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { crearClienteSupabase } from "@/lib/supabase/client";
 import { mensajeErrorAuth } from "@/lib/auth/mensajesError";
+import { estamparActividadAhora } from "@/components/auth/CierreInactividad";
 import type { Diccionario, Locale } from "@/lib/i18n";
 
 export function RestablecerForm({ t, locale }: { t: Diccionario; locale: Locale }) {
@@ -74,6 +75,13 @@ export function RestablecerForm({ t, locale }: { t: Diccionario; locale: Locale 
       return;
     }
 
+    // El enlace del correo deja una sesión activa sin pasar por LoginForm,
+    // así que esta es otra puerta de entrada que tiene que estampar la
+    // actividad: si no, al llegar a /perfil CierreInactividad encontraba el
+    // timestamp viejo de la sesión anterior (ej. la que justamente cerró por
+    // inactividad) y sacaba al usuario a los ~15 s de haber cambiado la
+    // contraseña. Reproducido en build de producción antes del fix.
+    estamparActividadAhora();
     setExito(true);
     setTimeout(() => {
       router.push("/perfil");

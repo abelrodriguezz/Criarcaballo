@@ -7,6 +7,7 @@ import { BotonPagoDeposito } from "@/components/admin/BotonPagoDeposito";
 import { BotonEliminarAdmin } from "@/components/admin/BotonEliminarAdmin";
 import { formatearDinero } from "@/lib/format";
 import { obtenerDiccionario } from "@/lib/i18n/servidor";
+import { rellenar } from "@/lib/i18n";
 import type { DepositoSimulado } from "@/lib/types";
 
 type DepositoConUsuario = DepositoSimulado & {
@@ -85,7 +86,7 @@ export default async function PaginaDepositos() {
               </span>
             )}
           </div>
-          <div className="text-[12px] text-foreground-muted truncate">
+          <div className="text-[12px] text-foreground-muted break-words">
             {d.usuarios?.nombre || d.usuarios?.email || "Usuario eliminado"}
             {d.usuarios?.id_corto ? ` · ID ${d.usuarios.id_corto}` : ""} ·{" "}
             {new Date(d.created_at).toLocaleDateString("es-DO", {
@@ -95,7 +96,7 @@ export default async function PaginaDepositos() {
             })}
           </div>
           {d.wallet_mostrada && (
-            <div className="text-[12px] text-foreground-muted font-mono truncate">
+            <div className="text-[12px] text-foreground-muted font-mono break-all">
               {d.wallet_mostrada}
             </div>
           )}
@@ -149,7 +150,12 @@ export default async function PaginaDepositos() {
       <p className="text-foreground-muted text-[15px] mb-7">
         {t.admin.depositosIntro}
         {sinRevisar.length > 0 &&
-          ` ${sinRevisar.length} nuevo${sinRevisar.length === 1 ? "" : "s"} desde tu última visita.`}
+          // Antes era texto fijo en español: con el intro ya traducido,
+          // en inglés quedaba la misma oración mitad en cada idioma.
+          ` ${rellenar(
+            sinRevisar.length === 1 ? t.admin.depositosNuevoUno : t.admin.depositosNuevosVarios,
+            { n: sinRevisar.length }
+          )}`}
       </p>
 
       <h2 className="font-display font-semibold text-lg mb-3">

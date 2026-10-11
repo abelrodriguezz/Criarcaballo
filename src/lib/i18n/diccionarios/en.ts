@@ -382,6 +382,8 @@ export const en: typeof es = {
 
     depositosIntro:
       "Deposits must be verified and validated before the corresponding amount is credited to the user's investment balance.",
+    depositosNuevoUno: "{n} new since your last visit.",
+    depositosNuevosVarios: "{n} new since your last visit.",
     retirosIntro:
       "Withdrawals are processed within up to 24 business hours and are made in USDT through the wallet the user registered when requesting the withdrawal.",
     referidosTitulo: "Referrals",

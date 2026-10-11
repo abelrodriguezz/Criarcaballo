@@ -398,6 +398,8 @@ export const es = {
 
     depositosIntro:
       "Los depósitos deben ser verificados y validados antes de que el monto correspondiente se acredite al saldo de inversión del usuario.",
+    depositosNuevoUno: "{n} nuevo desde tu última visita.",
+    depositosNuevosVarios: "{n} nuevos desde tu última visita.",
     retirosIntro:
       "Los retiros se procesan en un plazo de hasta 24 horas laborables y se realizan en USDT a través de la wallet registrada por el usuario al momento de solicitar el retiro.",
     referidosTitulo: "Referidos",

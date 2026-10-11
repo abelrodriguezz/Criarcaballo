@@ -67,7 +67,7 @@ export default async function PaginaRetiros() {
               {formatearDinero(neto)}
             </div>
           )}
-          <div className="text-[12px] text-foreground-muted truncate">
+          <div className="text-[12px] text-foreground-muted break-words">
             {s.usuarios?.nombre || s.usuarios?.email || "Usuario eliminado"}
             {s.usuarios?.id_corto ? ` · ID ${s.usuarios.id_corto}` : ""} ·{" "}
             {new Date(s.created_at).toLocaleDateString("es-DO", {
@@ -76,7 +76,10 @@ export default async function PaginaRetiros() {
               year: "numeric",
             })}
           </div>
-          <div className="text-[12px] text-foreground-muted font-mono truncate">
+          {/* break-all, no truncate: a 360px la wallet salía cortada con
+              "…" y el admin no podía ver/verificar la dirección completa
+              a la que tiene que transferir. */}
+          <div className="text-[12px] text-foreground-muted font-mono break-all">
             {s.wallet_destino}
           </div>
           {s.nota_admin && (
