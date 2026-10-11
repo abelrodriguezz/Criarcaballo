@@ -120,10 +120,13 @@ export interface SolicitudRetiro {
 export interface MensajeSoporte {
   id: string;
   usuario_id: string;
-  remitente_id: string;
+  // null = auto-respuesta del sistema (fuera de horario), no la escribió
+  // ningún admin en particular — ver migración 093.
+  remitente_id: string | null;
   contenido: string;
   imagen_path: string | null;
   leido_admin: boolean;
   leido_usuario: boolean;
+  es_auto_respuesta: boolean;
   created_at: string;
 }

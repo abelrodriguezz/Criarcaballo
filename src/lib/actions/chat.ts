@@ -5,8 +5,67 @@ import { crearClienteSupabaseServidor } from "@/lib/supabase/server";
 import { cuentaActiva } from "@/lib/auth/sesion";
 import { exito, fallo, type Resultado } from "@/lib/actions/resultado";
 import { subirComprobante } from "@/lib/actions/comprobantes";
+import { obtenerLocale } from "@/lib/i18n/servidor";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { MensajeSoporte } from "@/lib/types";
+
+// 8:00am-3:00pm hora de Japón (JST, UTC+9 fijo — Japón no usa horario de
+// verano, así que no hace falta una librería de zonas horarias).
+const HORA_APERTURA_SOPORTE_JST = 8;
+const HORA_CIERRE_SOPORTE_JST = 15;
+
+function fueraDeHorarioSoporte(): boolean {
+  const horaJst = Number(
+    new Intl.DateTimeFormat("en-US", {
+      timeZone: "Asia/Tokyo",
+      hour: "numeric",
+      hour12: false,
+    }).format(new Date())
+  );
+  return horaJst < HORA_APERTURA_SOPORTE_JST || horaJst >= HORA_CIERRE_SOPORTE_JST;
+}
+
+const AVISO_FUERA_DE_HORARIO = {
+  es:
+    "Horario de atención al cliente\n\n" +
+    "Nuestro equipo de soporte está disponible de 8:00 a.m. a 3:00 p.m. (hora estándar de Japón, JST — UTC+9).\n\n" +
+    "Gracias por tu comprensión. Esperamos poder ayudarte dentro de nuestro horario de atención.",
+  en:
+    "Customer Support Hours\n\n" +
+    "Our customer support team is available from 8:00 a.m. to 3:00 p.m. (Japan Standard Time, JST — UTC+9).\n\n" +
+    "Thank you for your understanding. We look forward to assisting you during our business hours.",
+};
+
+/**
+ * Si el usuario escribe fuera de horario, le contesta el aviso fijo — pero
+ * no en cada mensaje: si el mensaje anterior de esta conversación YA es
+ * una auto-respuesta sin contestar todavía, no se repite (evita llenar el
+ * chat del mismo aviso si la persona manda varios mensajes seguidos).
+ */
+async function responderFueraDeHorarioSiAplica(
+  supabase: SupabaseClient,
+  usuarioId: string,
+  idMensajeNuevo: string
+): Promise<void> {
+  if (!fueraDeHorarioSoporte()) return;
+
+  const { data: anterior } = await supabase
+    .from("mensajes_soporte")
+    .select("es_auto_respuesta")
+    .eq("usuario_id", usuarioId)
+    .neq("id", idMensajeNuevo)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (anterior?.es_auto_respuesta) return;
+
+  const locale = await obtenerLocale();
+  await supabase.rpc("insertar_auto_respuesta_soporte", {
+    p_usuario_id: usuarioId,
+    p_contenido: AVISO_FUERA_DE_HORARIO[locale],
+  });
+}
 
 /**
  * Los ids de usuario llegan desde el cliente (campo oculto del formulario,
@@ -97,6 +156,10 @@ export async function enviarMensajeUsuario(
     .single<MensajeSoporte>();
 
   if (error) return fallo(mensajeDeErrorDeInsercion(error));
+
+  if (data) {
+    await responderFueraDeHorarioSiAplica(supabase, user.id, data.id);
+  }
 
   revalidatePath("/soporte");
   return exito(data);
