@@ -7,6 +7,7 @@ import { AdminFeeRetiroForm } from "@/components/admin/AdminFeeRetiroForm";
 import { obtenerFeeRetiro } from "@/lib/config-retiros";
 import { calcularFeeRetiro } from "@/lib/calculoFeeRetiro";
 import { formatearDinero } from "@/lib/format";
+import { obtenerDiccionario } from "@/lib/i18n/servidor";
 import type { SolicitudRetiro } from "@/lib/types";
 
 type SolicitudConUsuario = SolicitudRetiro & {
@@ -25,13 +26,14 @@ export default async function PaginaRetiros() {
   // usuarios (usuario_id y procesado_por) — sin el hint, PostgREST no
   // sabe cuál usar (mismo problema ya resuelto antes en Reportes con
   // ganancias_concursos).
-  const [{ data: solicitudesRaw }, feeActual] = await Promise.all([
+  const [{ data: solicitudesRaw }, feeActual, t] = await Promise.all([
     supabase
       .from("solicitudes_retiro")
       .select("*, usuarios!usuario_id(email, id_corto, nombre)")
       .order("created_at", { ascending: false })
       .returns<SolicitudConUsuario[]>(),
     obtenerFeeRetiro(),
+    obtenerDiccionario(),
   ]);
 
   const solicitudes = solicitudesRaw ?? [];
@@ -99,11 +101,7 @@ export default async function PaginaRetiros() {
 
       <h1 className="font-display font-semibold text-[26px] mb-1.5">Retiros</h1>
       <p className="text-foreground-muted text-[15px] mb-7">
-        Solicitudes de retiro contra las ganancias pendientes de cada usuario
-        (comisiones de referidos, premios de concursos, ganancias de Trade
-        del día) — no contra su saldo de inversión/práctica. Se paga en
-        USDT vía la wallet que el usuario tenía registrada al momento de
-        pedirlo. Márcala como pagada aquí cuando ya le hayas transferido.
+        {t.admin.retirosIntro}
       </p>
 
       <AdminFeeRetiroForm feeActual={feeActual} />

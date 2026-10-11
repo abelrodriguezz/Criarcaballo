@@ -5,7 +5,9 @@ import { useRouter } from "next/navigation";
 import { crearClienteSupabase } from "@/lib/supabase/client";
 
 const LIMITE_INACTIVIDAD_MS = 10 * 60 * 1000;
-const CLAVE_ULTIMA_ACTIVIDAD = "trade4u-ultima-actividad";
+// Exportada: LoginForm.tsx estampa esta misma clave justo al iniciar
+// sesión (ver ahí el porqué).
+export const CLAVE_ULTIMA_ACTIVIDAD = "trade4u-ultima-actividad";
 const INTERVALO_CHEQUEO_MS = 15 * 1000;
 
 const EVENTOS_ACTIVIDAD = [
@@ -37,7 +39,24 @@ export function CierreInactividad() {
       }
     }
 
-    marcarActividad();
+    // NO se llama marcarActividad() aquí a secas: este efecto vuelve a
+    // correr en cada montaje, incluida una recarga completa de la página
+    // (ej. el celular suspendió la pestaña por estar en segundo plano un
+    // rato largo y, al volver, el navegador la recarga de cero en vez de
+    // reanudarla). Si se estampara "ahora" sin condición, esa recarga
+    // borraba la única prueba de que el usuario de verdad estuvo inactivo
+    // 10 minutos — el cierre por inactividad nunca llegaba a dispararse
+    // ("a veces no funciona"). Solo se estampa si todavía no hay ningún
+    // valor guardado (primera vez que se abre la app en este navegador);
+    // un valor ya existente, por viejo que sea, se deja intacto para que
+    // el chequeo de abajo lo pueda evaluar de verdad.
+    try {
+      if (!localStorage.getItem(CLAVE_ULTIMA_ACTIVIDAD)) {
+        marcarActividad();
+      }
+    } catch {
+      // Storage no disponible — no hay nada que inicializar.
+    }
     EVENTOS_ACTIVIDAD.forEach((evento) =>
       window.addEventListener(evento, marcarActividad, { passive: true })
     );
@@ -55,14 +74,25 @@ export function CierreInactividad() {
 
       if (Date.now() - ultima >= LIMITE_INACTIVIDAD_MS) {
         cerrandoRef.current = true;
-        const supabase = crearClienteSupabase();
-        // scope "local": cierra SOLO la sesión de este navegador. El default
-        // de supabase-js es "global" (revoca todas las sesiones de la
-        // cuenta), y entonces una PC olvidada con la app abierta echaba al
-        // usuario de su celular mientras lo estaba usando.
-        await supabase.auth.signOut({ scope: "local" });
-        router.push("/login?motivo=inactividad");
-        router.refresh();
+        try {
+          const supabase = crearClienteSupabase();
+          // scope "local": cierra SOLO la sesión de este navegador. El default
+          // de supabase-js es "global" (revoca todas las sesiones de la
+          // cuenta), y entonces una PC olvidada con la app abierta echaba al
+          // usuario de su celular mientras lo estaba usando.
+          await supabase.auth.signOut({ scope: "local" });
+          router.push("/login?motivo=inactividad");
+          router.refresh();
+        } catch {
+          // Si signOut falla (ej. sin red justo al despertar la laptop del
+          // sueño, que es exactamente cuando este chequeo suele disparar
+          // por primera vez), cerrandoRef se quedaba en true para siempre
+          // y el cierre por inactividad dejaba de funcionar en esa pestaña
+          // hasta recargar la página — "a veces no funciona". Se reintenta
+          // en el próximo tick (ultima no se actualiza porque no hubo
+          // actividad real, así que la condición sigue cumpliéndose).
+          cerrandoRef.current = false;
+        }
       }
     }, INTERVALO_CHEQUEO_MS);
 

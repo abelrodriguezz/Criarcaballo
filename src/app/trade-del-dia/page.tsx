@@ -205,14 +205,14 @@ export default async function PaginaTradeDelDia() {
               </span>
             </div>
 
-            <div className="flex items-center gap-1.5 text-xs text-foreground-muted bg-surface px-3 py-2 rounded-lg">
-              <IconoInfo />
-              {operacionAbierta
-                ? rellenar(t.tradeDelDia.saldoInvertido, {
-                    monto: `$${formatearDinero(operacionAbierta.monto_usado)}`,
-                  })
-                : t.tradeDelDia.saldoPractica}
-            </div>
+            {operacionAbierta && (
+              <div className="flex items-center gap-1.5 text-xs text-foreground-muted bg-surface px-3 py-2 rounded-lg">
+                <IconoInfo />
+                {rellenar(t.tradeDelDia.saldoInvertido, {
+                  monto: `$${formatearDinero(operacionAbierta.monto_usado)}`,
+                })}
+              </div>
+            )}
 
             {!operacionAbierta ? (
               <AbrirOperacionForm

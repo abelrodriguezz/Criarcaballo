@@ -6,6 +6,7 @@ import Link from "next/link";
 import { crearClienteSupabase } from "@/lib/supabase/client";
 import { Turnstile } from "@/components/auth/Turnstile";
 import { mensajeErrorAuth } from "@/lib/auth/mensajesError";
+import { CLAVE_ULTIMA_ACTIVIDAD } from "@/components/auth/CierreInactividad";
 import type { Diccionario, Locale } from "@/lib/i18n";
 
 // Sin site key configurada, Turnstile no puede renderizar un widget real y
@@ -80,6 +81,16 @@ export function LoginForm({
       setError(t.auth.cuentaDesactivadaLogin);
       setCaptchaToken(null);
       return;
+    }
+
+    // Estampa la actividad justo aquí, no solo al montar CierreInactividad:
+    // sin esto, una sesión nueva podía heredar un timestamp viejo dejado
+    // por otra cuenta/sesión en el mismo navegador y quedar deslogueada a
+    // los segundos de haber entrado.
+    try {
+      localStorage.setItem(CLAVE_ULTIMA_ACTIVIDAD, String(Date.now()));
+    } catch {
+      // Storage no disponible — CierreInactividad ya maneja ese caso.
     }
 
     router.push("/perfil");

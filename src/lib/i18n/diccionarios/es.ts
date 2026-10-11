@@ -240,7 +240,6 @@ export const es = {
     sinPick: "El admin todavía no ha definido el pick de hoy.",
     saldoDeInversion: "Saldo de Inversión",
     pickDeHoy: "Pick de hoy",
-    saldoPractica: "Saldo de práctica — sin valor monetario real.",
     saldoInvertido: "Saldo invertido en esta operación: {monto}",
     yaTienesOperacion: "Ya tienes una operación abierta en",
     esperaAdminCierre:
@@ -397,11 +396,15 @@ export const es = {
     menuRetiros: "Retiros",
     menuRetirosSub: "Solicitudes de retiro de los usuarios",
 
+    depositosIntro:
+      "Los depósitos deben ser verificados y validados antes de que el monto correspondiente se acredite al saldo de inversión del usuario.",
+    retirosIntro:
+      "Los retiros se procesan en un plazo de hasta 24 horas laborables y se realizan en USDT a través de la wallet registrada por el usuario al momento de solicitar el retiro.",
     referidosTitulo: "Referidos",
     referidosInvitadosUno: "{n} persona se registró por invitación.",
     referidosInvitadosVarios: "{n} personas se registraron por invitación.",
     referidosIntro:
-      "Cuando confirmas como pagado el depósito simulado de un invitado (en Depósitos), se le genera automáticamente a quien lo invitó una comisión pendiente de pago (un depósito sin confirmar no genera nada todavía) — se suma a sus ganancias pendientes y se le paga cuando pide un retiro, que se procesa en Retiros (aquí ya no se marca como pagada a mano).",
+      "Cuando confirmas como pagado el depósito de un invitado (en Depósitos), se le genera automáticamente a quien lo invitó una comisión pendiente de pago (un depósito sin confirmar no genera nada todavía) — se suma a sus ganancias pendientes y se le paga cuando pide un retiro, que se procesa en Retiros (aquí ya no se marca como pagada a mano).",
     configuracion: "Configuración",
 
     premioResumen:

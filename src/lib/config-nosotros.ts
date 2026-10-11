@@ -31,7 +31,7 @@ export const NOSOTROS_POR_DEFECTO: ConfigNosotros = {
   ],
   disclaimerTitulo: "Aviso importante",
   disclaimer:
-    "Trade4U es una herramienta educativa y de práctica. Nada en esta plataforma constituye asesoría financiera, y ninguna cifra o resultado pasado garantiza resultados futuros.",
+    "Trade4U no solicita inversiones ni depósitos a través de mensajes privados o redes sociales. Todas nuestras operaciones y comunicaciones oficiales se realizan exclusivamente a través de esta página web. No confíes en personas que se hagan pasar por representantes de Trade4U y te contacten por otros medios.",
 };
 
 export const NOSOTROS_POR_DEFECTO_EN: ConfigNosotros = {
@@ -42,7 +42,7 @@ export const NOSOTROS_POR_DEFECTO_EN: ConfigNosotros = {
   ],
   disclaimerTitulo: "Important notice",
   disclaimer:
-    "Trade4U is an educational and practice tool. Nothing on this platform constitutes financial advice, and no past figure or result guarantees future results.",
+    "Trade4U does not solicit investments or deposits through private messages or social media. All our official operations and communications take place exclusively through this website. Do not trust people who impersonate Trade4U representatives and contact you through other channels.",
 };
 
 async function obtenerNosotrosGuardado(): Promise<

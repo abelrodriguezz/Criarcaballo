@@ -6,6 +6,7 @@ import { marcarDepositosRevisados } from "@/lib/actions/depositos";
 import { BotonPagoDeposito } from "@/components/admin/BotonPagoDeposito";
 import { BotonEliminarAdmin } from "@/components/admin/BotonEliminarAdmin";
 import { formatearDinero } from "@/lib/format";
+import { obtenerDiccionario } from "@/lib/i18n/servidor";
 import type { DepositoSimulado } from "@/lib/types";
 
 type DepositoConUsuario = DepositoSimulado & {
@@ -20,7 +21,7 @@ export default async function PaginaDepositos() {
 
   const supabase = await crearClienteSupabaseServidor();
 
-  const [{ data: depositosRaw }, { data: saldosRaw }] = await Promise.all([
+  const [{ data: depositosRaw }, { data: saldosRaw }, t] = await Promise.all([
     supabase
       .from("depositos_simulados")
       .select("*, usuarios!usuario_id(email, id_corto, nombre)")
@@ -30,6 +31,7 @@ export default async function PaginaDepositos() {
     // pagado, si el usuario ya gastó ese saldo (una operación abierta usa
     // el saldo completo) y la reversión no le va a quedar exacta.
     supabase.from("saldo_virtual").select("usuario_id, saldo_usd"),
+    obtenerDiccionario(),
   ]);
 
   const depositos = depositosRaw ?? [];
@@ -145,10 +147,7 @@ export default async function PaginaDepositos() {
 
       <h1 className="font-display font-semibold text-[26px] mb-1.5">Depósitos</h1>
       <p className="text-foreground-muted text-[15px] mb-7">
-        Depósitos simulados que cada usuario registró (cada usuario solo
-        puede hacer uno en toda su existencia). Confirma primero que el
-        dinero llegó de verdad a la wallet — al marcarlo como pagado, ese
-        monto exacto se le suma automáticamente a su saldo de inversión.
+        {t.admin.depositosIntro}
         {sinRevisar.length > 0 &&
           ` ${sinRevisar.length} nuevo${sinRevisar.length === 1 ? "" : "s"} desde tu última visita.`}
       </p>

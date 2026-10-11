@@ -231,7 +231,6 @@ export const en: typeof es = {
     sinPick: "The admin hasn't set today's pick yet.",
     saldoDeInversion: "Investment Balance",
     pickDeHoy: "Today's pick",
-    saldoPractica: "Practice balance — no real monetary value.",
     saldoInvertido: "Balance invested in this position: {monto}",
     yaTienesOperacion: "You already have an open position in",
     esperaAdminCierre: "You'll be able to open another once the admin closes today's session.",
@@ -381,11 +380,15 @@ export const en: typeof es = {
     menuRetiros: "Withdrawals",
     menuRetirosSub: "Users' withdrawal requests",
 
+    depositosIntro:
+      "Deposits must be verified and validated before the corresponding amount is credited to the user's investment balance.",
+    retirosIntro:
+      "Withdrawals are processed within up to 24 business hours and are made in USDT through the wallet the user registered when requesting the withdrawal.",
     referidosTitulo: "Referrals",
     referidosInvitadosUno: "{n} person signed up with an invitation.",
     referidosInvitadosVarios: "{n} people signed up with an invitation.",
     referidosIntro:
-      "When you confirm an invitee's simulated deposit as paid (in Deposits), a pending commission is automatically created for whoever invited them (an unconfirmed deposit doesn't create anything yet). It's added to their pending earnings and paid when they request a withdrawal, which is processed in Withdrawals (it's no longer marked as paid by hand here).",
+      "When you confirm an invitee's deposit as paid (in Deposits), a pending commission is automatically created for whoever invited them (an unconfirmed deposit doesn't create anything yet). It's added to their pending earnings and paid when they request a withdrawal, which is processed in Withdrawals (it's no longer marked as paid by hand here).",
     configuracion: "Settings",
 
     premioResumen:
