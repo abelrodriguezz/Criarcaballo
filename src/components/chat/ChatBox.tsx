@@ -222,7 +222,12 @@ export function ChatBox({
           </p>
         )}
         {mensajes.map((m) => {
-          const esMio = m.remitente_id === usuarioActualId;
+          // remitente_id null = aviso automático de soporte (migración 093):
+          // para el admin va del lado de "soporte", no del lado del usuario,
+          // o parecería que el propio usuario escribió el aviso.
+          const esMio =
+            m.remitente_id === usuarioActualId ||
+            (esAdmin && m.remitente_id === null);
           const urlImagen = m.imagen_path ? urlsFirmadas[m.imagen_path] : null;
           return (
             <div

@@ -25,46 +25,23 @@ function fueraDeHorarioSoporte(): boolean {
   return horaJst < HORA_APERTURA_SOPORTE_JST || horaJst >= HORA_CIERRE_SOPORTE_JST;
 }
 
-const AVISO_FUERA_DE_HORARIO = {
-  es:
-    "Horario de atención al cliente\n\n" +
-    "Nuestro equipo de soporte está disponible de 8:00 a.m. a 3:00 p.m. (hora estándar de Japón, JST — UTC+9).\n\n" +
-    "Gracias por tu comprensión. Esperamos poder ayudarte dentro de nuestro horario de atención.",
-  en:
-    "Customer Support Hours\n\n" +
-    "Our customer support team is available from 8:00 a.m. to 3:00 p.m. (Japan Standard Time, JST — UTC+9).\n\n" +
-    "Thank you for your understanding. We look forward to assisting you during our business hours.",
-};
-
 /**
  * Si el usuario escribe fuera de horario, le contesta el aviso fijo — pero
- * no en cada mensaje: si el mensaje anterior de esta conversación YA es
- * una auto-respuesta sin contestar todavía, no se repite (evita llenar el
- * chat del mismo aviso si la persona manda varios mensajes seguidos).
+ * no en cada mensaje. El texto (es/en), la deduplicación ("si el último
+ * mensaje que no escribió el usuario ya es un aviso, no se repite") y el
+ * bloqueo contra envíos simultáneos viven en la RPC (migración 095): antes
+ * la RPC aceptaba el texto como parámetro y cualquier usuario podía
+ * llamarla directo para meter "mensajes de soporte" falsos en su chat, y
+ * la deduplicación de aquí solo miraba el mensaje inmediatamente anterior
+ * (una ráfaga de 10 mensajes generaba 5 avisos).
  */
 async function responderFueraDeHorarioSiAplica(
-  supabase: SupabaseClient,
-  usuarioId: string,
-  idMensajeNuevo: string
+  supabase: SupabaseClient
 ): Promise<void> {
   if (!fueraDeHorarioSoporte()) return;
 
-  const { data: anterior } = await supabase
-    .from("mensajes_soporte")
-    .select("es_auto_respuesta")
-    .eq("usuario_id", usuarioId)
-    .neq("id", idMensajeNuevo)
-    .order("created_at", { ascending: false })
-    .limit(1)
-    .maybeSingle();
-
-  if (anterior?.es_auto_respuesta) return;
-
   const locale = await obtenerLocale();
-  await supabase.rpc("insertar_auto_respuesta_soporte", {
-    p_usuario_id: usuarioId,
-    p_contenido: AVISO_FUERA_DE_HORARIO[locale],
-  });
+  await supabase.rpc("insertar_auto_respuesta_soporte", { p_idioma: locale });
 }
 
 /**
@@ -158,7 +135,7 @@ export async function enviarMensajeUsuario(
   if (error) return fallo(mensajeDeErrorDeInsercion(error));
 
   if (data) {
-    await responderFueraDeHorarioSiAplica(supabase, user.id, data.id);
+    await responderFueraDeHorarioSiAplica(supabase);
   }
 
   revalidatePath("/soporte");
