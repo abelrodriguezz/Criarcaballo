@@ -22,7 +22,7 @@ export default async function PaginaDepositos() {
 
   const supabase = await crearClienteSupabaseServidor();
 
-  const [{ data: depositosRaw }, { data: saldosRaw }, t] = await Promise.all([
+  const [{ data: depositosRaw }, { data: saldosRaw }, { data: operacionesAbiertasRaw }, t] = await Promise.all([
     supabase
       .from("depositos_simulados")
       .select("*, usuarios!usuario_id(email, id_corto, nombre)")
@@ -32,6 +32,13 @@ export default async function PaginaDepositos() {
     // pagado, si el usuario ya gastó ese saldo (una operación abierta usa
     // el saldo completo) y la reversión no le va a quedar exacta.
     supabase.from("saldo_virtual").select("usuario_id, saldo_usd"),
+    // Una operación abierta tiene el saldo COMPLETO adentro (saldo = 0
+    // mientras dure). Revertir el depósito la cancela (migración 097), así
+    // que para el aviso cuenta como dinero que el usuario todavía tiene.
+    supabase
+      .from("operaciones_simuladas")
+      .select("usuario_id, monto_usado")
+      .eq("estado", "abierta"),
     obtenerDiccionario(),
   ]);
 
@@ -39,6 +46,14 @@ export default async function PaginaDepositos() {
   const saldoPorUsuario = new Map(
     (saldosRaw ?? []).map((s) => [s.usuario_id, Number(s.saldo_usd)])
   );
+  const enOperacionPorUsuario = new Map<string, number>();
+  for (const o of operacionesAbiertasRaw ?? []) {
+    if (!o.usuario_id) continue;
+    enOperacionPorUsuario.set(
+      o.usuario_id,
+      (enOperacionPorUsuario.get(o.usuario_id) ?? 0) + Number(o.monto_usado)
+    );
+  }
 
   // URL firmada por depósito (bucket privado, igual que en el chat de
   // soporte) — se resuelve aquí en el servidor porque esta pantalla ya es
@@ -117,6 +132,7 @@ export default async function PaginaDepositos() {
             pagado={d.pagado}
             monto={Number(d.monto)}
             saldoActual={saldoPorUsuario.get(d.usuario_id) ?? 0}
+            montoEnOperacion={enOperacionPorUsuario.get(d.usuario_id) ?? 0}
           />
           {/* Solo para pendientes: tras revisar el comprobante, si el pago
               NO llegó de verdad, esto borra el depósito registrado (mismo

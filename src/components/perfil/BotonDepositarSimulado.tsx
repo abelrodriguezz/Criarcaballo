@@ -193,7 +193,7 @@ export function BotonDepositarSimulado({
               </h3>
               <button
                 onClick={cerrar}
-                className="text-foreground-muted text-sm"
+                className="text-foreground-muted text-sm w-9 h-9 -mr-2 flex items-center justify-center shrink-0"
                 aria-label="Cerrar"
               >
                 ✕
@@ -224,12 +224,17 @@ export function BotonDepositarSimulado({
                 <label className="block text-[12px] font-medium text-foreground-muted mb-1.5">
                   {t.perfil.depositarWalletLabel}
                 </label>
-                <div className="flex gap-2 mb-4">
-                  <input
-                    readOnly
-                    value={walletElegida}
-                    className="flex-1 min-w-0 px-3 py-2.5 rounded-lg border border-[var(--border)] bg-background text-[13px] font-mono truncate"
-                  />
+                {/* Dirección COMPLETA, partida en líneas (antes era un input
+                    con truncate: en 360px solo se veían los primeros ~22
+                    caracteres y el usuario no podía comparar el final de
+                    la wallet con lo que pegó en su exchange). */}
+                <div className="flex gap-2 mb-4 items-start">
+                  <div
+                    data-wallet
+                    className="flex-1 min-w-0 px-3 py-2.5 rounded-lg border border-[var(--border)] bg-background text-[13px] font-mono break-all select-all"
+                  >
+                    {walletElegida}
+                  </div>
                   <CopiarBoton texto={walletElegida} t={t} />
                 </div>
 

@@ -9,12 +9,15 @@ export function BotonPagoDeposito({
   pagado,
   monto,
   saldoActual,
+  montoEnOperacion = 0,
 }: {
   depositoId: string;
   pagado: boolean;
   monto: number;
   /** Saldo de inversión actual del usuario — solo para armar el aviso de abajo. */
   saldoActual: number;
+  /** monto_usado de su operación abierta en Trade (0 si no tiene). */
+  montoEnOperacion?: number;
 }) {
   const router = useRouter();
   const [guardando, setGuardando] = useState(false);
@@ -22,17 +25,21 @@ export function BotonPagoDeposito({
   const deshabilitado = guardando || refrescando;
 
   async function alternarPago() {
-    // Si el usuario ya gastó parte o todo este dinero (por ejemplo abrió
-    // una operación, que usa el saldo completo), revertir a pendiente no
-    // le va a restar el monto exacto -- el saldo nunca baja de $0
-    // (greatest(0, ...) en la base). Se le avisa al admin para que lo
-    // revise a mano después.
-    const saldoInsuficiente = pagado && saldoActual < monto;
+    // Si tiene una operación abierta, ese dinero está ahí adentro (saldo
+    // en $0 mientras dure): revertir la CANCELA y descuenta el depósito de
+    // saldo + operación (migración 097). Solo si aun así no alcanza (ya lo
+    // perdió operando) la reversión no queda exacta -- el saldo nunca baja
+    // de $0 (greatest(0, ...) en la base). Se le avisa al admin.
+    const fondos = saldoActual + montoEnOperacion;
+    const saldoInsuficiente = pagado && fondos < monto;
     const confirmacion = pagado
       ? window.confirm(
           `¿Revertir a pendiente? Esto le RESTA $${monto.toFixed(2)} del saldo de inversión del usuario.` +
+            (pagado && montoEnOperacion > 0
+              ? ` ⚠️ Tiene una operación abierta en Trade con $${montoEnOperacion.toFixed(2)}: se CANCELARÁ y el depósito se descuenta de ese dinero.`
+              : "") +
             (saldoInsuficiente
-              ? ` ⚠️ Este usuario ya usó parte o todo este dinero (su saldo actual es de $${saldoActual.toFixed(2)}) — la reversión no le va a quedar exacta. Revísalo a mano después.`
+              ? ` ⚠️ Este usuario ya usó parte o todo este dinero (le quedan $${fondos.toFixed(2)}) — la reversión no le va a quedar exacta. Revísalo a mano después.`
               : "")
         )
       : window.confirm(
