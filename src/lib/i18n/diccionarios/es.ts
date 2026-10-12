@@ -258,6 +258,7 @@ export const es = {
     historialReciente: "Historial reciente",
     entrada: "Entrada",
     salida: "Salida",
+    operacionCancelada: "Cancelada por el admin",
   },
   abrirOperacion: {
     montoPlaceholder: "Monto de tu saldo de inversión a usar (USD)",

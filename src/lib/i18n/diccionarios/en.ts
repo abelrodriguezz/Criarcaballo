@@ -248,6 +248,7 @@ export const en: typeof es = {
     historialReciente: "Recent history",
     entrada: "Entry",
     salida: "Exit",
+    operacionCancelada: "Cancelled by admin",
   },
   abrirOperacion: {
     montoPlaceholder: "Amount of your investment balance to use (USD)",

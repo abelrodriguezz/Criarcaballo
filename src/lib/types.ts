@@ -63,7 +63,7 @@ export interface OperacionSimulada {
   monto_usado: number;
   precio_salida: number | null;
   ganancia_perdida: number | null;
-  estado: "abierta" | "cerrada";
+  estado: "abierta" | "cerrada" | "cancelada";
   created_at: string;
   cerrado_en: string | null;
 }

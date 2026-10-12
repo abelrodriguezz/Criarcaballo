@@ -75,11 +75,15 @@ export default async function PaginaTradeDelDia() {
       .eq("usuario_id", usuario.id)
       .eq("estado", "abierta")
       .maybeSingle<OperacionSimulada>(),
+    // "cancelada" también entra: si no, una anulación administrativa
+    // (depósito revertido/borrado, cuenta desactivada — migración 077/097)
+    // le hacía desaparecer el dinero al usuario sin ningún rastro en su
+    // propio historial.
     supabase
       .from("operaciones_simuladas")
       .select("*")
       .eq("usuario_id", usuario.id)
-      .eq("estado", "cerrada")
+      .in("estado", ["cerrada", "cancelada"])
       .order("cerrado_en", { ascending: false })
       .limit(5)
       .returns<OperacionSimulada[]>(),
@@ -261,29 +265,40 @@ export default async function PaginaTradeDelDia() {
                     {op.tipo === "compra" ? t.tradeDelDia.compra : t.tradeDelDia.venta}
                   </div>
                   <div className="text-[12px] text-foreground-muted">
-                    {/* Esta lista solo trae operaciones "cerradas" (query de
-                        arriba), así que precio_entrada siempre debería venir
-                        seteado — pero el tipo quedó nullable desde que
-                        abrir_operacion ya no captura ningún precio al abrir
-                        (migración 060), así que se cubre igual el caso. */}
-                    {t.tradeDelDia.entrada}{" "}
-                    {op.precio_entrada != null ? `$${formatearPrecio(op.precio_entrada)}` : "—"} →{" "}
-                    {t.tradeDelDia.salida}{" "}
-                    {op.precio_salida != null ? `$${formatearPrecio(op.precio_salida)}` : "—"}
+                    {op.estado === "cancelada" ? (
+                      t.tradeDelDia.operacionCancelada
+                    ) : (
+                      <>
+                        {/* Esta rama es solo "cerrada": precio_entrada
+                            siempre debería venir seteado — pero el tipo
+                            quedó nullable desde que abrir_operacion ya no
+                            captura ningún precio al abrir (migración 060),
+                            así que se cubre igual el caso. */}
+                        {t.tradeDelDia.entrada}{" "}
+                        {op.precio_entrada != null ? `$${formatearPrecio(op.precio_entrada)}` : "—"} →{" "}
+                        {t.tradeDelDia.salida}{" "}
+                        {op.precio_salida != null ? `$${formatearPrecio(op.precio_salida)}` : "—"}
+                      </>
+                    )}
                   </div>
                 </div>
-                {/* shrink-0 + whitespace-nowrap: en móvil el importe se
-                    partía en dos líneas ("+622.04 / USD"). */}
-                <span
-                  className={`shrink-0 whitespace-nowrap font-display font-bold text-sm ${
-                    (op.ganancia_perdida ?? 0) >= 0 ? "text-gain" : "text-loss"
-                  }`}
-                >
-                  {/* ?? 0 también en el número: sin esto una operación
-                      cerrada sin ganancia registrada mostraba "+ USD". */}
-                  {(op.ganancia_perdida ?? 0) >= 0 ? "+" : ""}
-                  {formatearDinero(op.ganancia_perdida ?? 0)} USD
-                </span>
+                {/* Cancelada: sin color de ganancia/pérdida — no es un
+                    resultado de trading, mostrar "+0.00" en verde daba la
+                    idea falsa de un cierre neutro exitoso. shrink-0 +
+                    whitespace-nowrap: en móvil el importe se partía en dos
+                    líneas ("+622.04 / USD"). */}
+                {op.estado !== "cancelada" && (
+                  <span
+                    className={`shrink-0 whitespace-nowrap font-display font-bold text-sm ${
+                      (op.ganancia_perdida ?? 0) >= 0 ? "text-gain" : "text-loss"
+                    }`}
+                  >
+                    {/* ?? 0 también en el número: sin esto una operación
+                        cerrada sin ganancia registrada mostraba "+ USD". */}
+                    {(op.ganancia_perdida ?? 0) >= 0 ? "+" : ""}
+                    {formatearDinero(op.ganancia_perdida ?? 0)} USD
+                  </span>
+                )}
               </div>
             ))}
           </div>

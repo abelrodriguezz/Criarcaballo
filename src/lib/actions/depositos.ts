@@ -47,7 +47,22 @@ export async function registrarDepositoSimulado(
     return fallo(t.perfil.depositarMontoMaximo);
   }
 
-  const walletMostrada = formData.get("walletMostrada");
+  // No se confía en lo que manda el cliente tal cual: walletMostrada viaja
+  // en el FormData, así que cualquiera podía mandar un valor inventado (el
+  // insert de abajo no validaba nada). Solo se guarda si coincide con una
+  // de las wallets de admin configuradas AHORA MISMO — si no, se guarda
+  // null en vez de rechazar el depósito completo por esto.
+  const walletMostradaCruda = formData.get("walletMostrada");
+  let walletMostrada: string | null = null;
+  if (typeof walletMostradaCruda === "string" && walletMostradaCruda) {
+    const { data: walletsAdminActuales } = await supabase.rpc("obtener_wallets_admin");
+    if (
+      Array.isArray(walletsAdminActuales) &&
+      walletsAdminActuales.includes(walletMostradaCruda)
+    ) {
+      walletMostrada = walletMostradaCruda;
+    }
+  }
 
   const archivo = formData.get("comprobante");
   if (!(archivo instanceof File) || archivo.size === 0) {
@@ -76,7 +91,7 @@ export async function registrarDepositoSimulado(
     .insert({
       usuario_id: user.id,
       monto,
-      wallet_mostrada: typeof walletMostrada === "string" ? walletMostrada : null,
+      wallet_mostrada: walletMostrada,
       comprobante_path: comprobantePath,
     })
     .select("*")
