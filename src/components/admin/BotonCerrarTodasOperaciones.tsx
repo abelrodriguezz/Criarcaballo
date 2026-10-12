@@ -6,7 +6,7 @@ import {
   adminCerrarTodasLasOperaciones,
   type DatosCierreSimbolo,
 } from "@/lib/actions/adminTrading";
-import { parsearNumero } from "@/lib/format";
+import { parsearPrecioAdmin, formatearPrecio } from "@/lib/format";
 
 interface CamposSimbolo {
   precioEntrada: string;
@@ -58,14 +58,26 @@ export function BotonCerrarTodasOperaciones({
     const datosPorSimbolo: Record<string, DatosCierreSimbolo> = {};
     for (const simbolo of simbolos) {
       const c = campos[simbolo] ?? CAMPOS_VACIOS;
-      const precioEntrada = parsearNumero(c.precioEntrada);
-      const precioSalida = parsearNumero(c.precioSalida);
+      // parsearPrecioAdmin, no parsearNumero: este último borraba TODAS
+      // las comas, así que "1,5" (coma decimal, como se escribe en
+      // español) se guardaba como 15 y la ganancia de cada usuario salía
+      // multiplicada. "65,000" es ambiguo y se rechaza en vez de adivinar.
+      const precioEntrada = parsearPrecioAdmin(c.precioEntrada);
+      const precioSalida = parsearPrecioAdmin(c.precioSalida);
       if (!Number.isFinite(precioEntrada) || precioEntrada <= 0) {
-        setMensaje(`Falta un precio de entrada válido para ${simbolo}.`);
+        setMensaje(
+          c.precioEntrada.trim()
+            ? `Precio de entrada no válido o ambiguo para ${simbolo} ("${c.precioEntrada}"). Usa punto o coma solo para los decimales, sin separador de miles (ej. 65000 o 185.50).`
+            : `Falta un precio de entrada válido para ${simbolo}.`
+        );
         return;
       }
       if (!Number.isFinite(precioSalida) || precioSalida <= 0) {
-        setMensaje(`Falta un precio de salida válido para ${simbolo}.`);
+        setMensaje(
+          c.precioSalida.trim()
+            ? `Precio de salida no válido o ambiguo para ${simbolo} ("${c.precioSalida}"). Usa punto o coma solo para los decimales, sin separador de miles (ej. 65000 o 185.50).`
+            : `Falta un precio de salida válido para ${simbolo}.`
+        );
         return;
       }
       const horaEntrada = horaAIso(c.horaEntrada);
@@ -88,9 +100,18 @@ export function BotonCerrarTodasOperaciones({
       };
     }
 
+    // El confirm muestra los precios TAL COMO SE VAN A GUARDAR y el % que
+    // resulta: es la última oportunidad de ver un precio mal tecleado antes
+    // de liquidar a todos los usuarios (no se puede deshacer).
+    const resumen = Object.entries(datosPorSimbolo)
+      .map(([simbolo, d]) => {
+        const variacion = ((d.precioSalida - d.precioEntrada) / d.precioEntrada) * 100;
+        return `• ${simbolo}: entrada ${formatearPrecio(d.precioEntrada)} → salida ${formatearPrecio(d.precioSalida)} (${variacion >= 0 ? "+" : ""}${variacion.toFixed(2)}%)`;
+      })
+      .join("\n");
     if (
       !window.confirm(
-        "¿Cerrar TODAS las operaciones abiertas con estos precios? Esto reemplaza el precio de entrada capturado al abrir y recalcula la ganancia/pérdida de cada usuario. Esta acción no se puede deshacer."
+        `¿Cerrar TODAS las operaciones abiertas con estos precios?\n\n${resumen}\n\nEsto reemplaza el precio de entrada capturado al abrir y recalcula la ganancia/pérdida de cada usuario. Esta acción no se puede deshacer.`
       )
     ) {
       return;

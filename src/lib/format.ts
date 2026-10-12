@@ -43,6 +43,49 @@ export function parsearMontoUsuario(texto: string): number {
 }
 
 /**
+ * Lee un PRECIO tecleado a mano por el admin (cierre en bloque de Trade
+ * del día). No sirve parsearMontoUsuario: un precio puede tener más de 2
+ * decimales ("0,12345"), y ahí esa función lo leería como miles (12345).
+ * Tampoco parsearNumero: "1,5" se leía como 15 y, con entrada "185.5" y
+ * salida "186,20", la ganancia salía de +9.938% en vez de +0,38%.
+ *
+ * Reglas:
+ *  - Con los dos separadores, el ÚLTIMO es el decimal ("1.234,56", "1,234.56").
+ *  - Varias comas o varios puntos solos = miles ("1,234,567", "1.234.567").
+ *  - Un solo punto = decimal ("185.5").
+ *  - Una sola coma = decimal ("185,5", "0,12345"), SALVO que lleve justo 3
+ *    dígitos detrás ("65,000"): eso es ambiguo (¿65 mil o 65?) y se
+ *    devuelve NaN para que el formulario pida escribirlo sin ambigüedad.
+ */
+export function parsearPrecioAdmin(texto: string): number {
+  const limpio = texto.replace(/\s/g, "");
+  if (!/^\d[\d.,]*$/.test(limpio) || /[.,]$/.test(limpio)) return NaN;
+
+  const comas = (limpio.match(/,/g) ?? []).length;
+  const puntos = (limpio.match(/\./g) ?? []).length;
+
+  let normalizado: string;
+  if (comas > 0 && puntos > 0) {
+    const comaEsDecimal = limpio.lastIndexOf(",") > limpio.lastIndexOf(".");
+    const [miles, decimal] = comaEsDecimal ? [".", ","] : [",", "."];
+    if (limpio.split(decimal).length !== 2) return NaN;
+    normalizado = limpio.split(miles).join("").replace(decimal, ".");
+  } else if (comas > 1 || puntos > 1) {
+    const sep = comas > 1 ? "," : ".";
+    const grupos = limpio.split(sep);
+    if (grupos.slice(1).some((g) => g.length !== 3)) return NaN;
+    normalizado = grupos.join("");
+  } else if (comas === 1) {
+    if (/^\d+,\d{3}$/.test(limpio)) return NaN; // ambiguo
+    normalizado = limpio.replace(",", ".");
+  } else {
+    normalizado = limpio;
+  }
+
+  return Number(normalizado);
+}
+
+/**
  * Formato para importes en dólares (saldo virtual, ganancias, premios):
  * SIEMPRE 2 decimales.
  *

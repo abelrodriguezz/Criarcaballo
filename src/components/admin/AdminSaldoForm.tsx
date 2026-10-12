@@ -3,7 +3,7 @@
 import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { crearClienteSupabase } from "@/lib/supabase/client";
-import { parsearNumero } from "@/lib/format";
+import { parsearMontoUsuario } from "@/lib/format";
 
 export function AdminSaldoForm({ usuarioId }: { usuarioId: string }) {
   const router = useRouter();
@@ -16,7 +16,9 @@ export function AdminSaldoForm({ usuarioId }: { usuarioId: string }) {
     e.preventDefault();
     setError(null);
 
-    const montoNum = parsearNumero(monto);
+    // parsearMontoUsuario, no parsearNumero: este último borra TODAS las
+    // comas, así que "100,50" (coma decimal) acreditaba $10,050.
+    const montoNum = parsearMontoUsuario(monto);
     if (isNaN(montoNum) || montoNum === 0) {
       setError("El monto debe ser un número distinto de cero.");
       return;
