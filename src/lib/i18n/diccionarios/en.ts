@@ -218,13 +218,14 @@ export const en: typeof es = {
     retirarEnviado:
       "Your request was sent. The admin will review it and transfer the USDT to your wallet.",
     retirarSinWallet:
-      "Register your USDT (ERC20) wallet above before requesting a withdrawal.",
+      "Register your USDT (ERC20) wallet further down in your profile before requesting a withdrawal.",
     retirarSinDisponible: "You don't have any pending earnings available to withdraw yet.",
     retirarMontoInvalido: "Enter an amount greater than zero.",
     retirarMontoExcedeDisponible: "You can't withdraw more than what's available.",
     retirarYaPendiente: "You already have a pending withdrawal request.",
     retirarErrorGuardar: "Couldn't send the request. Try again.",
     retirarRechazado: "Rejected",
+    retirarMotivo: "Reason",
     retirarHistorialTitulo: "Your requests",
   },
   tradeDelDia: {
@@ -272,7 +273,9 @@ export const en: typeof es = {
       "Invalid format. Must be an ERC20 address (starts with 0x, 42 characters).",
     errorGuardar: "Couldn't save. Try again.",
     descripcion:
-      "This is only used to send you rewards if you win a contest — it does not enable deposits or withdrawals on the platform. Make sure it's your address on the Ethereum (ERC20) network, not BSC, Polygon or another compatible network — the format is the same but the payment is made specifically in ERC20.",
+      "This is where we send your earnings withdrawals and contest rewards — it is not used for deposits. Make sure it's your address on the Ethereum (ERC20) network, not BSC, Polygon or another compatible network — the format is the same but the payment is made specifically in ERC20.",
+    descripcionAdmin:
+      "These are the wallets shown to users for depositing (one is picked at random). They must be addresses on the Ethereum (ERC20) network, not BSC, Polygon or another compatible network.",
     confirmarVaciar:
       "You're about to leave this wallet empty. If you have a pending withdrawal or win a contest, we won't be able to pay you until you add one again. Continue?",
   },

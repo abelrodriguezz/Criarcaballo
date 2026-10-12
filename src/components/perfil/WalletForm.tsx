@@ -190,7 +190,7 @@ export function WalletForm({
         />
       )}
       <p className="text-[12px] text-foreground-muted mb-3">
-        {t.wallet.descripcion}
+        {esAdmin ? t.wallet.descripcionAdmin : t.wallet.descripcion}
       </p>
 
       {error && <p className="text-loss text-[13px] mb-2">{error}</p>}

@@ -224,7 +224,7 @@ export const es = {
     retirarEnviado:
       "Tu solicitud fue enviada. El admin la revisará y te transferirá el USDT a tu wallet.",
     retirarSinWallet:
-      "Registra tu wallet USDT (ERC20) arriba antes de solicitar un retiro.",
+      "Registra tu wallet USDT (ERC20) más abajo en tu perfil antes de solicitar un retiro.",
     retirarSinDisponible:
       "Todavía no tienes ganancias pendientes disponibles para retirar.",
     retirarMontoInvalido: "Ingresa un monto mayor a cero.",
@@ -232,6 +232,7 @@ export const es = {
     retirarYaPendiente: "Ya tienes una solicitud de retiro pendiente.",
     retirarErrorGuardar: "No se pudo enviar la solicitud. Intenta de nuevo.",
     retirarRechazado: "Rechazado",
+    retirarMotivo: "Motivo",
     retirarHistorialTitulo: "Tus solicitudes",
   },
   tradeDelDia: {
@@ -282,7 +283,9 @@ export const es = {
       "Formato inválido. Debe ser una dirección ERC20 (empieza con 0x, 42 caracteres).",
     errorGuardar: "No se pudo guardar. Intenta de nuevo.",
     descripcion:
-      "Solo se usa para enviarte recompensas si ganas un concurso — no habilita depósitos ni retiros en la plataforma. Asegúrate de que sea tu dirección en la red Ethereum (ERC20), no en BSC, Polygon u otra red compatible — el formato es el mismo pero el pago se hace específicamente en ERC20.",
+      "Aquí te enviamos tus retiros de ganancias y las recompensas de concursos — no se usa para depositar. Asegúrate de que sea tu dirección en la red Ethereum (ERC20), no en BSC, Polygon u otra red compatible — el formato es el mismo pero el pago se hace específicamente en ERC20.",
+    descripcionAdmin:
+      "Estas son las wallets que se les muestran a los usuarios para depositar (se elige una al azar). Deben ser direcciones en la red Ethereum (ERC20), no en BSC, Polygon u otra red compatible.",
     confirmarVaciar:
       "Vas a dejar esta wallet vacía. Si tienes un retiro pendiente o ganas un concurso, no podremos pagarte hasta que agregues una de nuevo. ¿Continuar?",
   },

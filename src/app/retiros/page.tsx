@@ -11,7 +11,12 @@ import { obtenerDiccionario } from "@/lib/i18n/servidor";
 import type { SolicitudRetiro } from "@/lib/types";
 
 type SolicitudConUsuario = SolicitudRetiro & {
-  usuarios: { email: string; id_corto: number | null; nombre: string | null } | null;
+  usuarios: {
+    email: string;
+    id_corto: number | null;
+    nombre: string | null;
+    activo: boolean;
+  } | null;
 };
 
 export default async function PaginaRetiros() {
@@ -29,7 +34,7 @@ export default async function PaginaRetiros() {
   const [{ data: solicitudesRaw }, feeActual, t] = await Promise.all([
     supabase
       .from("solicitudes_retiro")
-      .select("*, usuarios!usuario_id(email, id_corto, nombre)")
+      .select("*, usuarios!usuario_id(email, id_corto, nombre, activo)")
       .order("created_at", { ascending: false })
       .returns<SolicitudConUsuario[]>(),
     obtenerFeeRetiro(),
@@ -60,6 +65,15 @@ export default async function PaginaRetiros() {
             >
               {s.estado === "pagado" ? "Pagado" : s.estado === "rechazado" ? "Rechazado" : "Pendiente"}
             </span>
+            {/* Desactivar una cuenta no toca su solicitud ya pendiente (la
+                ganancia sigue siendo suya y se puede pagar o rechazar) —
+                pero sin esto el admin no se enteraba y la pagaba sin saber
+                que esa cuenta está desactivada. */}
+            {s.estado === "pendiente" && s.usuarios && !s.usuarios.activo && (
+              <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-loss/15 text-loss">
+                Cuenta desactivada
+              </span>
+            )}
           </div>
           {s.fee_porcentaje > 0 && (
             <div className="text-[12px] text-brand-primary tabular">

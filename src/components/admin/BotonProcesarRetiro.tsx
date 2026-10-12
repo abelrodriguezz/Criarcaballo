@@ -49,7 +49,13 @@ export function BotonProcesarRetiro({
   }
 
   async function rechazar() {
-    const notaAdmin = window.prompt("Motivo del rechazo (opcional):", "") || null;
+    // prompt() devuelve null al tocar "Cancelar" — antes eso caía al
+    // `|| null` y la solicitud se rechazaba IGUAL (sin vuelta atrás: el
+    // estado final es inmutable, migración 081). "" (Aceptar sin escribir)
+    // sí rechaza, sin motivo.
+    const respuesta = window.prompt("Motivo del rechazo (opcional):", "");
+    if (respuesta === null) return;
+    const notaAdmin = respuesta.trim() || null;
 
     setGuardando(true);
     const supabase = crearClienteSupabase();

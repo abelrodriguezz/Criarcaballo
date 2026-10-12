@@ -139,7 +139,7 @@ export function BotonSolicitarRetiro({
           onClick={cerrar}
         >
           <div
-            className="bg-surface border border-[var(--border)] rounded-2xl p-5 max-w-[380px] w-full"
+            className="bg-surface border border-[var(--border)] rounded-2xl p-5 max-w-[380px] w-full max-h-[90vh] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex justify-between items-center mb-3">
@@ -182,11 +182,13 @@ export function BotonSolicitarRetiro({
                 <label className="block text-[12px] font-medium text-foreground-muted mb-1.5">
                   {t.perfil.retirarWalletLabel}
                 </label>
-                <input
-                  readOnly
-                  value={walletActual ?? ""}
-                  className="w-full px-3 py-2.5 mb-3 rounded-lg border border-[var(--border)] bg-background text-[13px] font-mono truncate"
-                />
+                {/* div con break-all, no un input readOnly: a 360px el
+                    input cortaba la dirección con "…" y el usuario no
+                    podía verificar los últimos caracteres de la wallet a
+                    la que se le va a pagar (mismo arreglo que /retiros). */}
+                <div className="w-full px-3 py-2.5 mb-3 rounded-lg border border-[var(--border)] bg-background text-[13px] font-mono break-all">
+                  {walletActual ?? ""}
+                </div>
 
                 <div className="flex justify-between items-center mb-1.5">
                   <label className="text-[12px] font-medium text-foreground-muted">
@@ -194,7 +196,10 @@ export function BotonSolicitarRetiro({
                   </label>
                   <button
                     type="button"
-                    onClick={() => setMonto(String(disponible))}
+                    onClick={() => {
+                      setMonto(String(disponible));
+                      setError(null);
+                    }}
                     className="text-[12px] font-semibold text-brand-primary"
                   >
                     {t.perfil.retirarDisponibleLabel}: ${formatearDinero(disponible)}
@@ -202,7 +207,12 @@ export function BotonSolicitarRetiro({
                 </div>
                 <input
                   value={monto}
-                  onChange={(e) => setMonto(e.target.value)}
+                  onChange={(e) => {
+                    setMonto(e.target.value);
+                    // El error era del monto anterior — no dejarlo visible
+                    // mientras ya se está corrigiendo.
+                    setError(null);
+                  }}
                   inputMode="decimal"
                   placeholder="0.00"
                   className="w-full px-3.5 py-2.5 mb-1.5 rounded-lg border border-[var(--border)] bg-background text-sm font-mono"
@@ -245,24 +255,24 @@ export function BotonSolicitarRetiro({
                 </div>
                 <div className="flex flex-col gap-1.5">
                   {historial.map((s) => (
-                    <div
-                      key={s.id}
-                      className="flex justify-between items-center text-[12px]"
-                    >
-                      <span className="text-foreground-muted">
+                    <div key={s.id} className="text-[12px]">
+                    <div className="flex justify-between items-center gap-2">
+                      {/* whitespace-nowrap: a 360px la fecha se partía en
+                          dos líneas ("12" / "oct"). */}
+                      <span className="text-foreground-muted whitespace-nowrap shrink-0">
                         {new Date(s.created_at).toLocaleDateString("es-DO", {
                           day: "numeric",
                           month: "short",
                         })}
                       </span>
                       <span
-                        className={
+                        className={`text-right ${
                           s.estado === "pagado"
                             ? "text-gain"
                             : s.estado === "rechazado"
                               ? "text-loss"
                               : "text-brand-secondary"
-                        }
+                        }`}
                       >
                         ${formatearDinero(s.monto)}
                         {s.fee_porcentaje > 0 &&
@@ -276,6 +286,15 @@ export function BotonSolicitarRetiro({
                             ? t.perfil.retirarRechazado
                             : t.perfil.pendiente}
                       </span>
+                    </div>
+                    {/* El motivo que escribe el admin al rechazar antes solo
+                        lo veía el propio admin en /retiros — el usuario se
+                        quedaba con un "Rechazado" sin saber por qué. */}
+                    {s.estado === "rechazado" && s.nota_admin && (
+                      <div className="text-foreground-muted break-words mt-0.5">
+                        {t.perfil.retirarMotivo}: {s.nota_admin}
+                      </div>
+                    )}
                     </div>
                   ))}
                 </div>
