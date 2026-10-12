@@ -10,7 +10,15 @@ import { obtenerFeeRetiro } from "@/lib/config-retiros";
 import { TarjetaTotalGanado } from "@/components/perfil/TarjetaTotalGanado";
 import { AdminSimulacionForm } from "@/components/admin/AdminSimulacionForm";
 import { TarjetaMenu } from "@/components/ui/TarjetaMenu";
-import { IconoUsuarios, IconoSoporte, IconoReportes, IconoWallet, IconoDeposito } from "@/components/ui/Iconos";
+import {
+  IconoUsuarios,
+  IconoReferidos,
+  IconoSoporte,
+  IconoReportes,
+  IconoRetiros,
+  IconoDeposito,
+  IconoTendenciaSubida,
+} from "@/components/ui/Iconos";
 import { formatearDinero } from "@/lib/format";
 import { obtenerDiccionario, obtenerLocale } from "@/lib/i18n/servidor";
 import { inicioDelDiaNY, finDelDiaNY, fechaEnNY } from "@/lib/horarioMercado";
@@ -269,13 +277,24 @@ export default async function PaginaPerfil() {
             </div>
           </>
         ) : (
-          <div className="rounded-xl px-4 py-5 bg-gain/10 text-center">
-            <div className="text-[12px] font-semibold text-foreground-muted uppercase tracking-wide mb-1">
-              {t.perfil.saldoDeInversion}
+          <div
+            className="relative rounded-xl px-4 pt-4 pb-3.5 text-center overflow-hidden"
+            style={{
+              background:
+                "radial-gradient(130% 120% at 50% 0%, color-mix(in srgb, var(--gain) 16%, var(--surface)) 0%, var(--surface) 65%)",
+            }}
+          >
+            <div className="relative z-10 flex items-center justify-center gap-2 mb-2">
+              <div className="w-7 h-7 rounded-full bg-gain text-white flex items-center justify-center shrink-0">
+                <IconoTendenciaSubida className="w-3.5 h-3.5" />
+              </div>
+              <span className="text-[11px] font-bold text-foreground-muted uppercase tracking-wide">
+                {t.perfil.saldoDeInversion}
+              </span>
             </div>
             {/* Si por lo que sea no hay fila de saldo, mostrar $0.00 — antes
                 caía a "10,000.00" fijo, un saldo que el usuario no tiene. */}
-            <div className="font-display font-extrabold text-[36px] leading-tight tabular text-gain">
+            <div className="relative z-10 font-display font-bold text-[32px] leading-tight -tracking-[0.01em]">
               ${formatearDinero(saldo?.saldo_usd ?? 0)}
             </div>
           </div>
@@ -357,7 +376,7 @@ export default async function PaginaPerfil() {
       {esAdmin(usuario) && (
         <TarjetaMenu
           href="/referidos"
-          icono={<IconoUsuarios />}
+          icono={<IconoReferidos />}
           titulo={t.admin.menuReferidos}
           subtitulo={t.admin.menuReferidosSub}
         />
@@ -376,7 +395,7 @@ export default async function PaginaPerfil() {
       {esAdmin(usuario) && (
         <TarjetaMenu
           href="/retiros"
-          icono={<IconoWallet />}
+          icono={<IconoRetiros />}
           titulo={t.admin.menuRetiros}
           subtitulo={t.admin.menuRetirosSub}
           badge={retirosPendientesCount ?? 0}

@@ -94,9 +94,10 @@ export function IconoImagen({ className = "w-[18px] h-[18px]" }: IconoProps) {
 export function IconoDeposito({ className = "w-[18px] h-[18px]" }: IconoProps) {
   return (
     <svg {...baseProps} className={className}>
-      <path d="M12 3v12" />
-      <path d="m7 10 5 5 5-5" />
-      <path d="M4 19h16" />
+      <circle cx="9.3" cy="7.2" r="3.1" />
+      <circle cx="14.3" cy="9.6" r="3.1" />
+      <path d="M4.5 16.3h15" />
+      <path d="M4.5 16.3v3.2a1 1 0 0 0 1 1h13a1 1 0 0 0 1-1v-3.2" />
     </svg>
   );
 }
@@ -132,10 +133,21 @@ export function IconoWallet({ className = "w-[18px] h-[18px]" }: IconoProps) {
 export function IconoUsuarios({ className = "w-[18px] h-[18px]" }: IconoProps) {
   return (
     <svg {...baseProps} className={className}>
-      <circle cx="9" cy="8" r="3" />
-      <path d="M3.5 20c0-3.3 2.5-6 5.5-6s5.5 2.7 5.5 6" />
-      <path d="M16 5.2c1.4.4 2.4 1.7 2.4 3.2 0 1.5-1 2.8-2.4 3.2" />
-      <path d="M18 14.3c2 .6 3.4 2.5 3.4 4.7" />
+      <path d="M12 3l7 3v5c0 5-3.2 7.8-7 9-3.8-1.2-7-4-7-9V6l7-3Z" />
+      <path d="M9 12.3l2 2 4-4.3" />
+    </svg>
+  );
+}
+
+/** Red de nodos — distinto del escudo de Gestión de usuarios, para no
+    compartir el mismo ícono entre dos módulos distintos. */
+export function IconoReferidos({ className = "w-[18px] h-[18px]" }: IconoProps) {
+  return (
+    <svg {...baseProps} className={className}>
+      <circle cx="12" cy="5.3" r="2.3" />
+      <circle cx="6" cy="18" r="2.3" />
+      <circle cx="18" cy="18" r="2.3" />
+      <path d="M12 7.6v2.9M12 10.5 7.4 16M12 10.5l4.6 5.5" />
     </svg>
   );
 }
@@ -143,9 +155,10 @@ export function IconoUsuarios({ className = "w-[18px] h-[18px]" }: IconoProps) {
 export function IconoSoporte({ className = "w-[18px] h-[18px]" }: IconoProps) {
   return (
     <svg {...baseProps} className={className}>
-      <path d="M4 12a8 8 0 1 1 3.2 6.4L4 19l1.1-3.4A7.96 7.96 0 0 1 4 12Z" />
-      <line x1="8.5" y1="11" x2="15.5" y2="11" />
-      <line x1="8.5" y1="14" x2="13" y2="14" />
+      <path d="M4 13v-1a8 8 0 0 1 16 0v1" />
+      <rect x="3" y="13" width="4" height="6" rx="1.5" />
+      <rect x="17" y="13" width="4" height="6" rx="1.5" />
+      <path d="M19 19v1a3 3 0 0 1-3 3h-2.5" />
     </svg>
   );
 }
@@ -153,11 +166,26 @@ export function IconoSoporte({ className = "w-[18px] h-[18px]" }: IconoProps) {
 export function IconoReportes({ className = "w-[18px] h-[18px]" }: IconoProps) {
   return (
     <svg {...baseProps} className={className}>
-      <path d="M6 2.5h9l4.5 4.5V21a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V3.5a1 1 0 0 1 1-1Z" />
-      <path d="M15 2.5V7h4.5" />
-      <line x1="8" y1="12.5" x2="16" y2="12.5" />
-      <line x1="8" y1="16" x2="16" y2="16" />
-      <line x1="8" y1="9" x2="11" y2="9" />
+      <path d="M3 20h18" />
+      <path d="M5 20v-6" />
+      <path d="M10.3 20V9" />
+      <path d="M15.7 20v-11" />
+      <path d="M21 20V5" />
+    </svg>
+  );
+}
+
+/** Billetera con flecha saliente — para Retiros, distinto de la
+    billetera simple (IconoWallet) usada en los campos de wallet y en
+    depósito, donde la flecha de "salida" no aplica. */
+export function IconoRetiros({ className = "w-[18px] h-[18px]" }: IconoProps) {
+  return (
+    <svg {...baseProps} className={className}>
+      <rect x="2.5" y="7.5" width="15" height="12" rx="2.5" />
+      <path d="M2.5 11h15" />
+      <circle cx="13.3" cy="15" r="1.1" fill="currentColor" stroke="none" />
+      <path d="M17.2 4.8 21.5 4.8 21.5 9.1" />
+      <path d="M21.5 4.8 15.8 10.5" />
     </svg>
   );
 }
