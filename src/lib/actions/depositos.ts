@@ -51,7 +51,9 @@ export async function registrarDepositoSimulado(
   // en el FormData, así que cualquiera podía mandar un valor inventado (el
   // insert de abajo no validaba nada). Solo se guarda si coincide con una
   // de las wallets de admin configuradas AHORA MISMO — si no, se guarda
-  // null en vez de rechazar el depósito completo por esto.
+  // null en vez de rechazar el depósito completo por esto. Esta es solo la
+  // primera capa: la que de verdad no se puede saltar es el trigger de la
+  // migración 099 (un insert directo vía PostgREST no pasa por aquí).
   const walletMostradaCruda = formData.get("walletMostrada");
   let walletMostrada: string | null = null;
   if (typeof walletMostradaCruda === "string" && walletMostradaCruda) {
