@@ -195,7 +195,7 @@ export const en: typeof es = {
     depositarSinWallets: "The admin hasn't set up any wallet for this simulation yet.",
     depositarMontoInvalido: "Enter an amount greater than zero.",
     depositarMontoMaximo: "The maximum amount is 100,000,000 USDT.",
-    depositarYaHecho: "You already made your simulated deposit",
+    depositarYaHecho: "You already made your deposit",
     depositarEstadoPendiente: "Pending admin confirmation",
     depositarEstadoAcreditado: "Credited to your investment balance",
     depositarErrorGuardar: "Couldn't save it. Try again.",
@@ -276,7 +276,7 @@ export const en: typeof es = {
       "Invalid format. Must be an ERC20 address (starts with 0x, 42 characters).",
     errorGuardar: "Couldn't save. Try again.",
     descripcion:
-      "This is where we send your earnings withdrawals and contest rewards — it is not used for deposits. Make sure it's your address on the Ethereum (ERC20) network, not BSC, Polygon or another compatible network — the format is the same but the payment is made specifically in ERC20.",
+      "This is where we send your earnings withdrawals and rewards — Make sure it's your address on the Ethereum (ERC20) network, not BSC, Polygon or another compatible network — the format is the same but the payment is made specifically in ERC20.",
     descripcionAdmin:
       "These are the wallets shown to users for depositing (one is picked at random). They must be addresses on the Ethereum (ERC20) network, not BSC, Polygon or another compatible network.",
     confirmarVaciar:

@@ -9,20 +9,30 @@ import { obtenerLocale } from "@/lib/i18n/servidor";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { MensajeSoporte } from "@/lib/types";
 
-// 8:00am-3:00pm hora de Japón (JST, UTC+9 fijo — Japón no usa horario de
-// verano, así que no hace falta una librería de zonas horarias).
-const HORA_APERTURA_SOPORTE_JST = 8;
-const HORA_CIERRE_SOPORTE_JST = 15;
+// 6:30am-11:00am hora de Japón (JST, UTC+9 fijo — Japón no usa horario de
+// verano, así que no hace falta una librería de zonas horarias). En
+// minutos desde la medianoche porque la apertura ya no cae en una hora
+// entera (antes era 8:00-15:00, sí alcanzaba con solo la hora).
+const APERTURA_SOPORTE_MIN_JST = 6 * 60 + 30; // 6:30
+const CIERRE_SOPORTE_MIN_JST = 11 * 60; // 11:00
 
 function fueraDeHorarioSoporte(): boolean {
-  const horaJst = Number(
-    new Intl.DateTimeFormat("en-US", {
-      timeZone: "Asia/Tokyo",
-      hour: "numeric",
-      hour12: false,
-    }).format(new Date())
+  const partes = new Intl.DateTimeFormat("en-US", {
+    timeZone: "Asia/Tokyo",
+    hour: "numeric",
+    minute: "numeric",
+    hour12: false,
+  }).formatToParts(new Date());
+  const hora = Number(partes.find((p) => p.type === "hour")?.value ?? 0);
+  const minuto = Number(partes.find((p) => p.type === "minute")?.value ?? 0);
+  // Algunos motores imprimen la medianoche como "24" en vez de "0" con
+  // hour12:false — en cualquiera de las dos lecturas cae igual fuera del
+  // tramo 6:30-11:00, así que no hace falta normalizarlo.
+  const minutosDesdeMedianoche = hora * 60 + minuto;
+  return (
+    minutosDesdeMedianoche < APERTURA_SOPORTE_MIN_JST ||
+    minutosDesdeMedianoche >= CIERRE_SOPORTE_MIN_JST
   );
-  return horaJst < HORA_APERTURA_SOPORTE_JST || horaJst >= HORA_CIERRE_SOPORTE_JST;
 }
 
 /**

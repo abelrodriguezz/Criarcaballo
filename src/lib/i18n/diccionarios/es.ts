@@ -201,7 +201,7 @@ export const es = {
       "El admin todavía no configuró ninguna wallet para esta simulación.",
     depositarMontoInvalido: "Ingresa un monto mayor a cero.",
     depositarMontoMaximo: "El monto máximo es 100,000,000 USDT.",
-    depositarYaHecho: "Ya hiciste tu depósito simulado",
+    depositarYaHecho: "Ya hiciste tu depósito",
     depositarEstadoPendiente: "Pendiente de confirmación del admin",
     depositarEstadoAcreditado: "Acreditado a tu saldo de inversión",
     depositarErrorGuardar: "No se pudo registrar. Intenta de nuevo.",
@@ -286,7 +286,7 @@ export const es = {
       "Formato inválido. Debe ser una dirección ERC20 (empieza con 0x, 42 caracteres).",
     errorGuardar: "No se pudo guardar. Intenta de nuevo.",
     descripcion:
-      "Aquí te enviamos tus retiros de ganancias y las recompensas de concursos — no se usa para depositar. Asegúrate de que sea tu dirección en la red Ethereum (ERC20), no en BSC, Polygon u otra red compatible — el formato es el mismo pero el pago se hace específicamente en ERC20.",
+      "Aquí te enviamos tus retiros de ganancias y las recompensas — Asegúrate de que sea tu dirección en la red Ethereum (ERC20), no en BSC, Polygon u otra red compatible — el formato es el mismo pero el pago se hace específicamente en ERC20.",
     descripcionAdmin:
       "Estas son las wallets que se les muestran a los usuarios para depositar (se elige una al azar). Deben ser direcciones en la red Ethereum (ERC20), no en BSC, Polygon u otra red compatible.",
     confirmarVaciar:
