@@ -300,7 +300,6 @@ export default async function PaginaPerfil() {
             disponible={disponibleParaRetirar}
             walletActual={perfilExtra?.wallet_usdt_erc20 ?? null}
             solicitudPendiente={solicitudRetiroPendiente}
-            historial={historialRetiros}
             feePorcentaje={feeRetiro}
             t={t}
           />

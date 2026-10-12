@@ -13,14 +13,12 @@ export function BotonSolicitarRetiro({
   disponible,
   walletActual,
   solicitudPendiente,
-  historial,
   feePorcentaje,
   t,
 }: {
   disponible: number;
   walletActual: string | null;
   solicitudPendiente: SolicitudRetiro | null;
-  historial: SolicitudRetiro[];
   /** % que se descuenta del monto pedido (config-retiros.ts) — 0 = sin fee. */
   feePorcentaje: number;
   t: Diccionario;
@@ -248,57 +246,12 @@ export function BotonSolicitarRetiro({
               </>
             )}
 
-            {historial.length > 0 && !enviado && (
-              <div className="mt-4 pt-4 border-t border-[var(--border)]">
-                <div className="text-[12px] font-medium text-foreground-muted mb-2">
-                  {t.perfil.retirarHistorialTitulo}
-                </div>
-                <div className="flex flex-col gap-1.5">
-                  {historial.map((s) => (
-                    <div key={s.id} className="text-[12px]">
-                    <div className="flex justify-between items-center gap-2">
-                      {/* whitespace-nowrap: a 360px la fecha se partía en
-                          dos líneas ("12" / "oct"). */}
-                      <span className="text-foreground-muted whitespace-nowrap shrink-0">
-                        {new Date(s.created_at).toLocaleDateString("es-DO", {
-                          day: "numeric",
-                          month: "short",
-                        })}
-                      </span>
-                      <span
-                        className={`text-right ${
-                          s.estado === "pagado"
-                            ? "text-gain"
-                            : s.estado === "rechazado"
-                              ? "text-loss"
-                              : "text-brand-secondary"
-                        }`}
-                      >
-                        ${formatearDinero(s.monto)}
-                        {s.fee_porcentaje > 0 &&
-                          ` (${rellenar(t.perfil.retirarRecibiras, {
-                            neto: formatearDinero(calcularFeeRetiro(s.monto, s.fee_porcentaje).neto),
-                          })})`}{" "}
-                        ·{" "}
-                        {s.estado === "pagado"
-                          ? t.perfil.pagado
-                          : s.estado === "rechazado"
-                            ? t.perfil.retirarRechazado
-                            : t.perfil.pendiente}
-                      </span>
-                    </div>
-                    {/* El motivo que escribe el admin al rechazar antes solo
-                        lo veía el propio admin en /retiros — el usuario se
-                        quedaba con un "Rechazado" sin saber por qué. */}
-                    {s.estado === "rechazado" && s.nota_admin && (
-                      <div className="text-foreground-muted break-words mt-0.5">
-                        {t.perfil.retirarMotivo}: {s.nota_admin}
-                      </div>
-                    )}
-                    </div>
-                  ))}
-                </div>
-              </div>
+            {/* Pedido del dueño (2026-10-12): en vez de la lista de "Tus
+                solicitudes", un aviso corto y fijo sobre el plazo/moneda. */}
+            {!enviado && (
+              <p className="mt-4 pt-4 border-t border-[var(--border)] text-[11px] text-foreground-muted leading-relaxed">
+                {t.perfil.retirarPlazoAviso}
+              </p>
             )}
           </div>
         </div>

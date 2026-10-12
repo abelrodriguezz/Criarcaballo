@@ -234,6 +234,8 @@ export const es = {
     retirarRechazado: "Rechazado",
     retirarMotivo: "Motivo",
     retirarHistorialTitulo: "Tus solicitudes",
+    retirarPlazoAviso:
+      "Los retiros se procesan en un plazo de hasta 24 horas laborables y se realizan en USDT a través de la wallet registrada por el usuario al momento de solicitar el retiro.",
   },
   tradeDelDia: {
     // titulo/subtitulo ya no viven aquí — son editables por el admin desde
