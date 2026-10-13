@@ -51,6 +51,7 @@ export function TarjetaGananciaAdmin({
             day: "numeric",
             month: "short",
             year: "numeric",
+            timeZone: "America/New_York",
           })}
         </div>
       </div>

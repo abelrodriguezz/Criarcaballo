@@ -108,6 +108,7 @@ export default async function PaginaDepositos() {
               day: "numeric",
               month: "short",
               year: "numeric",
+              timeZone: "America/New_York",
             })}
           </div>
           {d.wallet_mostrada && (

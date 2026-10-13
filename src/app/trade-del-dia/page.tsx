@@ -134,12 +134,12 @@ export default async function PaginaTradeDelDia() {
         {t.tradeDelDia.abiertaALas}{" "}
         {new Date(operacionAbierta.created_at).toLocaleTimeString(
           locale === "en" ? "en-US" : "es-DO",
-          { hour: "2-digit", minute: "2-digit" }
+          { hour: "2-digit", minute: "2-digit", timeZone: "America/New_York" }
         )}{" "}
         ·{" "}
         {new Date(operacionAbierta.created_at).toLocaleDateString(
           locale === "en" ? "en-US" : "es-DO",
-          { day: "numeric", month: "short" }
+          { day: "numeric", month: "short", timeZone: "America/New_York" }
         )}
       </div>
       <div className="flex items-center gap-1.5 text-[12px] text-foreground-muted bg-surface px-3 py-2 rounded-lg">

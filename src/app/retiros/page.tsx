@@ -88,6 +88,7 @@ export default async function PaginaRetiros() {
               day: "numeric",
               month: "short",
               year: "numeric",
+              timeZone: "America/New_York",
             })}
           </div>
           {/* break-all, no truncate: a 360px la wallet salía cortada con

@@ -208,6 +208,7 @@ export default async function PaginaReportes({
                       day: "numeric",
                       month: "short",
                       year: "numeric",
+                      timeZone: "America/New_York",
                     })}
                   </div>
                   <div className="text-[11px] text-foreground-muted font-mono truncate">

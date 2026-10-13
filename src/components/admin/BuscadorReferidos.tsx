@@ -224,7 +224,7 @@ export function BuscadorReferidos({
                     ·{" "}
                     {new Date(f.created_at).toLocaleDateString(
                       locale === "en" ? "en-US" : "es-DO",
-                      { day: "numeric", month: "short", year: "numeric" }
+                      { day: "numeric", month: "short", year: "numeric", timeZone: "America/New_York" }
                     )}
                   </div>
                   <div className="text-[12px] text-foreground-muted">
@@ -299,7 +299,7 @@ export function BuscadorReferidos({
                   {b.concepto} ·{" "}
                   {new Date(b.created_at).toLocaleDateString(
                     locale === "en" ? "en-US" : "es-DO",
-                    { day: "numeric", month: "short", year: "numeric" }
+                    { day: "numeric", month: "short", year: "numeric", timeZone: "America/New_York" }
                   )}
                 </div>
               </div>

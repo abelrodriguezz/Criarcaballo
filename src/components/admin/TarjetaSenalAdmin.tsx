@@ -110,7 +110,7 @@ export function TarjetaSenalAdmin({
           {" · "}
           {new Date(senal.cerrado_en).toLocaleDateString(
             locale === "en" ? "en-US" : "es-DO",
-            { day: "numeric", month: "short", year: "numeric" }
+            { day: "numeric", month: "short", year: "numeric", timeZone: "America/New_York" }
           )}
         </>
       )}
