@@ -200,6 +200,8 @@ export const es = {
     depositarSinWallets:
       "El admin todavía no configuró ninguna wallet para esta simulación.",
     depositarMontoInvalido: "Ingresa un monto mayor a cero.",
+    depositarMontoMinimo: "El depósito mínimo es 500 USDT.",
+    depositarAvisoMinimo: "Aviso: el monto mínimo para depósitos es 500 USDT.",
     depositarMontoMaximo: "El monto máximo es 100,000,000 USDT.",
     depositarYaHecho: "Ya hiciste tu depósito",
     depositarEstadoPendiente: "Pendiente de confirmación del admin",
@@ -228,6 +230,7 @@ export const es = {
     retirarSinDisponible:
       "Todavía no tienes ganancias pendientes disponibles para retirar.",
     retirarMontoInvalido: "Ingresa un monto mayor a cero.",
+    retirarMontoMinimo: "El retiro mínimo es 35 USDT.",
     retirarMontoExcedeDisponible: "No puedes retirar más de lo que tienes disponible.",
     retirarYaPendiente: "Ya tienes una solicitud de retiro pendiente.",
     retirarErrorGuardar: "No se pudo enviar la solicitud. Intenta de nuevo.",

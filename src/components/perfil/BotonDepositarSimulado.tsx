@@ -9,11 +9,12 @@ import { IconoWallet, IconoImagen } from "@/components/ui/Iconos";
 import { formatearDinero, parsearMontoUsuario } from "@/lib/format";
 import type { Diccionario } from "@/lib/i18n";
 
-// Tope del monto simulado. Tiene que coincidir con el `check` de la
-// migración 027: así un monto absurdo se rechaza aquí con un mensaje
-// claro en vez de llegar a la base y volver como un error de guardado
-// genérico.
+// Tope y piso del monto simulado. Tienen que coincidir con los `check` de
+// las migraciones 027 y 101: así un monto fuera de rango se rechaza aquí
+// con un mensaje claro en vez de llegar a la base y volver como un error
+// de guardado genérico.
 const MONTO_MAXIMO = 100_000_000;
+const MONTO_MINIMO = 500;
 const TIPOS_IMAGEN_ACEPTADOS = "image/jpeg,image/png,image/webp";
 const TAMANO_MAXIMO_IMAGEN = 5 * 1024 * 1024; // 5 MB, igual que el bucket/servidor
 
@@ -84,6 +85,10 @@ export function BotonDepositarSimulado({
       setError(t.perfil.depositarMontoInvalido);
       return;
     }
+    if (redondeado < MONTO_MINIMO) {
+      setError(t.perfil.depositarMontoMinimo);
+      return;
+    }
     if (redondeado > MONTO_MAXIMO) {
       setError(t.perfil.depositarMontoMaximo);
       return;
@@ -121,6 +126,10 @@ export function BotonDepositarSimulado({
   // se ignora el prop recién refrescado; al cerrarlo (botón "Entendido"),
   // esta rama ya vuelve a aplicar normalmente.
   const mostrandoExito = abierto && enviado;
+
+  const montoParaValidar = Math.round(parsearMontoUsuario(monto) * 100) / 100;
+  const montoCumpleMinimo =
+    Number.isFinite(montoParaValidar) && montoParaValidar >= MONTO_MINIMO;
 
   if (depositoExistente && !mostrandoExito) {
     return (
@@ -246,8 +255,11 @@ export function BotonDepositarSimulado({
                   onChange={(e) => setMonto(e.target.value)}
                   inputMode="decimal"
                   placeholder="0.00"
-                  className="w-full px-3.5 py-2.5 mb-3 rounded-lg border border-[var(--border)] bg-background text-sm font-mono"
+                  className="w-full px-3.5 py-2.5 mb-1.5 rounded-lg border border-[var(--border)] bg-background text-sm font-mono"
                 />
+                <p className="text-loss text-[11px] mb-3 font-medium">
+                  {t.perfil.depositarAvisoMinimo}
+                </p>
 
                 <label className="block text-[12px] font-medium text-foreground-muted mb-1.5">
                   {t.perfil.depositarComprobanteLabel}
@@ -260,10 +272,15 @@ export function BotonDepositarSimulado({
                   className="hidden"
                   aria-label={t.perfil.depositarComprobanteLabel}
                 />
+                {/* El monto tiene que cumplir el mínimo ANTES de poder
+                    adjuntar el comprobante — pedido del dueño (2026-10-12),
+                    para que no se pueda ni intentar enviar un depósito por
+                    debajo de 500 USDT. */}
                 <button
                   type="button"
-                  onClick={() => inputArchivoRef.current?.click()}
-                  className="w-full flex items-center gap-2 px-3.5 py-2.5 mb-3 rounded-lg border border-dashed border-[var(--border)] text-[13px] text-foreground-muted hover:text-foreground hover:bg-surface-hover transition-colors"
+                  onClick={() => montoCumpleMinimo && inputArchivoRef.current?.click()}
+                  disabled={!montoCumpleMinimo}
+                  className="w-full flex items-center gap-2 px-3.5 py-2.5 mb-3 rounded-lg border border-dashed border-[var(--border)] text-[13px] text-foreground-muted hover:text-foreground hover:bg-surface-hover disabled:opacity-50 disabled:hover:bg-transparent disabled:hover:text-foreground-muted transition-colors"
                 >
                   <IconoImagen className="w-4 h-4 shrink-0" />
                   <span className="flex-1 min-w-0 truncate text-left">
@@ -275,7 +292,7 @@ export function BotonDepositarSimulado({
 
                 <button
                   onClick={manejarEnviar}
-                  disabled={enviando || !comprobante}
+                  disabled={enviando || !comprobante || !montoCumpleMinimo}
                   className="w-full bg-brand-primary hover:bg-brand-primary-hover disabled:opacity-60 text-white font-semibold text-sm py-3 rounded-xl transition-colors"
                 >
                   {t.perfil.depositarEnviar}

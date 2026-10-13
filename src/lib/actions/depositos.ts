@@ -8,10 +8,11 @@ import { exito, fallo, type Resultado } from "@/lib/actions/resultado";
 import { subirComprobante } from "@/lib/actions/comprobantes";
 import type { DepositoSimulado } from "@/lib/types";
 
-// Mismo tope que valida el cliente (BotonDepositarSimulado.tsx) y que ya
-// impone el check de la migración 027 — repetido aquí como segunda capa,
-// no como única fuente de verdad.
+// Mismo tope/piso que valida el cliente (BotonDepositarSimulado.tsx) y que
+// ya imponen los `check` de las migraciones 027 y 101 — repetido aquí como
+// segunda capa, no como única fuente de verdad.
 const MONTO_MAXIMO = 100_000_000;
+const MONTO_MINIMO = 500;
 
 /**
  * Registra el único depósito simulado del usuario, con su comprobante de
@@ -42,6 +43,9 @@ export async function registrarDepositoSimulado(
   const monto = Math.round(Number(montoTexto) * 100) / 100;
   if (!Number.isFinite(monto) || monto <= 0) {
     return fallo(t.perfil.depositarMontoInvalido);
+  }
+  if (monto < MONTO_MINIMO) {
+    return fallo(t.perfil.depositarMontoMinimo);
   }
   if (monto > MONTO_MAXIMO) {
     return fallo(t.perfil.depositarMontoMaximo);

@@ -9,6 +9,10 @@ import { calcularFeeRetiro } from "@/lib/calculoFeeRetiro";
 import { rellenar, type Diccionario } from "@/lib/i18n";
 import type { SolicitudRetiro } from "@/lib/types";
 
+// Mismo piso que valida la RPC solicitar_retiro (migración 101) —
+// repetido aquí como segunda capa, no como única fuente de verdad.
+const MONTO_MINIMO = 35;
+
 export function BotonSolicitarRetiro({
   disponible,
   walletActual,
@@ -50,6 +54,10 @@ export function BotonSolicitarRetiro({
       setError(t.perfil.retirarMontoInvalido);
       return;
     }
+    if (redondeado < MONTO_MINIMO) {
+      setError(t.perfil.retirarMontoMinimo);
+      return;
+    }
     if (redondeado > disponible) {
       setError(t.perfil.retirarMontoExcedeDisponible);
       return;
@@ -80,9 +88,11 @@ export function BotonSolicitarRetiro({
             ? t.perfil.retirarSinWallet
             : msg.includes("disponible")
               ? t.perfil.retirarMontoExcedeDisponible
-              : msg.includes("Monto invalido")
-                ? t.perfil.retirarMontoInvalido
-                : t.perfil.retirarErrorGuardar
+              : msg.includes("mínimo")
+                ? t.perfil.retirarMontoMinimo
+                : msg.includes("Monto invalido")
+                  ? t.perfil.retirarMontoInvalido
+                  : t.perfil.retirarErrorGuardar
       );
       return;
     }
