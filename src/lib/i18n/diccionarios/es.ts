@@ -297,7 +297,7 @@ export const es = {
   },
   datosContacto: {
     titulo: "Datos de contacto",
-    sinDatos: "No has agregado tu nombre ni teléfono todavía.",
+    sinDatos: "Completa tu perfil",
     nombreLabel: "Nombre",
     nombrePlaceholder: "Tu nombre",
     apellidoLabel: "Apellido",

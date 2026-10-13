@@ -287,7 +287,7 @@ export const en: typeof es = {
   },
   datosContacto: {
     titulo: "Contact details",
-    sinDatos: "You haven't added your name or phone number yet.",
+    sinDatos: "Complete your profile",
     nombreLabel: "Name",
     nombrePlaceholder: "Your name",
     apellidoLabel: "Last name",
