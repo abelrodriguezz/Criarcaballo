@@ -13,10 +13,10 @@ export interface ConfigSimulacionAmbosIdiomas {
 }
 
 export const MENSAJE_SIMULACION_POR_DEFECTO =
-  "Esto no fue una transacción real — no se envió dinero a ninguna wallet.";
+  "Tu comprobante quedó registrado. Nuestro equipo lo verificará y acreditará tu depósito en breve.";
 
 export const MENSAJE_SIMULACION_POR_DEFECTO_EN =
-  "This was not a real transaction — no money was sent to any wallet.";
+  "Your proof of payment has been received. Our team will verify it and credit your deposit shortly.";
 
 async function obtenerSimulacionGuardada(): Promise<
   Partial<ConfigSimulacionAmbosIdiomas>
