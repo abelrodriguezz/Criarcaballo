@@ -18,8 +18,15 @@ export function parsearNumero(texto: string): number {
  * Regla: si aparecen los dos separadores, el ÚLTIMO es el decimal
  * ("1.000,50" → 1000.50). Si solo hay comas, una sola coma seguida de 1
  * o 2 dígitos es decimal ("1,50" → 1.5) y cualquier otro caso son miles
- * ("1,000" → 1000). Devuelve NaN si el texto no es un número limpio, en
- * vez de quedarse con el prefijo numérico como hace parseFloat.
+ * ("1,000" → 1000) — EXCEPTO una sola coma seguida de exactamente 3
+ * dígitos ("499,999", "65,000"): ahí es genuinamente ambiguo (¿casi 500,
+ * con coma decimal como se escribe en español, o casi medio millón, con
+ * coma de miles?) y se devuelve NaN en vez de adivinar, para no registrar
+ * un depósito/retiro por un monto muy distinto al que la persona quiso
+ * escribir (hallazgo de QA, 2026-10-12). Mismo criterio que ya usa
+ * parsearPrecioAdmin para precios. Devuelve NaN si el texto no es un
+ * número limpio, en vez de quedarse con el prefijo numérico como hace
+ * parseFloat.
  */
 export function parsearMontoUsuario(texto: string): number {
   const limpio = texto.replace(/\s/g, "");
@@ -31,8 +38,11 @@ export function parsearMontoUsuario(texto: string): number {
   let comaEsDecimal: boolean;
   if (ultimaComa >= 0 && ultimoPunto >= 0) {
     comaEsDecimal = ultimaComa > ultimoPunto;
+  } else if (ultimaComa >= 0) {
+    if (/^[+-]?\d+,\d{3}$/.test(limpio)) return NaN; // ambiguo
+    comaEsDecimal = /^[+-]?\d+,\d{1,2}$/.test(limpio);
   } else {
-    comaEsDecimal = ultimaComa >= 0 && /^[+-]?\d+,\d{1,2}$/.test(limpio);
+    comaEsDecimal = false;
   }
 
   const normalizado = comaEsDecimal
