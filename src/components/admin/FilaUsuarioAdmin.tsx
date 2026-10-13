@@ -37,7 +37,7 @@ export function FilaUsuarioAdmin({
   // ejemplo abrió una operación, que usa el saldo completo), la reversión
   // se topa en $0 y no queda exacta (greatest(0, ...) en la base), así que
   // se le avisa al admin para que lo revise a mano después de borrar.
-  let textoConfirmacionDeposito = "¿Eliminar este depósito simulado (pendiente, sin acreditar)? El usuario podrá volver a hacer la simulación.";
+  let textoConfirmacionDeposito = "¿Eliminar este depósito (pendiente, sin acreditar)? El usuario podrá volver a hacer el depósito.";
   if (depositoSimulado?.pagado) {
     const monto = Number(depositoSimulado.monto);
     const saldoInsuficiente = saldoActual < monto;

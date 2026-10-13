@@ -37,7 +37,7 @@ export const en: typeof es = {
     feature2Titulo: "Analysis published daily",
     feature2Texto:
       "Entries, stop loss and take profit explained, not just loose numbers.",
-    feature3Titulo: "Practice with virtual balance",
+    feature3Titulo: "Trade with balance",
     feature3Texto:
       'Trade the "pick of the day" without real money and track your progress over time.',
     noticiasImportantesTitulo: "Important news",
@@ -130,7 +130,7 @@ export const en: typeof es = {
     tipoOperacionInvalido: "Invalid operation type.",
     montoInvalido: "The amount must be greater than zero.",
     pickNoVigente: "That asset is no longer today's pick.",
-    saldoInsuficiente: "Insufficient virtual balance.",
+    saldoInsuficiente: "Insufficient balance.",
     operacionYaAbierta:
       "You already have an open operation. You can open another once the admin closes it.",
     tradingDeshabilitado: "An administrator disabled trading for your account.",
@@ -385,7 +385,7 @@ export const en: typeof es = {
     menuReferidos: "Referrals",
     menuReferidosSub: "Who invited whom and referral rewards",
     menuDepositos: "Deposits",
-    menuDepositosSub: "Simulated deposits registered by users",
+    menuDepositosSub: "Deposits registered by users",
     menuRetiros: "Withdrawals",
     menuRetirosSub: "Users' withdrawal requests",
 
@@ -405,11 +405,11 @@ export const en: typeof es = {
     premioResumen:
       "✎ {p}% commission per deposit · ${m} bonus every {c} qualified referrals (edit)",
     premioTitulo: "Referral reward settings",
-    premioComisionLabel: "Commission — % of the invitee's simulated deposit",
+    premioComisionLabel: "Commission — % of the invitee's deposit",
     premioBonoCadaLabel: "Bonus every X referrals",
     premioBonoMontoLabel: "Bonus amount (USDT)",
     premioAyuda:
-      "When you confirm an invitee's simulated deposit as paid, whoever invited them gets a pending commission for that percentage. Each time they reach a multiple of the configured number of referrals (with the deposit already confirmed), the bonus is added too, and it repeats at every new multiple. Changes only apply going forward, not to rewards already granted.",
+      "When you confirm an invitee's deposit as paid, whoever invited them gets a pending commission for that percentage. Each time they reach a multiple of the configured number of referrals (with the deposit already confirmed), the bonus is added too, and it repeats at every new multiple. Changes only apply going forward, not to rewards already granted.",
     premioErrPorcentaje: "The percentage must be between 0 and 100.",
     premioErrBonoCada: "The number of referrals for the bonus must be a whole number greater than zero.",
     premioErrBonoMonto: "The bonus amount must be a number equal to or greater than zero.",
@@ -426,12 +426,12 @@ export const en: typeof es = {
     sinCadenas: "There are no referral chains yet.",
     comisionesTitulo: "Referral commissions",
     comisionesAyuda:
-      "One row per invited person. \"No commission yet\" means that person hasn't made their simulated deposit, or you haven't confirmed it as paid yet. As soon as you confirm it, the amount and whether it's been paid show up here (payment is processed in Withdrawals).",
+      "One row per invited person. \"No commission yet\" means that person hasn't made their deposit, or you haven't confirmed it as paid yet. As soon as you confirm it, the amount and whether it's been paid show up here (payment is processed in Withdrawals).",
     sinRegistrosInvitacion: "Nobody has signed up with an invitation code yet.",
     invitadoPor: "Invited by",
-    depositoSimulado: "Simulated deposit: ${m}",
+    depositoSimulado: "Deposit ${m}",
     depositoSinConfirmar: " · unconfirmed (no commission until you mark it paid)",
-    sinDepositoAun: "Hasn't made their simulated deposit yet",
+    sinDepositoAun: "Hasn't made their deposit yet",
     sinComisionAun: "No commission yet",
     bonosTitulo: "Referral milestone bonuses",
     bonosAyuda:
@@ -458,7 +458,7 @@ export const en: typeof es = {
     csvCorreo: "Email",
     csvId: "ID",
     csvInvitadoPor: "Invited by",
-    csvDeposito: "Simulated deposit (USD)",
+    csvDeposito: "Deposit (USD)",
     csvEstado: "Commission status",
     csvMonto: "Commission amount (USD)",
     csvSinDeposito: "No deposit",

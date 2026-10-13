@@ -27,7 +27,7 @@ export const NOSOTROS_POR_DEFECTO: ConfigNosotros = {
   titulo: "Sobre Trade4U",
   parrafos: [
     "Trade4U nació para darle a cualquier persona acceso a datos de mercado reales — cripto, acciones e índices — sin adornos ni promesas de rendimiento. Creemos que entender el mercado antes de arriesgar dinero real es la base de cualquier decisión de trading responsable.",
-    "Por eso construimos un espacio para practicar con saldo virtual, seguir análisis publicados a diario con su razonamiento incluido, y medir tu progreso con el tiempo — todo con precios en tiempo real, directo de la fuente.",
+    "Por eso construimos un espacio para seguir análisis publicados a diario con su razonamiento incluido, y medir tu progreso con el tiempo — todo con precios en tiempo real, directo de la fuente.",
   ],
   disclaimerTitulo: "Aviso importante",
   disclaimer:
@@ -38,7 +38,7 @@ export const NOSOTROS_POR_DEFECTO_EN: ConfigNosotros = {
   titulo: "About Trade4U",
   parrafos: [
     "Trade4U was built to give anyone access to real market data — crypto, stocks and indices — without decoration or promises of returns. We believe understanding the market before risking real money is the foundation of any responsible trading decision.",
-    "That's why we built a space to practice with a virtual balance, follow daily analysis with the reasoning included, and track your progress over time — all with real-time prices, straight from the source.",
+    "That's why we built a space to follow daily analysis with the reasoning included, and track your progress over time — all with real-time prices, straight from the source.",
   ],
   disclaimerTitulo: "Important notice",
   disclaimer:

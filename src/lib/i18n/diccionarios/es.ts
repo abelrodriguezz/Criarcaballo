@@ -35,7 +35,7 @@ export const es = {
     feature2Titulo: "Análisis publicado a diario",
     feature2Texto:
       "Entradas, stop loss y take profit explicados, no solo números sueltos.",
-    feature3Titulo: "Práctica con saldo virtual",
+    feature3Titulo: "Operación con saldo",
     feature3Texto:
       'Opera el "pick del día" sin dinero real y mide tu progreso con el tiempo.',
     noticiasImportantesTitulo: "Noticias importantes",
@@ -135,7 +135,7 @@ export const es = {
     tipoOperacionInvalido: "Tipo de operación inválido.",
     montoInvalido: "El monto debe ser mayor a cero.",
     pickNoVigente: "Ese activo ya no es el pick del día vigente.",
-    saldoInsuficiente: "Saldo virtual insuficiente.",
+    saldoInsuficiente: "Saldo insuficiente.",
     operacionYaAbierta:
       "Ya tienes una operación abierta. Podrás abrir otra cuando el admin cierre la sesión.",
     tradingDeshabilitado: "Un administrador deshabilitó el trading para tu cuenta.",
@@ -401,7 +401,7 @@ export const es = {
     menuReferidos: "Referidos",
     menuReferidosSub: "Quién invitó a quién y premios por referido",
     menuDepositos: "Depósitos",
-    menuDepositosSub: "Depósitos simulados registrados por los usuarios",
+    menuDepositosSub: "Depósitos registrados por los usuarios",
     menuRetiros: "Retiros",
     menuRetirosSub: "Solicitudes de retiro de los usuarios",
 
@@ -421,11 +421,11 @@ export const es = {
     premioResumen:
       "✎ Comisión {p}% por depósito · Bono ${m} cada {c} referidos calificados (editar)",
     premioTitulo: "Configuración de premios por referido",
-    premioComisionLabel: "Comisión — % del depósito simulado del invitado",
+    premioComisionLabel: "Comisión — % del depósito del invitado",
     premioBonoCadaLabel: "Bono cada X referidos",
     premioBonoMontoLabel: "Monto del bono (USDT)",
     premioAyuda:
-      "Cuando confirmas como pagado el depósito simulado de un invitado, se le genera a quien lo invitó una comisión pendiente por ese porcentaje. Al llegar a un múltiplo de la cantidad de referidos configurada (con el depósito ya confirmado), se suma además el bono — se repite cada vez que se alcanza otro múltiplo. Los cambios solo aplican hacia adelante, no a lo ya otorgado.",
+      "Cuando confirmas como pagado el depósito de un invitado, se le genera a quien lo invitó una comisión pendiente por ese porcentaje. Al llegar a un múltiplo de la cantidad de referidos configurada (con el depósito ya confirmado), se suma además el bono — se repite cada vez que se alcanza otro múltiplo. Los cambios solo aplican hacia adelante, no a lo ya otorgado.",
     premioErrPorcentaje: "El porcentaje debe estar entre 0 y 100.",
     premioErrBonoCada:
       "La cantidad de referidos para el bono debe ser un entero mayor a cero.",
@@ -443,13 +443,13 @@ export const es = {
     sinCadenas: "Todavía no hay ninguna cadena de referidos.",
     comisionesTitulo: "Comisiones por referido",
     comisionesAyuda:
-      "Una fila por cada persona invitada. \"Sin comisión todavía\" significa que esa persona no ha hecho su depósito simulado o que todavía no lo confirmaste como pagado — en cuanto lo confirmes, aparece aquí el monto y si ya se pagó (el pago se procesa en Retiros).",
+      "Una fila por cada persona invitada. \"Sin comisión todavía\" significa que esa persona no ha hecho su depósito o que todavía no lo confirmaste como pagado — en cuanto lo confirmes, aparece aquí el monto y si ya se pagó (el pago se procesa en Retiros).",
     sinRegistrosInvitacion: "Todavía nadie se ha registrado con un código de invitación.",
     invitadoPor: "Invitado por",
-    depositoSimulado: "Depósito simulado: ${m}",
+    depositoSimulado: "Depósito ${m}",
     depositoSinConfirmar:
       " · sin confirmar (no genera comisión hasta que lo marques pagado)",
-    sinDepositoAun: "Todavía no hizo su depósito simulado",
+    sinDepositoAun: "Todavía no hizo su depósito",
     sinComisionAun: "Sin comisión todavía",
     bonosTitulo: "Bonos por meta de referidos",
     bonosAyuda:
@@ -476,7 +476,7 @@ export const es = {
     csvCorreo: "Correo",
     csvId: "ID",
     csvInvitadoPor: "Invitado por",
-    csvDeposito: "Depósito simulado (USD)",
+    csvDeposito: "Depósito (USD)",
     csvEstado: "Estado comisión",
     csvMonto: "Monto comisión (USD)",
     csvSinDeposito: "Sin depósito",

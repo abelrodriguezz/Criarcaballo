@@ -47,7 +47,7 @@ export function AdminSimulacionForm({
         onClick={() => setAbierto(true)}
         className="border border-dashed border-[var(--brand-primary)] text-brand-primary text-sm font-semibold px-4 py-2.5 rounded-xl mb-3 hover:bg-[var(--brand-primary)]/5 transition-colors"
       >
-        ✎ Editar mensaje de simulación (admin)
+        ✎ Editar mensaje (admin)
       </button>
     );
   }
@@ -61,7 +61,7 @@ export function AdminSimulacionForm({
     >
       <div className="flex justify-between items-center mb-3">
         <h3 className="font-display font-semibold text-sm">
-          Mensaje de simulación
+          Mensaje
         </h3>
         <button
           type="button"

@@ -21,16 +21,14 @@ export const HERO_POR_DEFECTO: ConfigHero = {
   badge: "● Datos en vivo, sin promesas de rendimiento",
   titulo_linea1: "Entiende el mercado.",
   titulo_linea2: "Practica sin riesgo.",
-  subtitulo:
-    "Análisis diario, precios en tiempo real y un modo de práctica con saldo virtual — aprende a operar antes de arriesgar capital real.",
+  subtitulo: "Análisis diario, precios en tiempo real.",
 };
 
 export const HERO_POR_DEFECTO_EN: ConfigHero = {
   badge: "● Live data, no return promises",
   titulo_linea1: "Understand the market.",
   titulo_linea2: "Practice without risk.",
-  subtitulo:
-    "Daily analysis, real-time prices and a practice mode with virtual balance — learn to trade before risking real capital.",
+  subtitulo: "Daily analysis, real-time prices.",
 };
 
 async function obtenerHeroGuardado(): Promise<Partial<ConfigHeroAmbosIdiomas>> {

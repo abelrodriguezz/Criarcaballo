@@ -22,11 +22,11 @@ import type { OperacionSimulada, PickDelDia } from "@/lib/types";
 const CLAVE_TEXTOS = claveConfigTextosModulo("trade_del_dia");
 const TEXTOS_POR_DEFECTO = {
   titulo: "Trade del día",
-  subtitulo: "Practica con saldo virtual sobre el pick de hoy.",
+  subtitulo: "Invierte con tu saldo sobre el pick de hoy.",
 };
 const TEXTOS_POR_DEFECTO_EN = {
   titulo: "Trade of the day",
-  subtitulo: "Practice with virtual balance on today's pick.",
+  subtitulo: "Invest with your balance on today's pick.",
 };
 
 export default async function PaginaTradeDelDia() {
