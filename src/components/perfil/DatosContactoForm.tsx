@@ -52,12 +52,31 @@ export function DatosContactoForm({
     const cedulaLimpia = cedula.trim();
     const telefonoLimpio = telefono.trim();
 
-    if (telefonoLimpio && !TELEFONO_VALIDO.test(telefonoLimpio)) {
-      setError(t.datosContacto.formatoInvalido);
+    // Mismo orden y mensajes que el registro (RegistroForm.tsx) — los 4
+    // campos son obligatorios tanto al crear la cuenta como al editarla
+    // (pedido del dueño, 2026-10-12).
+    if (!nombreLimpio) {
+      setError(t.auth.nombreRequerido);
       return;
     }
-    if (cedulaLimpia && !CEDULA_VALIDA.test(cedulaLimpia)) {
+    if (!apellidoLimpio) {
+      setError(t.auth.apellidoRequerido);
+      return;
+    }
+    if (!cedulaLimpia) {
+      setError(t.auth.cedulaRequerido);
+      return;
+    }
+    if (!CEDULA_VALIDA.test(cedulaLimpia)) {
       setError(t.datosContacto.cedulaFormatoInvalido);
+      return;
+    }
+    if (!telefonoLimpio) {
+      setError(t.auth.telefonoRequerido);
+      return;
+    }
+    if (!TELEFONO_VALIDO.test(telefonoLimpio)) {
+      setError(t.datosContacto.formatoInvalido);
       return;
     }
 
@@ -66,10 +85,10 @@ export function DatosContactoForm({
     const { error } = await supabase
       .from("usuarios")
       .update({
-        nombre: nombreLimpio || null,
-        apellido: apellidoLimpio || null,
-        cedula: cedulaLimpia || null,
-        telefono: telefonoLimpio || null,
+        nombre: nombreLimpio,
+        apellido: apellidoLimpio,
+        cedula: cedulaLimpia,
+        telefono: telefonoLimpio,
       })
       .eq("id", usuarioId);
     setGuardando(false);
@@ -127,6 +146,11 @@ export function DatosContactoForm({
   return (
     <form
       onSubmit={manejarEnvio}
+      // noValidate: mismo motivo que RegistroForm.tsx -- sin esto, el
+      // `required` nativo del navegador frena el envio con su propia
+      // burbuja (en el idioma del navegador, no el de la app) antes de
+      // llegar a manejarEnvio. required se deja igual por accesibilidad.
+      noValidate
       className="border border-[var(--brand-primary)] bg-[var(--brand-primary)]/5 rounded-2xl p-5 mb-4"
     >
       <div className="flex justify-between items-center mb-2.5">
@@ -149,6 +173,7 @@ export function DatosContactoForm({
 
       <div className="grid grid-cols-2 gap-1.5 mb-1.5">
         <input
+          required
           value={nombre}
           onChange={(e) => setNombre(e.target.value)}
           placeholder={t.datosContacto.nombrePlaceholder}
@@ -156,6 +181,7 @@ export function DatosContactoForm({
           className="w-full px-3.5 py-2.5 rounded-lg border border-[var(--border)] bg-background text-sm"
         />
         <input
+          required
           value={apellido}
           onChange={(e) => setApellido(e.target.value)}
           placeholder={t.datosContacto.apellidoPlaceholder}
@@ -164,6 +190,7 @@ export function DatosContactoForm({
         />
       </div>
       <input
+        required
         ref={inputCedula}
         value={cedula}
         onChange={alCambiarCedula}
@@ -173,6 +200,7 @@ export function DatosContactoForm({
         className="w-full px-3.5 py-2.5 mb-1.5 rounded-lg border border-[var(--border)] bg-background text-sm"
       />
       <input
+        required
         value={telefono}
         onChange={(e) => setTelefono(e.target.value)}
         placeholder={t.datosContacto.telefonoPlaceholder}
