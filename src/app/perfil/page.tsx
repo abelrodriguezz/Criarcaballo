@@ -195,7 +195,7 @@ export default async function PaginaPerfil() {
   );
 
   return (
-    <div className="py-10 max-w-[520px]">
+    <div className="py-10 max-w-[520px] mx-auto">
       <h1 className="font-display font-semibold text-[26px] mb-7">
         {t.perfil.titulo}
       </h1>

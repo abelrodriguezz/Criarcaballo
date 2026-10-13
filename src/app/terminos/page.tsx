@@ -9,7 +9,7 @@ export const metadata = {
 // abrirse desde Registro/Login, antes de que la persona tenga cuenta.
 export default function PaginaTerminos() {
   return (
-    <div className="py-10 max-w-[640px]">
+    <div className="py-10 max-w-[640px] mx-auto">
       <Link
         href="/login"
         className="text-[13px] text-brand-primary font-semibold mb-4 inline-block"

@@ -21,7 +21,7 @@ export default async function PaginaNosotros() {
   ]);
 
   return (
-    <div className="py-10 max-w-[640px]">
+    <div className="py-10 max-w-[640px] mx-auto">
       {usuarioEsAdmin && nosotrosCompleto && (
         <AdminNosotrosForm nosotrosActual={nosotrosCompleto} ta={t.admin} />
       )}
