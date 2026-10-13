@@ -257,7 +257,13 @@ export function BotonDepositarSimulado({
                   placeholder="0.00"
                   className="w-full px-3.5 py-2.5 mb-1.5 rounded-lg border border-[var(--border)] bg-background text-sm font-mono"
                 />
-                <p className="text-loss text-[11px] mb-3 font-medium">
+                {/* Rojo mas oscuro que --loss en claro: QA con Opus midio
+                    3.48:1 de contraste con --loss (texto chico, bajo el
+                    minimo WCAG AA de 4.5:1) -- --loss es el token global de
+                    perdidas/errores de todo el sitio, no se toca; esto es
+                    un color puntual solo para este aviso. En oscuro ya
+                    pasaba (5.47:1), se deja el token normal. */}
+                <p className="text-[#b91c1c] dark:text-loss text-[11px] mb-3 font-medium">
                   {t.perfil.depositarAvisoMinimo}
                 </p>
 
