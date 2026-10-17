@@ -3,7 +3,7 @@
 import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { crearClienteSupabase } from "@/lib/supabase/client";
-import { parsearNumero } from "@/lib/format";
+import { parsearPrecioAdmin } from "@/lib/format";
 import type { Senal } from "@/lib/types";
 
 // Mismo formato que exige AdminPickForm: el par completo de Binance. Si no
@@ -63,7 +63,7 @@ export function AdminSenalForm({
       return;
     }
 
-    const entradaNum = parsearNumero(entrada);
+    const entradaNum = parsearPrecioAdmin(entrada);
     if (!Number.isFinite(entradaNum) || entradaNum <= 0) {
       setError("El precio de entrada debe ser un número mayor a cero.");
       return;
@@ -72,8 +72,8 @@ export function AdminSenalForm({
     // Campos opcionales: vacío = null, pero un texto que no sea un número
     // NO puede pasar como null silencioso (antes, escribir "abc" en el
     // stop loss lo guardaba sin stop loss y sin avisar).
-    const stopLossNum = stopLoss.trim() ? parsearNumero(stopLoss) : null;
-    const takeProfitNum = takeProfit.trim() ? parsearNumero(takeProfit) : null;
+    const stopLossNum = stopLoss.trim() ? parsearPrecioAdmin(stopLoss) : null;
+    const takeProfitNum = takeProfit.trim() ? parsearPrecioAdmin(takeProfit) : null;
 
     if (stopLossNum !== null && (!Number.isFinite(stopLossNum) || stopLossNum <= 0)) {
       setError("El stop loss debe ser un número mayor a cero (o dejarse vacío).");

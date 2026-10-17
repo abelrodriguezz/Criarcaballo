@@ -7,7 +7,7 @@ import { estaAbiertaBolsaNY, fechaEnNY } from "@/lib/horarioMercado";
 import { obtenerHorarioMercado, formatearHorarioMercado } from "@/lib/config-horario-mercado";
 import { obtenerLocale, obtenerDiccionario } from "@/lib/i18n/servidor";
 import { obtenerSecretoServidor } from "@/lib/supabase/secretoServidor";
-import { parsearNumero } from "@/lib/format";
+import { parsearMontoUsuario } from "@/lib/format";
 import { exito, fallo, type Resultado } from "@/lib/actions/resultado";
 import { traducirErrorConocido } from "@/lib/erroresConocidos";
 
@@ -56,9 +56,10 @@ export async function abrirOperacion(
 
   const activo = String(formData.get("activo")).toUpperCase().trim();
   const tipo = String(formData.get("tipo"));
-  // parsearNumero (no parseFloat) por si el navegador/autocompletado manda
-  // el monto con comas de miles: parseFloat("10,000") devuelve 10.
-  const montoUsado = parsearNumero(String(formData.get("monto")));
+  // parsearMontoUsuario (no parseFloat/parsearNumero): el monto que escribe
+  // el usuario puede traer coma decimal ("500,50") o de miles ("1,000") —
+  // mismo bug de interpretación ya arreglado en depósito/retiro.
+  const montoUsado = parsearMontoUsuario(String(formData.get("monto")));
 
   // Sin formato de "par de Binance": el pick ya puede ser cualquier activo
   // (acciones, forex, materias primas), así que solo se valida que no
