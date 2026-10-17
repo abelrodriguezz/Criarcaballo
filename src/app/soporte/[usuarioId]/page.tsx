@@ -4,6 +4,7 @@ import { esAdmin, obtenerUsuarioActual } from "@/lib/auth/sesion";
 import { crearClienteSupabaseServidor } from "@/lib/supabase/server";
 import { marcarLeidoPorAdmin } from "@/lib/actions/chat";
 import { ChatBox } from "@/components/chat/ChatBox";
+import { obtenerDiccionario } from "@/lib/i18n/servidor";
 import type { MensajeSoporte } from "@/lib/types";
 
 const FORMATO_UUID =
@@ -15,7 +16,10 @@ export default async function PaginaSoporteConversacion({
   params: Promise<{ usuarioId: string }>;
 }) {
   const { usuarioId } = await params;
-  const usuario = await obtenerUsuarioActual();
+  const [usuario, t] = await Promise.all([
+    obtenerUsuarioActual(),
+    obtenerDiccionario(),
+  ]);
 
   if (!usuario) redirect("/login");
   if (!usuario.activo) redirect("/cuenta-desactivada");
@@ -65,6 +69,7 @@ export default async function PaginaSoporteConversacion({
         usuarioActualId={usuario.id}
         esAdmin={true}
         mensajesIniciales={mensajes ?? []}
+        t={t}
       />
     </div>
   );

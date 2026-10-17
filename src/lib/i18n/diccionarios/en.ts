@@ -491,4 +491,22 @@ export const en: typeof es = {
     errUrl: "The source URL must be a valid http:// or https:// link.",
     confirmarEliminarNoticia: "Delete the news item \"{t}\"?",
   },
+  chat: {
+    titulo: "Support",
+    subtitulo:
+      "Any questions? Write to us — the team replies in order of arrival, it may take a little while.",
+    conexionPerdida: "Connection lost, reconnecting...",
+    sinMensajesAdmin: "There are no messages in this conversation yet.",
+    sinMensajesUsuario: "Write your question and the team will reply as soon as possible.",
+    comprobanteAdjunto: "Attached proof",
+    quitarImagen: "Remove image",
+    adjuntarImagenComprobante: "Attach proof image",
+    adjuntarImagen: "Attach image",
+    placeholderMensaje: "Write a message...",
+    escribeUnMensaje: "Write a message",
+    enviar: "Send",
+    imagenTipoInvalido: "The image must be JPG, PNG, or WEBP.",
+    imagenMuyPesada: "The image can't be larger than 5 MB.",
+    errorEnvio: "Couldn't send the message. Try again.",
+  },
 };

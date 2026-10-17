@@ -5,6 +5,7 @@ import { crearClienteSupabase } from "@/lib/supabase/client";
 import { enviarMensajeUsuario, enviarMensajeAdmin } from "@/lib/actions/chat";
 import { IconoImagen } from "@/components/ui/Iconos";
 import type { MensajeSoporte } from "@/lib/types";
+import type { Diccionario } from "@/lib/i18n";
 
 const TIPOS_IMAGEN_ACEPTADOS = "image/jpeg,image/png,image/webp";
 const TAMANO_MAXIMO_IMAGEN = 5 * 1024 * 1024; // 5 MB, igual que el bucket/servidor
@@ -14,11 +15,13 @@ export function ChatBox({
   usuarioActualId,
   esAdmin,
   mensajesIniciales,
+  t,
 }: {
   usuarioId: string; // dueño de la conversación
   usuarioActualId: string; // quién está viendo el chat ahora mismo
   esAdmin: boolean;
   mensajesIniciales: MensajeSoporte[];
+  t: Diccionario;
 }) {
   const [mensajes, setMensajes] = useState(mensajesIniciales);
   const [texto, setTexto] = useState("");
@@ -149,11 +152,11 @@ export function ChatBox({
   function elegirImagen(archivo: File | undefined) {
     if (!archivo) return;
     if (!["image/jpeg", "image/png", "image/webp"].includes(archivo.type)) {
-      setError("La imagen debe ser JPG, PNG o WEBP.");
+      setError(t.chat.imagenTipoInvalido);
       return;
     }
     if (archivo.size > TAMANO_MAXIMO_IMAGEN) {
-      setError("La imagen no puede pesar más de 5 MB.");
+      setError(t.chat.imagenMuyPesada);
       return;
     }
     setError(null);
@@ -198,7 +201,7 @@ export function ChatBox({
       // que se duplique cuando además llega por Realtime.
       if (resultado.datos) agregarMensaje(resultado.datos);
     } catch {
-      setError("No se pudo enviar el mensaje. Inténtalo de nuevo.");
+      setError(t.chat.errorEnvio);
       setTexto(contenido);
       setImagen(imagenAEnviar);
     } finally {
@@ -210,15 +213,13 @@ export function ChatBox({
     <div className="flex flex-col border border-[var(--border)] rounded-2xl overflow-hidden h-[70vh] max-h-[600px]">
       {conexionPerdida && (
         <div className="bg-brand-secondary/10 text-brand-secondary text-[12px] text-center py-1.5">
-          Conexión perdida, reconectando...
+          {t.chat.conexionPerdida}
         </div>
       )}
       <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-2.5">
         {mensajes.length === 0 && (
           <p className="text-center text-[13px] text-foreground-muted my-auto">
-            {esAdmin
-              ? "Todavía no hay mensajes en esta conversación."
-              : "Escribe tu duda y el equipo te responderá lo antes posible."}
+            {esAdmin ? t.chat.sinMensajesAdmin : t.chat.sinMensajesUsuario}
           </p>
         )}
         {mensajes.map((m) => {
@@ -249,7 +250,7 @@ export function ChatBox({
                     // eslint-disable-next-line @next/next/no-img-element -- URL firmada temporal, no un asset de next/image
                     <img
                       src={urlImagen}
-                      alt="Comprobante adjunto"
+                      alt={t.chat.comprobanteAdjunto}
                       className="max-w-full max-h-[240px] rounded-lg border border-black/10 object-contain bg-black/10"
                     />
                   ) : (
@@ -284,7 +285,7 @@ export function ChatBox({
                 if (inputArchivoRef.current) inputArchivoRef.current.value = "";
               }}
               className="shrink-0 text-foreground-muted hover:text-loss"
-              aria-label="Quitar imagen"
+              aria-label={t.chat.quitarImagen}
             >
               ✕
             </button>
@@ -297,13 +298,13 @@ export function ChatBox({
             accept={TIPOS_IMAGEN_ACEPTADOS}
             onChange={(e) => elegirImagen(e.target.files?.[0])}
             className="hidden"
-            aria-label="Adjuntar imagen de comprobante"
+            aria-label={t.chat.adjuntarImagenComprobante}
           />
           <button
             type="button"
             onClick={() => inputArchivoRef.current?.click()}
             disabled={enviando}
-            aria-label="Adjuntar imagen"
+            aria-label={t.chat.adjuntarImagen}
             className="shrink-0 w-[42px] flex items-center justify-center rounded-lg border border-[var(--border)] text-foreground-muted hover:text-foreground hover:bg-surface-hover transition-colors disabled:opacity-50"
           >
             <IconoImagen className="w-[18px] h-[18px]" />
@@ -311,8 +312,8 @@ export function ChatBox({
           <input
             value={texto}
             onChange={(e) => setTexto(e.target.value)}
-            placeholder="Escribe un mensaje..."
-            aria-label="Escribe un mensaje"
+            placeholder={t.chat.placeholderMensaje}
+            aria-label={t.chat.escribeUnMensaje}
             maxLength={2000}
             className="flex-1 min-w-0 px-3.5 py-2.5 rounded-lg border border-[var(--border)] bg-background text-base md:text-sm"
           />
@@ -321,7 +322,7 @@ export function ChatBox({
             disabled={enviando || (!texto.trim() && !imagen)}
             className="shrink-0 bg-brand-primary hover:bg-brand-primary-hover disabled:opacity-50 text-white font-semibold text-sm px-5 py-2.5 rounded-lg transition-colors"
           >
-            Enviar
+            {t.chat.enviar}
           </button>
         </div>
       </form>

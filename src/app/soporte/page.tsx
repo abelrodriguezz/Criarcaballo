@@ -4,10 +4,14 @@ import { esAdmin, obtenerUsuarioActual } from "@/lib/auth/sesion";
 import { crearClienteSupabaseServidor } from "@/lib/supabase/server";
 import { marcarLeidoPorUsuario } from "@/lib/actions/chat";
 import { ChatBox } from "@/components/chat/ChatBox";
+import { obtenerDiccionario } from "@/lib/i18n/servidor";
 import type { MensajeSoporte } from "@/lib/types";
 
 export default async function PaginaSoporte() {
-  const usuario = await obtenerUsuarioActual();
+  const [usuario, t] = await Promise.all([
+    obtenerUsuarioActual(),
+    obtenerDiccionario(),
+  ]);
   if (!usuario) redirect("/login");
   if (!usuario.activo) redirect("/cuenta-desactivada");
 
@@ -114,11 +118,10 @@ export default async function PaginaSoporte() {
   return (
     <div className="py-10">
       <h1 className="font-display font-semibold text-[26px] mb-1.5">
-        Soporte
+        {t.chat.titulo}
       </h1>
       <p className="text-foreground-muted text-[15px] mb-7">
-        ¿Alguna duda? Escríbenos — el equipo responde en orden de llegada,
-        puede tomar un poco de tiempo.
+        {t.chat.subtitulo}
       </p>
 
       <ChatBox
@@ -126,6 +129,7 @@ export default async function PaginaSoporte() {
         usuarioActualId={usuario.id}
         esAdmin={false}
         mensajesIniciales={mensajes ?? []}
+        t={t}
       />
     </div>
   );

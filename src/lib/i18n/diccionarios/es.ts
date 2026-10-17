@@ -509,4 +509,22 @@ export const es = {
     errUrl: "La URL de la fuente tiene que ser un enlace http:// o https:// válido.",
     confirmarEliminarNoticia: "¿Eliminar la noticia \"{t}\"?",
   },
+  chat: {
+    titulo: "Soporte",
+    subtitulo:
+      "¿Alguna duda? Escríbenos — el equipo responde en orden de llegada, puede tomar un poco de tiempo.",
+    conexionPerdida: "Conexión perdida, reconectando...",
+    sinMensajesAdmin: "Todavía no hay mensajes en esta conversación.",
+    sinMensajesUsuario: "Escribe tu duda y el equipo te responderá lo antes posible.",
+    comprobanteAdjunto: "Comprobante adjunto",
+    quitarImagen: "Quitar imagen",
+    adjuntarImagenComprobante: "Adjuntar imagen de comprobante",
+    adjuntarImagen: "Adjuntar imagen",
+    placeholderMensaje: "Escribe un mensaje...",
+    escribeUnMensaje: "Escribe un mensaje",
+    enviar: "Enviar",
+    imagenTipoInvalido: "La imagen debe ser JPG, PNG o WEBP.",
+    imagenMuyPesada: "La imagen no puede pesar más de 5 MB.",
+    errorEnvio: "No se pudo enviar el mensaje. Inténtalo de nuevo.",
+  },
 };
