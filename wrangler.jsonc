@@ -1,0 +1,27 @@
+{
+	"$schema": "node_modules/wrangler/config-schema.json",
+	"main": ".open-next/worker.js",
+	"name": "mercado-app",
+	"compatibility_date": "2026-10-19",
+	"compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+	"assets": {
+		"directory": ".open-next/assets",
+		"binding": "ASSETS"
+	},
+	"services": [
+		{
+			// Referencia a si mismo, la usa internamente el adaptador OpenNext
+			// (revalidacion/ISR) -- el nombre tiene que coincidir con "name" de
+			// arriba.
+			"binding": "WORKER_SELF_REFERENCE",
+			"service": "mercado-app"
+		}
+	]
+	// No se usa next/image en este proyecto (confirmado en el codigo), asi
+	// que no hace falta el binding "images" de Cloudflare.
+	// No se configura cache incremental con R2 a proposito: casi todas las
+	// rutas de esta app son dinamicas (server-rendered por request, no
+	// paginas estaticas con ISR), asi que el cache incremental no aporta
+	// mucho aca y evita tener que crear un bucket de R2 aparte. Se puede
+	// agregar despues si hace falta (ver https://opennext.js.org/cloudflare/caching).
+}

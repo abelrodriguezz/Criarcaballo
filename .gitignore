@@ -20,6 +20,14 @@
 # vercel
 .vercel
 
+# cloudflare (@opennextjs/cloudflare) — .dev.vars tiene las mismas claves
+# reales que .env.local, nunca debe subirse; .open-next y .wrangler son
+# build output/caché local, se regeneran solos
+.dev.vars
+.dev.vars*
+/.open-next/
+/.wrangler/
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts
