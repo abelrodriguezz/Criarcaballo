@@ -9,16 +9,17 @@
 -- en que migracion (buscar el "=== MIGRACION NNN ===" mas cercano arriba
 -- del error) y consultarlo antes de seguir.
 --
--- OJO -- UNA MIGRACION DE ACA ADENTRO (100) NECESITA UN CAMBIO A MANO:
+-- OJO -- UNA MIGRACION DE ACA ADENTRO (080) NECESITA UN CAMBIO A MANO:
 -- la migracion de "cron de cierre automatico de senales" trae hardcodeada
 -- la URL del servidor de desarrollo (criarcaballo-production.up.railway.app).
 -- Busca la linea que dice "url := 'https://criarcaballo-production..."
 -- mas abajo en este mismo archivo (esta cerca del final) y cambiala por
--- tu propio dominio de Railway ANTES de correr este script. Si todavia
--- no tenes el dominio de Railway porque es tu primera vez desplegando,
--- corre este script igual (el resto de la app funciona bien sin esto),
--- y despues volve a correr SOLO ese bloque (es el paso 6 del checklist
--- de lanzamiento) con la URL correcta una vez que la tengas.
+-- tu propia URL (Cloudflare Workers, o tu dominio propio si ya lo
+-- conectaste) ANTES de correr este script. Si todavia no tenes esa URL
+-- porque es tu primera vez desplegando, corre este script igual (el
+-- resto de la app funciona bien sin esto), y despues volve a correr
+-- SOLO ese bloque (es el paso 6 del checklist de lanzamiento) con la
+-- URL correcta una vez que la tengas.
 -- ============================================================
 
 
