@@ -14,15 +14,18 @@ Preguntale si ya tiene creadas las cuentas de GitHub, Supabase y Cloudflare de l
 
 ## Paso 1 — Subir el código al repo nuevo
 
-Si no estás corriendo ya dentro de un clon de este repo, clonalo primero desde el origen (preguntale la URL al operador si no la tenés).
+El código llega a esta máquina como un archivo `mercado-app-export.zip` (sin historial de git, por privacidad) — no un clon del repo de desarrollo original. Extraelo a una carpeta nueva y armá el repo desde cero ahí:
 
 ```
-git remote remove origin
+git init
+git add -A
+git commit -m "Version inicial"
+git branch -M master
 git remote add origin <URL-DEL-REPO-NUEVO-DE-LA-EMPRESA>
 git push -u origin master
 ```
 
-Esto va a pedir login de GitHub — dejá que el operador lo resuelva (navegador o token), es su cuenta, no la completes vos por él.
+Esto va a pedir login de GitHub — dejá que el operador lo resuelva (navegador o token), es su cuenta nueva de la empresa, no la completes vos por él.
 
 ## Paso 2 — Datos de Supabase
 
