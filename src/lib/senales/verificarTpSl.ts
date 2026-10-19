@@ -2,31 +2,40 @@ import { crearClienteSupabaseServidor } from "@/lib/supabase/server";
 import { obtenerSecretoServidor } from "@/lib/supabase/secretoServidor";
 import type { Senal } from "@/lib/types";
 
-/** Solo un par de Binance con este formato se puede consultar en su API. */
-const FORMATO_PAR_BINANCE = /^[A-Z0-9]{5,20}$/;
+// Las velas se consultan a MEXC, no a Binance: Binance bloquea con 451 a
+// cualquier servidor con IP en EE.UU./Europa, y Cloudflare Workers no deja
+// fijar una región (corre en el borde más cercano a quien dispara el
+// cron/la visita) — confirmado con una señal de prueba real que nunca se
+// cerró porque Binance no respondía desde el Worker. MEXC no bloquea por
+// región (ya se usa para los precios de /mercado por el mismo motivo) y
+// su formato de velas es casi idéntico al de Binance.
 
-/** Máximo de velas que Binance devuelve en una sola request. */
-const MAX_VELAS = 1000;
+/** Solo un par con este formato se puede consultar en la API de MEXC. */
+const FORMATO_PAR = /^[A-Z0-9]{5,20}$/;
+
+/** Máximo de velas que MEXC devuelve en una sola request (Binance da 1000). */
+const MAX_VELAS = 500;
 
 /**
- * Intervalos de vela de Binance, de más fino a más grueso, con cuántos
+ * Intervalos de vela de MEXC, de más fino a más grueso, con cuántos
  * minutos cubre cada uno en una sola request de MAX_VELAS velas.
  * Se elige el más fino que alcance a cubrir todo el tiempo que la señal
- * lleva activa — si se eligiera uno demasiado fino, las 1000 velas se
+ * lleva activa — si se eligiera uno demasiado fino, las velas se
  * acabarían antes de llegar a "ahora" y un toque de TP/SL reciente
  * pasaría desapercibido para siempre.
  *
- * La versión anterior se detenía en "4h" (≈166 días), así que una señal
- * más vieja que eso dejaba de revisarse correctamente sin ningún aviso.
+ * Los nombres de intervalo de MEXC no son los mismos que los de Binance:
+ * "60m" en vez de "1h", "1W" (mayúscula) en vez de "1w".
  */
 const INTERVALOS: ReadonlyArray<{ nombre: string; minutosPorVela: number }> = [
   { nombre: "1m", minutosPorVela: 1 },
   { nombre: "5m", minutosPorVela: 5 },
   { nombre: "15m", minutosPorVela: 15 },
-  { nombre: "1h", minutosPorVela: 60 },
+  { nombre: "30m", minutosPorVela: 30 },
+  { nombre: "60m", minutosPorVela: 60 },
   { nombre: "4h", minutosPorVela: 240 },
   { nombre: "1d", minutosPorVela: 1440 },
-  { nombre: "1w", minutosPorVela: 10080 },
+  { nombre: "1W", minutosPorVela: 10080 },
 ];
 
 function elegirIntervalo(msTranscurridos: number): string {
@@ -46,7 +55,7 @@ interface Toque {
 }
 
 /**
- * Revisa las velas de Binance desde que se publicó la señal hasta ahora
+ * Revisa las velas de MEXC desde que se publicó la señal hasta ahora
  * — no solo el precio actual — para saber si en algún momento el precio
  * tocó el take profit o el stop loss, aunque ya se haya alejado de ahí.
  *
@@ -57,11 +66,11 @@ interface Toque {
 async function buscarToqueTpSl(senal: Senal): Promise<Toque | null> {
   if (senal.take_profit == null && senal.stop_loss == null) return null;
 
-  // Un par que no existe en Binance (ej. "BTC" en vez de "BTCUSDT", o el
+  // Un par que no existe en MEXC (ej. "BTC" en vez de "BTCUSDT", o el
   // ticker de una acción) nunca va a devolver velas. Se descarta antes de
   // gastar la request — y así tampoco se puede colar nada raro en la URL.
   const par = senal.par.trim().toUpperCase();
-  if (!FORMATO_PAR_BINANCE.test(par)) return null;
+  if (!FORMATO_PAR.test(par)) return null;
 
   const desde = new Date(senal.created_at).getTime();
   if (!Number.isFinite(desde)) return null;
@@ -70,11 +79,17 @@ async function buscarToqueTpSl(senal: Senal): Promise<Toque | null> {
   const intervalo = elegirIntervalo(transcurrido);
 
   try {
+    // MEXC, a diferencia de Binance, solo respeta "startTime" como límite
+    // inferior real si también se manda "endTime" — sin él, ignora
+    // startTime y devuelve las últimas velas hasta ahora nada más (se
+    // confirmó probando contra la API real), lo que haría pasar por alto
+    // un toque de TP/SL viejo en una señal que lleva activa un buen rato.
+    const ahora = Date.now();
     const res = await fetch(
-      `https://api.binance.com/api/v3/klines?symbol=${encodeURIComponent(par)}` +
-        `&interval=${intervalo}&startTime=${desde}&limit=${MAX_VELAS}`,
+      `https://api.mexc.com/api/v3/klines?symbol=${encodeURIComponent(par)}` +
+        `&interval=${intervalo}&startTime=${desde}&endTime=${ahora}&limit=${MAX_VELAS}`,
       // Sin timeout explícito, fetch espera indefinidamente: una request
-      // colgada a Binance dejaría la página de señales cargando para
+      // colgada a MEXC dejaría la página de señales cargando para
       // siempre (y, con el candado de abajo, a todas las demás también).
       { cache: "no-store", signal: AbortSignal.timeout(10_000) }
     );
@@ -123,11 +138,11 @@ async function buscarToqueTpSl(senal: Senal): Promise<Toque | null> {
 }
 
 /**
- * Evita martillar la API de Binance. El chequeo se dispara en cada carga
+ * Evita martillar la API de MEXC. El chequeo se dispara en cada carga
  * de /senales y encima la página se auto-refresca cada 45s, así que con
  * varias pestañas abiertas (y una request por señal activa) se puede
- * llegar rápido al límite de peticiones de Binance, que responde 418/429
- * y deja de cerrar señales justo cuando más hace falta.
+ * llegar rápido al límite de peticiones de MEXC, que respondería con un
+ * error y dejaría de cerrar señales justo cuando más hace falta.
  */
 const PAUSA_MINIMA_MS = 30_000;
 let ultimaRevision = 0;
@@ -144,7 +159,7 @@ let revisionEnCurso: Promise<void> | null = null;
 export async function revisarYCerrarSenalesActivas(): Promise<void> {
   // Si ya hay una revisión corriendo, esta request NO la espera: sigue de
   // largo y pinta la página. Dos visitantes cargando /senales a la vez
-  // duplicaban todas las llamadas a Binance, pero hacer que el segundo
+  // duplicaban todas las llamadas a MEXC, pero hacer que el segundo
   // espere al primero sería peor — encadenaría el tiempo de carga de una
   // request al de otra, y si la primera se cuelga, se cuelgan todas.
   if (revisionEnCurso) return;
@@ -154,7 +169,7 @@ export async function revisarYCerrarSenalesActivas(): Promise<void> {
     try {
       // Nada de lo que pase aquí dentro debe tumbar el render de /senales:
       // es una tarea de mantenimiento en segundo plano, no el contenido de
-      // la página. Si Binance o la base fallan, la señal simplemente se
+      // la página. Si MEXC o la base fallan, la señal simplemente se
       // cierra en la próxima visita.
       const supabase = await crearClienteSupabaseServidor();
 
