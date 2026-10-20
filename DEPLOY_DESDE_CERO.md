@@ -4,13 +4,21 @@ Esta guía está escrita para el agente que la va a ejecutar, no para un humano 
 
 ## Contexto
 
-App Next.js 16 + Supabase (mercado-app / Trade4U: señales, paper trading, depósitos/retiros, referidos). Se despliega desde cero a cuentas nuevas de GitHub + Supabase + Cloudflare Workers, sin reusar nada del entorno de desarrollo. Objetivo final: base de datos vacía, 2 cuentas admin reales, app corriendo en Cloudflare.
+App Next.js 16 + Supabase (mercado-app / Trade4U: señales, paper trading, depósitos/retiros, referidos). Se despliega desde cero a cuentas nuevas de GitHub + Supabase + un VPS privado (1984 Hosting, pagado con cripto), sin reusar nada del entorno de desarrollo.
+
+**Por qué un VPS y no Vercel/Railway/Cloudflare**: el operador necesita privacidad (sin tarjeta, sin verificación de identidad) y pago en cripto. Investigado y descartado: Vercel/Cloudflare/Railway piden tarjeta; el plan gratis de Cloudflare Workers no aguanta esta app (límite de 10ms de CPU por pedido, la app mide 180-574ms reales); el plan gratis de Vercel sí aguantaría de capacidad pero prohíbe uso comercial en sus términos. Un VPS normal (acceso root, sin medir CPU por pedido) no tiene ninguno de los dos problemas.
+
+**Arquitectura**: la app se compila LOCALMENTE (en la máquina del operador, donde se ejecuta este agente) y solo se transfiere el resultado ya compilado al VPS — el plan elegido ($9.66/mes, 1GB RAM) alcanza de sobra para CORRER la app (probado: 294MB de pico con 20 usuarios concurrentes) pero podría quedarse sin memoria si se intentara COMPILAR ahí mismo.
 
 ## Paso 0 — Confirmar con el operador
 
-Preguntale si ya tiene creadas las cuentas de GitHub, Supabase y Cloudflare de la empresa (si no, el operador tiene que crearlas él mismo — signup con email y verificación no lo podés hacer vos). También si ya existen:
-- Un repositorio nuevo y PRIVADO en GitHub (si no: github.com → New repository → Private, sin README).
-- Un proyecto nuevo en Supabase (si no: supabase.com → New project → cualquier región sirve, no afecta los precios de cripto porque se usa MEXC → anotar la contraseña de la base que pida).
+Preguntale si ya tiene:
+- Cuenta de GitHub de la empresa + un repositorio nuevo y PRIVADO creado.
+- Proyecto nuevo en Supabase (región: cualquiera, ya no importa — tanto `/mercado` como el cierre de señales usan MEXC, que no bloquea por región).
+- Cuenta en 1984 Hosting (1984.hosting) y el VPS **ya pagado** (plan VPS #1, 1GB RAM/1 CPU, $9.66/mes, pagado con Bitcoin o Monero). Si todavía no lo pagó, decile que lo haga ahora — vos no podés pagar en cripto por él.
+- La **IP del VPS** y la contraseña de **root** (se la dan por email o en el panel de 1984 al terminar de pagar).
+
+Si el VPS no está listo, esperá a que el operador lo tenga antes de seguir del paso 5 en adelante — los pasos 1-4 (GitHub/Supabase) se pueden hacer mientras tanto.
 
 ## Paso 1 — Subir el código al repo nuevo
 
@@ -42,7 +50,7 @@ npm install pg --no-save
 
 ## Paso 3 — Correr las migraciones
 
-En vez de pedirle al operador que pegue el SQL a mano, conectate vos directo y corré el bundle entero:
+Conectate directo y corré el bundle entero:
 
 ```js
 // guardar como migrar.js y correr: node migrar.js
@@ -60,7 +68,7 @@ const client = new Client({ connectionString: "<CONNECTION STRING DEL PASO 2>", 
 
 Si da un error que NO sea "ya existe"/"already exists", DETENTE ahí y mostrale al operador el mensaje completo y la sección `=== MIGRACION NNN ===` más cercana arriba del error antes de seguir — esto nunca se corrió de punta a punta contra un proyecto realmente vacío antes de ahora.
 
-La migración 080 (cron de señales) trae hardcodeada la URL vieja de desarrollo — no pasa nada si se aplica tal cual, se corrige en el paso 6.
+La migración 080 (cron de señales) trae hardcodeada la URL vieja de desarrollo — no pasa nada si se aplica tal cual, se corrige en el paso 9.
 
 ## Paso 4 — Generar el TRADING_SERVER_SECRET nuevo
 
@@ -68,7 +76,7 @@ La migración 080 (cron de señales) trae hardcodeada la URL vieja de desarrollo
 node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 ```
 
-Guardá el valor (lo vas a necesitar también en el paso 5). Con la misma conexión del paso 3:
+Guardá el valor (lo vas a necesitar también en el paso 7). Con la misma conexión del paso 3:
 
 ```sql
 update public.config_servidor
@@ -76,59 +84,146 @@ set valor = '<EL VALOR GENERADO>', actualizado_en = now()
 where clave = 'trading_server_secret';
 ```
 
-## Paso 5 — Desplegar a Cloudflare Workers
+## Paso 5 — Preparar el VPS (primera conexión)
+
+Conectate por SSH con los datos que te dio el operador (reemplazando la IP real):
+
+```
+ssh root@IP_DEL_VPS
+```
+
+La primera vez te va a pedir aceptar la huella del servidor (escribí `yes`) y la contraseña de root que dio 1984. Una vez adentro, actualizá el sistema e instalá lo necesario (asumiendo Ubuntu/Debian, que es lo más común en 1984 Hosting — si el VPS corre otra distro, avisale al operador y ajustá los comandos de instalación de paquetes, el resto es igual):
+
+```bash
+apt update && apt upgrade -y
+
+# Node.js 20 LTS
+curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
+apt install -y nodejs
+
+# PM2: mantiene la app corriendo y la reinicia sola si se cae o si el VPS reinicia
+npm install -g pm2
+
+# Caddy: servidor web con HTTPS automatico (certificado real, se renueva solo)
+apt install -y debian-keyring debian-archive-keyring apt-transport-https curl gnupg
+curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/gpg.key' | gpg --dearmor -o /usr/share/keyrings/caddy-stable-archive-keyring.gpg
+curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/debian.deb.txt' | tee /etc/apt/sources.list.d/caddy-stable.list
+apt update
+apt install -y caddy
+
+# Firewall basico: solo SSH, HTTP y HTTPS
+apt install -y ufw
+ufw allow 22
+ufw allow 80
+ufw allow 443
+ufw --force enable
+
+# Usuario sin privilegios para correr la app (root nunca deberia correr la app en si)
+adduser --disabled-password --gecos "" mercadoapp
+mkdir -p /home/mercadoapp/app
+chown -R mercadoapp:mercadoapp /home/mercadoapp/app
+```
+
+Confirmá que `node -v` da `v20.x.x` y que `systemctl status caddy` dice "active (running)" antes de seguir.
+
+## Paso 6 — Compilar la app LOCALMENTE
+
+En tu máquina (NO en el VPS), dentro de la carpeta del proyecto:
 
 ```
 npm install
 ```
 
-Creá `.env.local` en la raíz del proyecto:
+Creá `.env.local` en la raíz con los datos reales del paso 2 (estas 2 variables se necesitan en el momento de compilar, quedan "horneadas" en el resultado):
 
 ```
 NEXT_PUBLIC_SUPABASE_URL=<del paso 2>
 NEXT_PUBLIC_SUPABASE_ANON_KEY=<del paso 2>
 ```
 
-Login de Cloudflare (dejá que el operador complete el login en el navegador que se abre, es su cuenta):
+Compilá:
 
 ```
-npx wrangler login
+npm run build
 ```
 
-Desplegar:
+Si termina sin errores, seguís al paso 7. El resultado queda en `.next/` — eso es lo que se transfiere, no hace falta volver a compilar en el VPS.
+
+## Paso 7 — Transferir la app al VPS
+
+Desde tu máquina, reemplazando IP_DEL_VPS:
 
 ```
-npm run cf:deploy
+rsync -avz --exclude ".git" --exclude ".env.local" ./ mercadoapp@IP_DEL_VPS:/home/mercadoapp/app/
 ```
 
-Anotá la URL que devuelve (tipo `https://mercado-app.<cuenta>.workers.dev`).
+(Si no tenés `rsync` disponible — por ejemplo en Windows sin WSL — usá `scp -r . mercadoapp@IP_DEL_VPS:/home/mercadoapp/app/` en su lugar; es más lento pero funciona igual. Puede pedir la contraseña del usuario `mercadoapp` — si no tiene, poné temporalmente `ssh root@IP_DEL_VPS "passwd mercadoapp"` para asignarle una antes de este paso.)
 
-**Cargar el secreto — método obligatorio, no uses tuberías.** `echo valor | npx wrangler secret put ...` (o cualquier `|`) coló un salto de línea de más en una prueba real y rompió el secreto EN SILENCIO, sin ningún error visible al desplegar. Usá esto en su lugar:
+Esto copia TODO el proyecto, incluido `node_modules` (así el VPS no necesita correr `npm install`, que es justo lo que queríamos evitar con 1GB de RAM) y `.next` ya compilado. **No copia `.env.local`** a propósito (está excluido arriba) — el del VPS se arma aparte en el paso 8, porque necesita una variable que el de acá NO tiene (el secreto).
 
-```js
-// guardar como poner_secreto.js y correr: node poner_secreto.js
-const { spawn } = require("child_process");
-const secreto = "<EL VALOR DEL PASO 4>";
-const p = spawn("npx.cmd", ["wrangler", "secret", "put", "TRADING_SERVER_SECRET"], {
-  stdio: ["pipe", "inherit", "inherit"],
-  shell: true, // en Mac/Linux: quitar shell:true y usar "npx" en vez de "npx.cmd"
-});
-p.stdin.write(secreto);
-p.stdin.end();
-p.on("close", (code) => process.exit(code));
-```
+## Paso 8 — Variables de entorno en el VPS y arranque con PM2
 
-Verificá que quedó bien:
+Por SSH, como el usuario `mercadoapp` (no root):
 
 ```
-curl -X POST https://<TU-WORKER>.workers.dev/api/cron/senales -H "Authorization: Bearer <EL SECRETO DEL PASO 4>"
+ssh mercadoapp@IP_DEL_VPS
+cd /home/mercadoapp/app
 ```
 
-Tiene que devolver `{"ok":true}`. Si da 401, repetí el paso del secreto — no sigas sin esto en verde.
+Creá el archivo de entorno de producción con las 3 variables (las 2 de siempre + el secreto del paso 4 — Next.js lee `.env.production.local` automáticamente al arrancar con `next start`):
 
-## Paso 6 — Apuntar el cron de señales a la URL nueva
+```
+cat > .env.production.local << 'EOF'
+NEXT_PUBLIC_SUPABASE_URL=<del paso 2>
+NEXT_PUBLIC_SUPABASE_ANON_KEY=<del paso 2>
+TRADING_SERVER_SECRET=<del paso 4>
+EOF
+```
 
-Con la conexión del paso 2/3, reemplazando `TU-WORKER.workers.dev` por la URL real del paso 5:
+Arrancá la app con PM2, apuntando al puerto interno 3000 (Caddy lo va a exponer afuera en el paso 9):
+
+```
+pm2 start npm --name mercado-app -- start -- -p 3000
+pm2 save
+```
+
+Para que arranque solo si el VPS se reinicia, como root:
+
+```
+exit
+pm2 startup systemd -u mercadoapp --hp /home/mercadoapp
+```
+
+(ese comando imprime una línea que empieza con `sudo env PATH=...` — copiala y correla tal cual, es la que registra el arranque automático).
+
+Verificá que responde:
+
+```
+curl -I http://localhost:3000
+```
+
+Tiene que dar `HTTP/1.1 200 OK`. Si no, revisá `pm2 logs mercado-app` para ver el error.
+
+## Paso 9 — Caddy: HTTPS automático con el dominio
+
+Esto requiere que el operador ya haya comprado un dominio y apuntado su registro DNS tipo **A** a la IP del VPS (decile que lo haga si todavía no — puede tardar unos minutos en propagar). Como root en el VPS:
+
+```
+cat > /etc/caddy/Caddyfile << 'EOF'
+TU-DOMINIO.com {
+  reverse_proxy localhost:3000
+}
+EOF
+systemctl reload caddy
+```
+
+Caddy consigue el certificado HTTPS real solo (Let's Encrypt) en cuanto detecta que el dominio ya apunta a esta IP — puede tardar uno o dos minutos la primera vez. Confirmá entrando a `https://TU-DOMINIO.com` desde un navegador o con `curl -I https://TU-DOMINIO.com`.
+
+Si el operador todavía no tiene dominio, se puede probar por ahora con `curl -I http://IP_DEL_VPS:3000` directo (sin HTTPS) mientras tanto, y hacer este paso después.
+
+## Paso 10 — Apuntar el cron de señales a la URL nueva
+
+Con la conexión del paso 2/3, reemplazando `TU-DOMINIO.com` por el dominio real (o la IP:3000 si todavía no hay dominio — pero el cron necesita que ese puerto sea alcanzable desde internet, así que lo ideal es esperar a tener el dominio):
 
 ```sql
 select cron.unschedule('cerrar-senales-automatico');
@@ -148,7 +243,7 @@ begin
   end if;
 
   perform net.http_post(
-    url := 'https://TU-WORKER.workers.dev/api/cron/senales',
+    url := 'https://TU-DOMINIO.com/api/cron/senales',
     headers := jsonb_build_object(
       'Authorization', 'Bearer ' || v_secreto,
       'Content-Type', 'application/json'
@@ -167,11 +262,17 @@ select cron.schedule(
 );
 ```
 
-Probá con el mismo curl del paso 5 — si da `{"ok":true}`, el cron ya apunta bien.
+Probá con curl (reemplazando dominio y secreto):
 
-## Paso 7 — Crear los 2 admins
+```
+curl -X POST https://TU-DOMINIO.com/api/cron/senales -H "Authorization: Bearer TU-SECRETO-DEL-PASO-4"
+```
 
-Pedile al operador los 2 correos reales de admin. En vez de hacerlos registrarse manualmente por la UI, creálos directo con la service_role key del paso 2:
+Tiene que devolver `{"ok":true}`.
+
+## Paso 11 — Crear los 2 admins
+
+Pedile al operador los 2 correos reales de admin. Creálos directo con la service_role key del paso 2 (evita el registro manual por la UI):
 
 ```js
 // guardar como crear_admins.js y correr: node crear_admins.js
@@ -193,7 +294,7 @@ const PASSWORD_TEMPORAL = "<una contraseña temporal segura>";
 })();
 ```
 
-Esto crea el usuario de auth; el trigger `handle_new_user()` crea la fila en `public.usuarios` con nombre/apellido/cédula/teléfono en `NULL` (se completan después desde `/perfil`, no son obligatorios en esta primera creación — a propósito, para no bloquear cuentas creadas así).
+Esto crea el usuario de auth; el trigger `handle_new_user()` crea la fila en `public.usuarios` con nombre/apellido/cédula/teléfono en `NULL` (se completan después desde `/perfil`, no son obligatorios en esta primera creación).
 
 Con la conexión SQL, marcá los roles (reemplazando los correos reales, y eligiendo cuál de las dos es la principal):
 
@@ -210,13 +311,23 @@ where email = '<correo-admin-1>';
 
 Pedile al operador que entre con cualquiera de las 2 (contraseña temporal del script), confirme que ve el panel de admin completo en `/perfil`, y que cambie esa contraseña temporal por una real ahí mismo.
 
+## Cómo actualizar la app más adelante (una vez que ya está desplegada)
+
+Para subir cambios de código después de este primer despliegue, repetí los pasos 6 y 7 (compilar local, `rsync` al VPS), y reiniciá el proceso:
+
+```
+ssh mercadoapp@IP_DEL_VPS "pm2 restart mercado-app"
+```
+
+No hace falta tocar Caddy, PM2 ni las variables de entorno de nuevo salvo que cambien.
+
 ## Lo que el operador SÍ tiene que hacer a mano (no se puede scriptear)
 
-- **SMTP (Resend)**: crear cuenta en resend.com, verificar el dominio (necesita el dominio del punto siguiente ya conectado a Cloudflare), generar una API key. Con esos 3 datos, vos configurás Supabase: Project Settings → Authentication → SMTP Settings → Enable Custom SMTP → Host `smtp.resend.com`, Port `465`, Username `resend`, Password la API key, Sender email del dominio verificado.
-- **Dominio propio**: el operador lo compra. Si no está ya en Cloudflare: Cloudflare → Add a site → el dominio → cambiar los nameservers en el registrador por los que da Cloudflare. Después vos conectás: Workers & Pages → el Worker → Settings → Domains & Routes → Add → Custom Domain. Actualizá el paso 6 con la URL del dominio nuevo.
-- **Cloudflare Turnstile**: el operador entra a dash.cloudflare.com/turnstile → Add widget → te pasa Site Key y Secret Key. Vos agregás `NEXT_PUBLIC_TURNSTILE_SITE_KEY` a `.env.local` y volvés a desplegar (`npm run cf:deploy`), y pegás el Secret Key en Supabase → Authentication → Attack Protection → Enable Captcha protection.
-- **Twelve Data (opcional)**: el operador crea cuenta en twelvedata.com y te pasa la API key. Vos la agregás a `.env.local` como `MARKET_API_KEY` y volvés a desplegar.
+- **SMTP (Resend)**: crear cuenta en resend.com, verificar el dominio (necesita el dominio del paso 9 ya apuntado), generar una API key. Con esos 3 datos, vos configurás Supabase: Project Settings → Authentication → SMTP Settings → Enable Custom SMTP → Host `smtp.resend.com`, Port `465`, Username `resend`, Password la API key, Sender email del dominio verificado.
+- **Dominio propio**: el operador lo compra y apunta el registro DNS tipo A a la IP del VPS (ver paso 9).
+- **Cloudflare Turnstile (opcional, captcha)**: el operador entra a dash.cloudflare.com/turnstile → Add widget → te pasa Site Key y Secret Key. Vos agregás `NEXT_PUBLIC_TURNSTILE_SITE_KEY` a `.env.local` ANTES de compilar (paso 6) y repetís 6-7 para que quede en el build, y pegás el Secret Key en Supabase → Authentication → Attack Protection → Enable Captcha protection.
+- **Twelve Data (opcional)**: el operador crea cuenta en twelvedata.com y te pasa la API key. Vos la agregás a `.env.local` como `MARKET_API_KEY` antes de compilar y repetís 6-7.
 
 ## Al terminar
 
-Resumen para el operador: URL final del sitio, qué quedó pendiente de la lista de arriba, y qué verificaste vos mismo (curl del cron, login de los 2 admins, alguna página clave cargando bien).
+Resumen para el operador: URL final del sitio, qué quedó pendiente de la lista de arriba, y qué verificaste vos mismo (curl del cron, `pm2 status` mostrando la app "online", login de los 2 admins, alguna página clave cargando bien con HTTPS).
