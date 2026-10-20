@@ -18,6 +18,7 @@ Preguntale si ya tiene:
 - Cuenta en 1984 Hosting (1984.hosting) y el VPS **ya pagado** (plan VPS #1, 1GB RAM/1 CPU, $9.66/mes, pagado con Bitcoin o Monero). Si todavía no lo pagó, decile que lo haga ahora — vos no podés pagar en cripto por él.
 - La **IP del VPS** y la contraseña de **root** (se la dan por email o en el panel de 1984 al terminar de pagar).
 - Cuenta de Cloudflare con un widget de **Turnstile** creado (ver paso 6 — si no la tiene todavía, no hace falta pararse ahí hasta llegar a ese paso).
+- Cuenta gratis en **Resend** para los correos (ver paso 11 — tampoco hace falta tenerla lista de entrada).
 
 Si el VPS no está listo, esperá a que el operador lo tenga antes de seguir del paso 5 en adelante — los pasos 1-4 (GitHub/Supabase) se pueden hacer mientras tanto.
 
@@ -69,7 +70,7 @@ const client = new Client({ connectionString: "<CONNECTION STRING DEL PASO 2>", 
 
 Si da un error que NO sea "ya existe"/"already exists", DETENTE ahí y mostrale al operador el mensaje completo y la sección `=== MIGRACION NNN ===` más cercana arriba del error antes de seguir — esto nunca se corrió de punta a punta contra un proyecto realmente vacío antes de ahora.
 
-La migración 080 (cron de señales) trae hardcodeada la URL vieja de desarrollo — no pasa nada si se aplica tal cual, se corrige en el paso 11.
+La migración 080 (cron de señales) trae hardcodeada la URL vieja de desarrollo — no pasa nada si se aplica tal cual, se corrige en el paso 12.
 
 ## Paso 4 — Generar el TRADING_SERVER_SECRET nuevo
 
@@ -241,7 +242,23 @@ Si el operador todavía no tiene dominio, se puede probar por ahora con `curl -I
 
 Si en el paso 6 el widget de Turnstile se creó sin dominio (o con otro), volvé al dashboard de Cloudflare y agregá este dominio a la lista de dominios del widget — si no, el captcha no va a validar en producción.
 
-## Paso 11 — Apuntar el cron de señales a la URL nueva
+## Paso 11 — Resend (SMTP para correos reales)
+
+**PARATE ACÁ y esperá los datos del operador antes de seguir.** Sin esto, los correos de confirmación de registro y "recuperar contraseña" comparten el límite de Supabase (2 por hora) — se agota enseguida con usuarios reales. Solo el plan gratis de Resend (3,000 correos/mes, 100/día, sin tarjeta) — no hace falta ni se debe activar ningún plan pago.
+
+Pedile al operador:
+1. Que cree una cuenta gratis en <https://resend.com> (plan Free, nada más).
+2. Que entre a Domains → Add Domain → ponga el mismo dominio del paso 10. Resend le muestra unos registros DNS (TXT/MX/CNAME) para agregar.
+3. Que agregue esos registros en el panel de DNS de su registrador (el mismo donde ya agregó el registro A del paso 10). Puede tardar unos minutos en verificarse.
+4. Que una vez que Resend marque el dominio como "Verified", vaya a API Keys → Create API Key y te pase el valor (empieza con `re_`, solo se muestra una vez).
+
+Con esos datos, configurá Supabase vos mismo: Project Settings → Authentication → SMTP Settings → activá "Enable Custom SMTP" → completá Sender email (ej. `no-responder@TU-DOMINIO.com`, del dominio recién verificado), Sender name (ej. Trade4U), Host `smtp.resend.com`, Port `465`, Username `resend`, Password la API key que te dio el operador.
+
+Probá: registrá una cuenta de prueba o pedí "recuperar contraseña" desde el sitio ya desplegado, y confirmá con el operador que el correo llega de verdad (ya no el limitado de Supabase).
+
+Si el operador todavía no tiene el dominio verificado en Resend, podés seguir con el resto del despliegue y volver a este paso después — no bloquea nada más.
+
+## Paso 12 — Apuntar el cron de señales a la URL nueva
 
 Con la conexión del paso 2/3, reemplazando `TU-DOMINIO.com` por el dominio real (o la IP:3000 si todavía no hay dominio — pero el cron necesita que ese puerto sea alcanzable desde internet, así que lo ideal es esperar a tener el dominio):
 
@@ -290,7 +307,7 @@ curl -X POST https://TU-DOMINIO.com/api/cron/senales -H "Authorization: Bearer T
 
 Tiene que devolver `{"ok":true}`.
 
-## Paso 12 — Crear los 2 admins
+## Paso 13 — Crear los 2 admins
 
 Pedile al operador los 2 correos reales de admin. Creálos directo con la service_role key del paso 2 (evita el registro manual por la UI):
 
@@ -343,12 +360,11 @@ No hace falta tocar Caddy, PM2 ni las variables de entorno de nuevo salvo que ca
 
 ## Lo que el operador SÍ tiene que hacer a mano (no se puede scriptear)
 
-- **SMTP (Resend)**: crear cuenta en resend.com, verificar el dominio (necesita el dominio del paso 10 ya apuntado), generar una API key. Con esos 3 datos, vos configurás Supabase: Project Settings → Authentication → SMTP Settings → Enable Custom SMTP → Host `smtp.resend.com`, Port `465`, Username `resend`, Password la API key, Sender email del dominio verificado.
 - **Dominio propio**: el operador lo compra y apunta el registro DNS tipo A a la IP del VPS (ver paso 10).
 - **Twelve Data (opcional)**: el operador crea cuenta en twelvedata.com y te pasa la API key. Vos la agregás a `.env.local` como `MARKET_API_KEY` antes de compilar y repetís 7-8.
 
-(Cloudflare Turnstile ya tiene su propio paso numerado, el 6 — no quedó en esta lista porque no es opcional, el formulario de login/registro ya lo espera.)
+(Cloudflare Turnstile y Resend/SMTP ya tienen su propio paso numerado, el 6 y el 11 — no quedaron en esta lista porque no son opcionales: el formulario de login/registro ya espera el captcha, y sin SMTP propio el envío de correos se agota rápido con usuarios reales.)
 
 ## Al terminar
 
-Resumen para el operador: URL final del sitio, qué quedó pendiente de la lista de arriba, y qué verificaste vos mismo (curl del cron, `pm2 status` mostrando la app "online", login de los 2 admins, captcha visible en login/registro, alguna página clave cargando bien con HTTPS).
+Resumen para el operador: URL final del sitio, qué quedó pendiente de la lista de arriba, y qué verificaste vos mismo (curl del cron, `pm2 status` mostrando la app "online", login de los 2 admins, captcha visible en login/registro, un correo real llegado por Resend, alguna página clave cargando bien con HTTPS).
