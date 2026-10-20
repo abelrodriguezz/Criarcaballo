@@ -17,6 +17,7 @@ Preguntale si ya tiene:
 - Proyecto nuevo en Supabase (región: cualquiera, ya no importa — tanto `/mercado` como el cierre de señales usan MEXC, que no bloquea por región).
 - Cuenta en 1984 Hosting (1984.hosting) y el VPS **ya pagado** (plan VPS #1, 1GB RAM/1 CPU, $9.66/mes, pagado con Bitcoin o Monero). Si todavía no lo pagó, decile que lo haga ahora — vos no podés pagar en cripto por él.
 - La **IP del VPS** y la contraseña de **root** (se la dan por email o en el panel de 1984 al terminar de pagar).
+- Cuenta de Cloudflare con un widget de **Turnstile** creado (ver paso 6 — si no la tiene todavía, no hace falta pararse ahí hasta llegar a ese paso).
 
 Si el VPS no está listo, esperá a que el operador lo tenga antes de seguir del paso 5 en adelante — los pasos 1-4 (GitHub/Supabase) se pueden hacer mientras tanto.
 
@@ -68,7 +69,7 @@ const client = new Client({ connectionString: "<CONNECTION STRING DEL PASO 2>", 
 
 Si da un error que NO sea "ya existe"/"already exists", DETENTE ahí y mostrale al operador el mensaje completo y la sección `=== MIGRACION NNN ===` más cercana arriba del error antes de seguir — esto nunca se corrió de punta a punta contra un proyecto realmente vacío antes de ahora.
 
-La migración 080 (cron de señales) trae hardcodeada la URL vieja de desarrollo — no pasa nada si se aplica tal cual, se corrige en el paso 9.
+La migración 080 (cron de señales) trae hardcodeada la URL vieja de desarrollo — no pasa nada si se aplica tal cual, se corrige en el paso 11.
 
 ## Paso 4 — Generar el TRADING_SERVER_SECRET nuevo
 
@@ -76,7 +77,7 @@ La migración 080 (cron de señales) trae hardcodeada la URL vieja de desarrollo
 node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 ```
 
-Guardá el valor (lo vas a necesitar también en el paso 7). Con la misma conexión del paso 3:
+Guardá el valor (lo vas a necesitar también en el paso 9). Con la misma conexión del paso 3:
 
 ```sql
 update public.config_servidor
@@ -126,7 +127,22 @@ chown -R mercadoapp:mercadoapp /home/mercadoapp/app
 
 Confirmá que `node -v` da `v20.x.x` y que `systemctl status caddy` dice "active (running)" antes de seguir.
 
-## Paso 6 — Compilar la app LOCALMENTE
+## Paso 6 — Cloudflare Turnstile (captcha de login y registro)
+
+**PARATE ACÁ y esperá los datos del operador antes de seguir.** El código ya está listo y conectado en login, registro y recuperar contraseña — solo falta la cuenta real.
+
+Pedile al operador:
+1. Que entre a <https://dash.cloudflare.com/?to=/:account/turnstile> (cuenta de Cloudflare de la empresa, separada del VPS — Turnstile es gratis y no tiene nada que ver con dónde corre la app).
+2. Add widget → nombre cualquiera → en "Domain" pone el dominio que va a usar la app (o lo deja en blanco/localhost si todavía no lo tiene, lo puede agregar después desde el mismo panel) → Widget Mode: Managed → Create.
+3. Que te pase el **Site Key** y el **Secret Key** que le muestra.
+
+Con esos dos valores:
+- Guardá el Site Key — lo vas a necesitar en el paso 7 (`NEXT_PUBLIC_TURNSTILE_SITE_KEY`, va al `.env.local` antes de compilar).
+- El Secret Key configuralo ahora mismo en Supabase: Authentication → Attack Protection → activá "Enable Captcha protection" → elegí Turnstile → pegá el Secret Key → Save.
+
+Si el operador todavía no tiene la cuenta de Cloudflare lista, podés seguir con el resto del despliegue sin el captcha activado (login/registro funcionan igual, solo sin esa capa extra) y volver a este paso después — en ese caso, cuando lo tenga, hay que agregar el Site Key al `.env.local`, volver a compilar (paso 7) y transferir (paso 8) de nuevo.
+
+## Paso 7 — Compilar la app LOCALMENTE
 
 En tu máquina (NO en el VPS), dentro de la carpeta del proyecto:
 
@@ -134,11 +150,12 @@ En tu máquina (NO en el VPS), dentro de la carpeta del proyecto:
 npm install
 ```
 
-Creá `.env.local` en la raíz con los datos reales del paso 2 (estas 2 variables se necesitan en el momento de compilar, quedan "horneadas" en el resultado):
+Creá `.env.local` en la raíz con los datos reales de los pasos anteriores (estas variables se necesitan en el momento de compilar, quedan "horneadas" en el resultado):
 
 ```
 NEXT_PUBLIC_SUPABASE_URL=<del paso 2>
 NEXT_PUBLIC_SUPABASE_ANON_KEY=<del paso 2>
+NEXT_PUBLIC_TURNSTILE_SITE_KEY=<del paso 6>
 ```
 
 Compilá:
@@ -147,9 +164,9 @@ Compilá:
 npm run build
 ```
 
-Si termina sin errores, seguís al paso 7. El resultado queda en `.next/` — eso es lo que se transfiere, no hace falta volver a compilar en el VPS.
+Si termina sin errores, seguís al paso 8. El resultado queda en `.next/` — eso es lo que se transfiere, no hace falta volver a compilar en el VPS.
 
-## Paso 7 — Transferir la app al VPS
+## Paso 8 — Transferir la app al VPS
 
 Desde tu máquina, reemplazando IP_DEL_VPS:
 
@@ -159,9 +176,9 @@ rsync -avz --exclude ".git" --exclude ".env.local" ./ mercadoapp@IP_DEL_VPS:/hom
 
 (Si no tenés `rsync` disponible — por ejemplo en Windows sin WSL — usá `scp -r . mercadoapp@IP_DEL_VPS:/home/mercadoapp/app/` en su lugar; es más lento pero funciona igual. Puede pedir la contraseña del usuario `mercadoapp` — si no tiene, poné temporalmente `ssh root@IP_DEL_VPS "passwd mercadoapp"` para asignarle una antes de este paso.)
 
-Esto copia TODO el proyecto, incluido `node_modules` (así el VPS no necesita correr `npm install`, que es justo lo que queríamos evitar con 1GB de RAM) y `.next` ya compilado. **No copia `.env.local`** a propósito (está excluido arriba) — el del VPS se arma aparte en el paso 8, porque necesita una variable que el de acá NO tiene (el secreto).
+Esto copia TODO el proyecto, incluido `node_modules` (así el VPS no necesita correr `npm install`, que es justo lo que queríamos evitar con 1GB de RAM) y `.next` ya compilado. **No copia `.env.local`** a propósito (está excluido arriba) — el del VPS se arma aparte en el paso 9, porque necesita una variable que el de acá NO tiene (el secreto).
 
-## Paso 8 — Variables de entorno en el VPS y arranque con PM2
+## Paso 9 — Variables de entorno en el VPS y arranque con PM2
 
 Por SSH, como el usuario `mercadoapp` (no root):
 
@@ -170,17 +187,18 @@ ssh mercadoapp@IP_DEL_VPS
 cd /home/mercadoapp/app
 ```
 
-Creá el archivo de entorno de producción con las 3 variables (las 2 de siempre + el secreto del paso 4 — Next.js lee `.env.production.local` automáticamente al arrancar con `next start`):
+Creá el archivo de entorno de producción con las variables (las del paso 7 + el secreto del paso 4 — Next.js lee `.env.production.local` automáticamente al arrancar con `next start`):
 
 ```
 cat > .env.production.local << 'EOF'
 NEXT_PUBLIC_SUPABASE_URL=<del paso 2>
 NEXT_PUBLIC_SUPABASE_ANON_KEY=<del paso 2>
+NEXT_PUBLIC_TURNSTILE_SITE_KEY=<del paso 6>
 TRADING_SERVER_SECRET=<del paso 4>
 EOF
 ```
 
-Arrancá la app con PM2, apuntando al puerto interno 3000 (Caddy lo va a exponer afuera en el paso 9):
+Arrancá la app con PM2, apuntando al puerto interno 3000 (Caddy lo va a exponer afuera en el paso 10):
 
 ```
 pm2 start npm --name mercado-app -- start -- -p 3000
@@ -204,7 +222,7 @@ curl -I http://localhost:3000
 
 Tiene que dar `HTTP/1.1 200 OK`. Si no, revisá `pm2 logs mercado-app` para ver el error.
 
-## Paso 9 — Caddy: HTTPS automático con el dominio
+## Paso 10 — Caddy: HTTPS automático con el dominio
 
 Esto requiere que el operador ya haya comprado un dominio y apuntado su registro DNS tipo **A** a la IP del VPS (decile que lo haga si todavía no — puede tardar unos minutos en propagar). Como root en el VPS:
 
@@ -221,7 +239,9 @@ Caddy consigue el certificado HTTPS real solo (Let's Encrypt) en cuanto detecta 
 
 Si el operador todavía no tiene dominio, se puede probar por ahora con `curl -I http://IP_DEL_VPS:3000` directo (sin HTTPS) mientras tanto, y hacer este paso después.
 
-## Paso 10 — Apuntar el cron de señales a la URL nueva
+Si en el paso 6 el widget de Turnstile se creó sin dominio (o con otro), volvé al dashboard de Cloudflare y agregá este dominio a la lista de dominios del widget — si no, el captcha no va a validar en producción.
+
+## Paso 11 — Apuntar el cron de señales a la URL nueva
 
 Con la conexión del paso 2/3, reemplazando `TU-DOMINIO.com` por el dominio real (o la IP:3000 si todavía no hay dominio — pero el cron necesita que ese puerto sea alcanzable desde internet, así que lo ideal es esperar a tener el dominio):
 
@@ -270,7 +290,7 @@ curl -X POST https://TU-DOMINIO.com/api/cron/senales -H "Authorization: Bearer T
 
 Tiene que devolver `{"ok":true}`.
 
-## Paso 11 — Crear los 2 admins
+## Paso 12 — Crear los 2 admins
 
 Pedile al operador los 2 correos reales de admin. Creálos directo con la service_role key del paso 2 (evita el registro manual por la UI):
 
@@ -313,7 +333,7 @@ Pedile al operador que entre con cualquiera de las 2 (contraseña temporal del s
 
 ## Cómo actualizar la app más adelante (una vez que ya está desplegada)
 
-Para subir cambios de código después de este primer despliegue, repetí los pasos 6 y 7 (compilar local, `rsync` al VPS), y reiniciá el proceso:
+Para subir cambios de código después de este primer despliegue, repetí los pasos 7 y 8 (compilar local, `rsync` al VPS), y reiniciá el proceso:
 
 ```
 ssh mercadoapp@IP_DEL_VPS "pm2 restart mercado-app"
@@ -323,11 +343,12 @@ No hace falta tocar Caddy, PM2 ni las variables de entorno de nuevo salvo que ca
 
 ## Lo que el operador SÍ tiene que hacer a mano (no se puede scriptear)
 
-- **SMTP (Resend)**: crear cuenta en resend.com, verificar el dominio (necesita el dominio del paso 9 ya apuntado), generar una API key. Con esos 3 datos, vos configurás Supabase: Project Settings → Authentication → SMTP Settings → Enable Custom SMTP → Host `smtp.resend.com`, Port `465`, Username `resend`, Password la API key, Sender email del dominio verificado.
-- **Dominio propio**: el operador lo compra y apunta el registro DNS tipo A a la IP del VPS (ver paso 9).
-- **Cloudflare Turnstile (opcional, captcha)**: el operador entra a dash.cloudflare.com/turnstile → Add widget → te pasa Site Key y Secret Key. Vos agregás `NEXT_PUBLIC_TURNSTILE_SITE_KEY` a `.env.local` ANTES de compilar (paso 6) y repetís 6-7 para que quede en el build, y pegás el Secret Key en Supabase → Authentication → Attack Protection → Enable Captcha protection.
-- **Twelve Data (opcional)**: el operador crea cuenta en twelvedata.com y te pasa la API key. Vos la agregás a `.env.local` como `MARKET_API_KEY` antes de compilar y repetís 6-7.
+- **SMTP (Resend)**: crear cuenta en resend.com, verificar el dominio (necesita el dominio del paso 10 ya apuntado), generar una API key. Con esos 3 datos, vos configurás Supabase: Project Settings → Authentication → SMTP Settings → Enable Custom SMTP → Host `smtp.resend.com`, Port `465`, Username `resend`, Password la API key, Sender email del dominio verificado.
+- **Dominio propio**: el operador lo compra y apunta el registro DNS tipo A a la IP del VPS (ver paso 10).
+- **Twelve Data (opcional)**: el operador crea cuenta en twelvedata.com y te pasa la API key. Vos la agregás a `.env.local` como `MARKET_API_KEY` antes de compilar y repetís 7-8.
+
+(Cloudflare Turnstile ya tiene su propio paso numerado, el 6 — no quedó en esta lista porque no es opcional, el formulario de login/registro ya lo espera.)
 
 ## Al terminar
 
-Resumen para el operador: URL final del sitio, qué quedó pendiente de la lista de arriba, y qué verificaste vos mismo (curl del cron, `pm2 status` mostrando la app "online", login de los 2 admins, alguna página clave cargando bien con HTTPS).
+Resumen para el operador: URL final del sitio, qué quedó pendiente de la lista de arriba, y qué verificaste vos mismo (curl del cron, `pm2 status` mostrando la app "online", login de los 2 admins, captcha visible en login/registro, alguna página clave cargando bien con HTTPS).
