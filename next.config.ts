@@ -36,7 +36,10 @@ const csp = [
   // challenges.cloudflare.com también en connect-src: el widget de
   // Turnstile hace sus propias peticiones a ese origen, y sin esto el
   // captcha no llega a resolverse cuando la site key está configurada.
-  `connect-src 'self' https://api.binance.com https://api.twelvedata.com https://challenges.cloudflare.com ${supabaseOrigin} ${supabaseWsOrigin}`,
+  // api.binance.com ya no hace falta (las señales pasaron a MEXC) y de
+  // todos modos ambas llamadas de precio son server-side, nunca desde el
+  // navegador -- esta línea solo cubre lo que el navegador pide directo.
+  `connect-src 'self' https://api.twelvedata.com https://challenges.cloudflare.com ${supabaseOrigin} ${supabaseWsOrigin}`,
   "frame-src https://challenges.cloudflare.com",
   "frame-ancestors 'self'",
   // Con 'unsafe-inline' en script-src, una inyección de HTML que consiga
